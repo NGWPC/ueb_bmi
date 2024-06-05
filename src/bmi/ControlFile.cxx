@@ -232,6 +232,29 @@ void ueb::ControlFile::setModelUTCOffset( double const& offset )
      _ModelUTCOffset = offset;
 }
 
+int ueb::ControlFile::getModelTotalTimeSteps() const
+{
+   int Year = _ModelStartDate[0];
+   int Month = _ModelStartDate[1];
+   int Day = _ModelStartDate[2];          
+   double sHour = _ModelStartHour;
+   double  currentModelDateTime = julian(Year, Month, Day, sHour);
+
+   double modelDT = _ModelDt;
+
+   // calculating model end date-time in julian date
+   double dHour = _ModelEndHour;
+   double EJD = julian( _ModelEndDate[0], 
+		        _ModelEndDate[1], 
+			_ModelEndDate[2], dHour);     
+
+   double modelSpan = EJD - currentModelDateTime;		  
+		  //model time steps
+   int numTotalTs = (int)ceil(modelSpan*(24 / modelDT));
+
+   return numTotalTs;
+}
+
 int ueb::ControlFile::getInpDailyorSubdaily()
 {
      return _inpDailyorSubdaily;
@@ -282,6 +305,15 @@ void ueb::ControlFile::setOutDimord( int const& od )
 void ueb::ControlFile::setAggoutDimord( int const& aod )
 {
      _aggoutDimord = aod;
+}
+
+int ueb::ControlFile::getStepsInADay() const
+{
+      double modelDT = _ModelDt;
+      int stepinaDay= (int) (24.0/modelDT +0.5);  // closest rounding
+      modelDT = 24.0/stepinaDay;
+      int nstepinaDay = stepinaDay; 	  
+      return nstepinaDay; 
 }
 
 std::ostream& operator<< ( std::ostream &os, ueb::ControlFile f)
