@@ -328,40 +328,121 @@ Finalize()
 int ueb::BmiUEB::
 GetVarGrid(std::string name)
 {
-  if (name.compare("plate_surface__temperature") == 0)
-    return 0;
-  else
-    return -1;
+  int lastgrid = 0;
+  std::array<sitevar, NSITEVARS> strsvArray = _sitevars.getSiteVars();
+  for ( int i = 0; i < ueb::SiteVariables::nsitevars; ++i )
+  {
+       if ( strsvArray[ i ].svType == 1 )
+       {
+            if ( name.compare( strsvArray[ i ].svName ) == 0 )
+	    {
+                return lastgrid;
+	    }
+            lastgrid++;
+       }     
+  }
+
+  std::array<inpforcvar, NFORCS> forcing = _forcings.getStrinpforcArray();
+  for ( int i = 0; i < NFORCS; ++i )
+  {
+       if ( forcing[ i ].infType == 1 )
+       {
+            if ( name.compare( forcing[ i ].infName ) == 0 )
+	    {
+                return lastgrid;
+	    }
+            lastgrid++;
+       }     
+  }
+  return -1;
 }
 
 
 std::string ueb::BmiUEB::
 GetVarType(std::string name)
 {
-  if (name.compare("plate_surface__temperature") == 0)
-    return "double";
-  else
-    return "";
+  
+  auto it_site = std::find( ueb::SiteVariables::site_var_names.begin(),
+                       ueb::SiteVariables::site_var_names.end(),
+		       name );
+  if ( it_site != ueb::SiteVariables::site_var_names.end() )
+  {
+       return "float";
+  }
+
+  auto it_par = std::find( ueb::Parameters::parameter_names.begin(),
+                       ueb::Parameters::parameter_names.end(),
+		       name );
+
+  if ( it_par != ueb::Parameters::parameter_names.end() )
+  {
+       return "float";
+  }
+
+  auto it_forc = std::find( ueb::ForcingVariables::forcing_var_names.begin(),
+                       ueb::ForcingVariables::forcing_var_names.end(),
+		       name );
+  if ( it_forc != ueb::ForcingVariables::forcing_var_names.end() )
+  {
+       return "float";
+  }
+
+  return "";
 }
 
 
 int ueb::BmiUEB::
 GetVarItemsize(std::string name)
 {
-  if (name.compare("plate_surface__temperature") == 0)
-    return sizeof(double);
-  else
-    return 0;
+  auto it_site = std::find( ueb::SiteVariables::site_var_names.begin(),
+                       ueb::SiteVariables::site_var_names.end(),
+		       name );
+  if ( it_site != ueb::SiteVariables::site_var_names.end() )
+  {
+       return sizeof(float);
+  }
+
+  auto it_par = std::find( ueb::Parameters::parameter_names.begin(),
+                       ueb::Parameters::parameter_names.end(),
+		       name );
+
+  if ( it_par != ueb::Parameters::parameter_names.end() )
+  {
+       return sizeof(float);
+  }
+
+  auto it_forc = std::find( ueb::ForcingVariables::forcing_var_names.begin(),
+                       ueb::ForcingVariables::forcing_var_names.end(),
+		       name );
+  if ( it_forc != ueb::ForcingVariables::forcing_var_names.end() )
+  {
+       return sizeof(float);
+  }
+
+  return 0;
 }
 
 
 std::string ueb::BmiUEB::
 GetVarUnits(std::string name)
 {
-  if (name.compare("plate_surface__temperature") == 0)
-    return "K";
-  else
-    return "";
+  auto it_site = ueb::SiteVariables::site_var_units.find( name );
+  if ( it_site != ueb::SiteVariables::site_var_units.end() )
+  {
+       return it_site->second;
+  }
+  auto it_par = ueb::Parameters::parameter_units.find( name );
+  if ( it_par != ueb::Parameters::parameter_units.end() )
+  {
+       return it_par->second;
+  }
+  auto it_forc = ueb::ForcingVariables::forcing_var_units.find( name );
+  if ( it_forc != ueb::ForcingVariables::forcing_var_units.end() )
+  {
+       return it_forc->second;
+  }
+
+  return "";
 }
 
 
@@ -381,53 +462,83 @@ GetVarNbytes(std::string name)
 std::string ueb::BmiUEB::
 GetVarLocation(std::string name)
 {
-  if (name.compare("plate_surface__temperature") == 0)
-    return "node";
-  else
-    return "";
+  auto it_site = std::find( ueb::SiteVariables::site_var_names.begin(),
+                       ueb::SiteVariables::site_var_names.end(),
+		       name );
+  if ( it_site != ueb::SiteVariables::site_var_names.end() )
+  {
+       return "node";
+  }
+
+  auto it_par = std::find( ueb::Parameters::parameter_names.begin(),
+                       ueb::Parameters::parameter_names.end(),
+		       name );
+
+  if ( it_par != ueb::Parameters::parameter_names.end() )
+  {
+       return "node";
+  }
+
+  auto it_forc = std::find( ueb::ForcingVariables::forcing_var_names.begin(),
+                       ueb::ForcingVariables::forcing_var_names.end(),
+		       name );
+  if ( it_forc != ueb::ForcingVariables::forcing_var_names.end() )
+  {
+       return "node";
+  }
+
+  return "";
 }
 
 
 void ueb::BmiUEB::
 GetGridShape(const int grid, int *shape)
 {
-/*
-  if (grid == 0) {
-    shape[0] = this->_model.shape[0];
-    shape[1] = this->_model.shape[1];
+  if (grid >= 0) {
+    shape[0] = this->_ws.getNYDim();
+    shape[1] = this->_ws.getNXDim();
   }
-  */
 
-     std::cerr << "to be implemented" << std::endl;
 }
 
 
 void ueb::BmiUEB::
 GetGridSpacing (const int grid, double * spacing)
 {
-//  if (grid == 0) {
-//    spacing[0] = this->_model.spacing[0];
-//    spacing[1] = this->_model.spacing[1];
-//  }
-     std::cerr << "to be implemented" << std::endl;
+  if (grid >= 0) {
+    int nydim = this->_ws.getNYDim();
+    if ( nydim > 1 )
+    {
+      float* ycoords = this->_ws.getWatershedYCors();
+      spacing[0] = ycoords[ 1 ] - ycoords[ 0 ];
+    }
+
+    int nxdim = this->_ws.getNXDim();
+    if ( nxdim > 1 )
+    {
+      float* xcoords = this->_ws.getWatershedXCors();
+      spacing[1] = xcoords[ 1 ] - xcoords[ 0 ];
+    }
+  }
 }
 
 
 void ueb::BmiUEB::
 GetGridOrigin (const int grid, double *origin)
 {
-//  if (grid == 0) {
-//    origin[0] = this->_model.origin[0];
-//    origin[1] = this->_model.origin[1];
-//  }
-     std::cerr << "to be implemented" << std::endl;
+  if (grid >= 0) {
+    float* ycoords = this->_ws.getWatershedYCors();
+    float* xcoords = this->_ws.getWatershedXCors();
+    origin[0] = ycoords[0];
+    origin[1] = xcoords[1];
+  }
 }
 
 
 int ueb::BmiUEB::
 GetGridRank(const int grid)
 {
-  if (grid == 0)
+  if (grid >= 0)
     return 2;
   else
     return -1;
@@ -437,21 +548,17 @@ GetGridRank(const int grid)
 int ueb::BmiUEB::
 GetGridSize(const int grid)
 {
-	/*
-  if (grid == 0)
-    return this->_model.shape[0] * this->_model.shape[1];
+  if (grid >= 0)
+    return this->_ws.getNYDim() * this->_ws.getNXDim();
   else
-    return -1;
-    */
-     std::cerr << "to be implemented" << std::endl;
-     return -1;
+    return 1;
 }
 
 
 std::string ueb::BmiUEB::
 GetGridType(const int grid)
 {
-  if (grid == 0)
+  if (grid >= 0)
     return "uniform_rectilinear";
   else
     return "";
@@ -461,14 +568,24 @@ GetGridType(const int grid)
 void ueb::BmiUEB::
 GetGridX(const int grid, double *x)
 {
-  throw NotImplemented();
+   if( grid >= 0 )
+   {
+      std::copy_n( _ws.getWatershedXCors(),
+		   _ws.getNXDim(),
+		   x );
+   }
 }
 
 
 void ueb::BmiUEB::
 GetGridY(const int grid, double *y)
 {
-  throw NotImplemented();
+   if( grid >= 0 )
+   {
+      std::copy_n( _ws.getWatershedYCors(),
+		   _ws.getNYDim(),
+		   y );
+   }
 }
 
 
@@ -482,13 +599,10 @@ GetGridZ(const int grid, double *z)
 int ueb::BmiUEB::
 GetGridNodeCount(const int grid)
 {
-	/*
-  if (grid == 0)
-    return this->_model.shape[0] * this->_model.shape[1];
+  if (grid >= 0)
+    return this->_ws.getNYDim() * this->_ws.getNXDim();
   else
     return -1;
-	*/
-	return -1;
 }
 
 
@@ -543,18 +657,66 @@ GetValue (std::string name, void *dest)
   src = this->GetValuePtr(name);
   nbytes = this->GetVarNbytes(name);
 
-  memcpy (dest, src, nbytes);
+  std::memcpy (dest, src, nbytes);
 }
 
 
 void *ueb::BmiUEB::
 GetValuePtr (std::string name)
 {
-  if (name.compare("plate_surface__temperature") == 0)
-    //return (void*)this->_model.z[0];
-    return (void*)NULL;
-  else
-    return NULL;
+  auto it_par = std::find( ueb::Parameters::parameter_names.begin(),
+                       ueb::Parameters::parameter_names.end(),
+		       name );
+
+  if ( it_par != ueb::Parameters::parameter_names.end() )
+  {
+      return (void*)( _parms.getParArrayPtr() + 
+             std::distance( ueb::Parameters::parameter_names.begin(), it_par)); 
+  }
+
+  auto it_site = std::find( ueb::SiteVariables::site_var_names.begin(),
+                       ueb::SiteVariables::site_var_names.end(),
+		       name );
+  if ( it_site != ueb::SiteVariables::site_var_names.end() )
+  {
+       const sitevar* sitevars = _sitevars.getSiteVarsPtr();
+       int i = std::distance( ueb::SiteVariables::site_var_names.begin(),
+		      it_site );
+       if ( sitevars[ i ].svType == 1 )
+       {
+            return (void*) ( sitevars[ i ].svArrayValues[0] ); 
+       }  
+       else
+       {
+            return (void*)(&(sitevars[ i ].svdefValue));
+       }
+  }
+
+  auto it_forc = std::find( ueb::ForcingVariables::forcing_var_names.begin(),
+                       ueb::ForcingVariables::forcing_var_names.end(),
+		       name );
+  if ( it_forc != ueb::ForcingVariables::forcing_var_names.end() )
+  {
+       auto strinpArray = _forcings.getStrinpforcArray();
+
+       int i = std::distance( ueb::ForcingVariables::forcing_var_names.begin(),
+		            it_forc );
+       //SCTV and SVTV inputs
+       if ( strinpArray[ i ].infType == 0 || strinpArray[ i ].infType == 1 )
+       {
+           return (void*) _forcings.getTsvarArray()[ i ];
+       }
+       //SCTV inputs, 0 is type (infType), 1 is value( infdefValue )
+       else if (strinpArray[i].infType == 2 || strinpArray[i].infType == -1)
+       {
+           return (void*) _forcings.getTsvarArray()[ 1 ];
+       }
+       else
+       {
+           return (void*)NULL;
+       }
+  }
+  return (void*)NULL;
 }
 
 

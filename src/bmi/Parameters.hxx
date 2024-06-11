@@ -3,6 +3,7 @@
 
 #include <string>
 #include <array>
+#include <map>
 
 #define NPARS 32
 
@@ -33,11 +34,14 @@ namespace ueb {
       std::array<float, NPARS> getParArray() const;
       void setParArray( std::array<float, NPARS> const& parms );
 
+      const float* getParArrayPtr() const;
+
       std::array<float, NPARS> getParams() const;
 
       int getIrad() const;
 
       static const std::array< std::string, NPARS> parameter_names;
+      static const std::map< std::string, std::string> parameter_units;
 
     friend std::ostream& ::operator<< ( std::ostream &os, Parameters p);
   };

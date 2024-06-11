@@ -210,6 +210,45 @@ ueb::ForcingVariables& ueb::ForcingVariables::operator=(
 					 //snow surface age.   	      
 	};
 
+   const std::map< std::string, std::string > 
+         ueb::ForcingVariables::forcing_var_units{ 
+		 {"Prec", "m/hr"} , //Precipitation, m/hr
+		 {"Ta",  "C"}, //Air temperature (oC)
+		 {"Tmin", "C"},//Min Air Temperature, oC
+				      //
+		 {"Tmax","C"}, //Max Air Temperature, oC
+				      //
+		 {"v", "m/h"}, //Wind Speed at a point z m above the 
+				   //snow surface or top of canopy if present,
+				   //m/h
+                 {"RH", "DLESS"}, //Relative humidity at a point z m above 
+				    //the snow surface or top of canopy if 
+				    //present		   
+		 {"Vp", "Pa"}, //Air vapor pressure, Pa
+		 {"AP", "Pa"}, //Air pressure, Pa
+		 {"Qsi", "kJ/m^2/hr"}, //Incoming shortwave radiation measured 
+				     //or that would be measured on a 
+				     //horizontal surface above the snow and 
+				     //canopy if present, kJ/m^2/hr
+		 {"Qli","kJ/m^2/hr"},  //Incoming longwave radiation that would 
+				     //be measured above the snow and canopy 
+				     //if present, kJ/m^2/hr		     
+		 {"Qnet", "kJ/M^2/hr"},  //Net radiation that would be measured 
+				      //on a horizontal surface above the snow 
+				      //and canopy if present.  This is only 
+				      //required if irad=3. kJ/m^2/hr
+		 {"Qg", "kJ/M^2/hr"},  //Ground heat flux, kJ/m^2/hr
+				       //
+		 {"Snowalb", "DLESS"} //Snow Albedo - The fraction of 
+					 //incident solar radiation reflected 
+					 //by the snow surface (in the range 0 
+					 //to 1).  This is only required as an 
+					 //input if ireadalb=1.  For other 
+					 //values of ireadalb, the snow albedo 
+					 //is calculated internally based on 
+					 //snow surface age.   	      
+	};
+
 
 std::ostream& operator<< ( std::ostream &os, ueb::ForcingVariables p)
 { //operator<<

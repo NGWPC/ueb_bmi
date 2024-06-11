@@ -3,6 +3,7 @@
 
 #include <string>
 #include <array>
+#include <map>
 #include "uebpgdecls.h"
 
 #define NFORCS 13
@@ -45,6 +46,7 @@ namespace ueb {
       ForcingVariables& operator=( ForcingVariables const& f );
 
       static const std::array< std::string, NFORCS > forcing_var_names;
+      static const std::map< std::string, std::string > forcing_var_units;
 
     friend std::ostream& ::operator<< ( std::ostream &os, ForcingVariables fv);
   };
