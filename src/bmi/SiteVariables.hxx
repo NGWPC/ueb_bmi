@@ -1,0 +1,57 @@
+#ifndef UEB_SITEVARIABLES
+#define UEB_SITEVARIABLES
+
+#include <string>
+#include <array>
+#include "uebpgdecls.h"
+
+#define NSITEVARS 32
+
+namespace ueb { class SiteVariables; }
+
+std::ostream& operator<< ( std::ostream &os, ueb::SiteVariables sv);
+
+namespace ueb {
+  class SiteVariables {
+    private:
+      std::string _sitefile;
+      std::array<sitevar, NSITEVARS> _strsvArray;
+      size_t _nydim;
+      size_t _nxdim;
+
+      void deepCopy( SiteVariables const& sv );
+
+    public:
+
+      static const int nsitevars = NSITEVARS;
+
+      SiteVariables();
+      SiteVariables( std::string const& sitefile );
+
+      //copy constructor
+      SiteVariables( SiteVariables const& );
+
+      virtual ~SiteVariables();
+
+      std::string getSiteFile() const;
+      void setSiteFile( std::string const& fname );
+
+      size_t getNYDim() const;
+      void setNYDim( size_t dim);
+
+      size_t getNXDim() const;
+      void setNXDim( size_t dim);
+
+      std::array<sitevar, NSITEVARS> getSiteVars() const;
+      void setSiteVars( std::array<float, NSITEVARS> const& sitevars );
+
+      SiteVariables& operator=( SiteVariables const& sv );
+
+      static const std::array< std::string, NSITEVARS> site_var_names;
+
+    friend std::ostream& ::operator<< ( std::ostream &os, SiteVariables sv);
+  };
+
+};
+
+#endif //#ifndef SITEVARIABLES

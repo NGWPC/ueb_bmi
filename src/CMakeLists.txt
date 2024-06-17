@@ -4,14 +4,36 @@ set (UEB_VERSION 0.1)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/uebcxx.pc.cmake
                 ${CMAKE_BINARY_DIR}/uebcxx.pc)
 
-set(bmi_ueb_lib_SRCS bmi/ControlFile.cxx)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fPIC")
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+set(bmi_ueb_lib_SRCS "bmi/ControlFile.cxx" "bmi/Watershed.cxx"
+	             "bmi/Parameters.cxx"  "bmi/SiteVariables.cxx"
+		     "bmi/ForcingVariables.cxx" "bmi/OutControl.cxx"
+		     "bmi/bmi_ueb.cxx"
+                    "ueb/matrixnvector.cpp" "ueb/uebdecls.cpp"
+	            "ueb/ncfunctions.cpp" "ueb/uebinputs.cpp"
+		    "ueb/canopy.cpp" "ueb/snowdgtv.cpp")
 if(WIN32)
   add_library(bmiuebcxx ${bmi_ueb_lib_SRCS})
 else()
-  add_library(bmiuebcxx SHARED ${bmi_ueb_lib_SRCS})
+  add_library(bmiuebcxx STATIC ${bmi_ueb_lib_SRCS})
 endif()
 
-add_executable(run_bmiuebcxx bmi/bmi_main.cxx bmi/ControlFile.cxx)
+target_include_directories(bmiuebcxx PRIVATE ueb )
+target_link_libraries(bmiuebcxx -lmpi -lmpicxx -lnetcdf -lhdf5_hl -lhdf5 -lz libcurl.a libpnetcdf.a)
+
+add_executable(run_bmiuebcxx bmi/bmi_main.cxx bmi/ControlFile.cxx
+	            bmi/Watershed.cxx bmi/Parameters.cxx
+		    bmi/SiteVariables.cxx bmi/ForcingVariables.cxx
+		    bmi/OutControl.cxx "bmi/bmi_ueb.cxx"
+                    "ueb/matrixnvector.cpp" "ueb/uebdecls.cpp"
+	            "ueb/ncfunctions.cpp" "ueb/uebpgdecls.h"
+		    "ueb/uebinputs.cpp" "ueb/snowxv.cpp" "ueb/canopy.cpp"
+		    "ueb/snowdgtv.cpp" )
+
+target_include_directories(run_bmiuebcxx PRIVATE ueb )
+target_link_libraries(run_bmiuebcxx libnetcdf.a -lhdf5_hl -lhdf5 -lz libcurl.a libpnetcdf.a -lmpi -lmpicxx)
 
 install(
   TARGETS run_bmiuebcxx
@@ -24,7 +46,9 @@ install(
   RUNTIME DESTINATION bin
 )
 install(
-  FILES bmi/ControlFile.hxx
+  FILES bmi/ControlFile.hxx bmi/Watershed.hxx bmi/Parameters.hxx 
+        bmi/SiteVariables.hxx bmi/ForcingVariables.hxx 
+	bmi/OutControl.hxx ueb/uebpgdecls.h bmi/bmi_ueb.hxx
   DESTINATION include
 )
 install(

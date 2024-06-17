@@ -4,6 +4,8 @@
 #include <string>
 #include <array>
 
+#include "uebpgdecls.h"
+
 namespace ueb { class ControlFile; }
 
 std::ostream& operator<< ( std::ostream &os, ueb::ControlFile f);
@@ -86,6 +88,8 @@ namespace ueb {
       double  getModelUTCOffset();
       void setModelUTCOffset( double const&  );
 
+      int getModelTotalTimeSteps() const;
+
       int getInpDailyorSubdaily();
       void setInpDailyorSubdaily( int const& );
 
@@ -100,6 +104,9 @@ namespace ueb {
       void setOutxStep( int const& );
       void setOutDimord( int const& );
       void setAggoutDimord( int const& );
+
+
+      int getStepsInADay() const;
 
     friend std::ostream& ::operator<< ( std::ostream &os, ControlFile f);
   };
