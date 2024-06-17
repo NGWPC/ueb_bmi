@@ -52,6 +52,11 @@ void ueb::Parameters::setParArray( std::array<float, NPARS> const& parms)
     _parArray = parms;
 }
 
+const float* ueb::Parameters::getParArrayPtr() const
+{
+    return _parArray.data();
+}
+
 std::array<float, NPARS> ueb::Parameters::getParams() const
 {
     std::array< float, NPARS > Param;
@@ -143,6 +148,41 @@ const std::array< std::string, NPARS> ueb::Parameters::parameter_names{
     "wcoeff",   // Wind decay coefficient for the forest
     "a",   // A in Bristow-Campbell formula for atmospheric transmittance
     "c",   // C in Bristow-Campbell formula for atmospheric transmittance
+};
+
+const std::map< std::string, std::string > ueb::Parameters::parameter_units{
+    {std::string( "irad"), std::string("DLESS")}, //  Radiation control flag (0=from ta, 1= input qsi, 2= input qsi,qli 3= input qnet)
+    {"ireadalb", "DLESS"},  //  Albedo reading control flag (0=albedo is computed internally, 1 albedo is read)
+    {"tr", "C"},  // Temperature above which all is rain (3 C)
+    {"ts", "C"}, // Temperature below which all is snow (-1 C)
+    {"ems", "DLESS"},  // Emissivity of snow (nominally 0.99)
+    {"cg", "KJ/kg/C"}, //  Ground heat capacity (nominally 2.09 KJ/kg/C)
+    {"z",  "m"}, // Nominal meas. heights for air temp. and humidity (2m)
+    {"zo", "m"},   //  Surface aerodynamic roughness (m)
+    {"rho", "kg/m^3"},   // Snow Density (Nominally 450 kg/m^3)
+    {"rhog", "kg/m^3"},   //  Soil Density (nominally 1700 kg/m^3)
+    {"lc", "DLESS"},  // Liquid holding capacity of snow (0.05)
+    {"ks", "m/hr"},  //  Snow Saturated hydraulic conductivity (20 m/hr)
+    {"de", "m"},  //  Thermally active depth of soil (0.1 m)
+    {"avo","DLESS"},   //  Visual new snow albedo (0.95)
+    {"anir0","DLESS"},   // NIR new snow albedo (0.65)
+    {"lans", "W/m-C-hr"},   // The thermal conductivity of fresh (dry) snow (W/m-K)
+    {"lang", "W/m-C-hr"},   // the thermal conductivity of soil (W/m-K)
+    {"wlf",  "rad/hr"}, //  Low frequency fluctuation in deep snow/soil layer 
+    {"rd1", "DLESS"},  // Amplitude correction coefficient of heat conduction (1)
+    {"dnews", "m"},   //  The threshold depth of for new snow (0.001 m)
+    {"emc",  "DLESS"}, //   Emissivity of canopy
+    {"alpha", "DLESS"},   // Scattering coefficient for solar radiation
+    {"alphal", "DLESS"},   //   Scattering coefficient for long wave radiation
+    {"g", "Degree"},   // leaf orientation with respect to zenith angle
+    {"uc", "1/hr"},   //  Unloading rate coefficient (Per hour) (Hedstrom and Pomeroy, 1998)
+    {"as", "DLESS"},   //  Fraction of extraterrestrial radiation on cloudy day, Shuttleworth (1993)  
+    {"Bs", "DLESS"},   //     (as+bs):Fraction of extraterrestrial radiation on clear day, Shuttleworth 
+    {"lambda", "DLESS"},   // Ratio of direct atm radiation to diffuse, worked out from Dingman 
+    {"rimax",  "DLESS"},  //  Maximum value of Richardson number for stability correction
+    {"wcoeff", "DLESS"},   // Wind decay coefficient for the forest
+    {"a",  "DLESS"},  // A in Bristow-Campbell formula for atmospheric transmittance
+    {"c", "DLESS"}   // C in Bristow-Campbell formula for atmospheric transmittance
 };
 
 std::ostream& operator<< ( std::ostream &os, ueb::Parameters p)

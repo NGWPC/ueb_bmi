@@ -17,11 +17,13 @@ set(bmi_ueb_lib_SRCS "bmi/ControlFile.cxx" "bmi/Watershed.cxx"
 if(WIN32)
   add_library(bmiuebcxx ${bmi_ueb_lib_SRCS})
 else()
-  add_library(bmiuebcxx STATIC ${bmi_ueb_lib_SRCS})
+#add_library(bmiuebcxx STATIC ${bmi_ueb_lib_SRCS})
+  add_library(bmiuebcxx SHARED ${bmi_ueb_lib_SRCS})
 endif()
 
 target_include_directories(bmiuebcxx PRIVATE ueb )
-target_link_libraries(bmiuebcxx -lmpi -lmpicxx -lnetcdf -lhdf5_hl -lhdf5 -lz libcurl.a libpnetcdf.a)
+#target_link_libraries(bmiuebcxx -lmpi -lmpicxx -lnetcdf -lhdf5_hl -lhdf5 -lz libcurl.a libpnetcdf.a)
+target_link_libraries(bmiuebcxx -lmpi -lmpicxx -lnetcdf -lhdf5_hl -lhdf5 -lz -lcurl)
 
 add_executable(run_bmiuebcxx bmi/bmi_main.cxx bmi/ControlFile.cxx
 	            bmi/Watershed.cxx bmi/Parameters.cxx

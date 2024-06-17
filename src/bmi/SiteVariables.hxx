@@ -3,6 +3,7 @@
 
 #include <string>
 #include <array>
+#include <map>
 #include "uebpgdecls.h"
 
 #define NSITEVARS 32
@@ -45,9 +46,12 @@ namespace ueb {
       std::array<sitevar, NSITEVARS> getSiteVars() const;
       void setSiteVars( std::array<float, NSITEVARS> const& sitevars );
 
+      const sitevar* getSiteVarsPtr() const;
+
       SiteVariables& operator=( SiteVariables const& sv );
 
       static const std::array< std::string, NSITEVARS> site_var_names;
+      static const std::map< std::string, std::string> site_var_units;
 
     friend std::ostream& ::operator<< ( std::ostream &os, SiteVariables sv);
   };
