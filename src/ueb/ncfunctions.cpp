@@ -317,7 +317,7 @@ int create3DNC_uebAggregatedOutputs(const char* FileName, aggOutput *aggOut, int
 	void * attValue;
 	nc_type attType;
 	char attName[256]; // = {}; // "grid_mapping_or_any_other_long_enough_name";
-	char grid_mappingValue[256] = {NULL}; // "grid_mapping_or_any_other_long_enough_name";	
+	char grid_mappingValue[256] = {'\0'}; // "grid_mapping_or_any_other_long_enough_name";	
 
 	const char* fillValueName = "_FillValue";
 	//float missVal = -9999;
@@ -517,7 +517,7 @@ int create3DNC_uebOutputs(const char* FileName, const char* VarName, const char 
 	void * attValue;
 	nc_type attType;	
 	char attName[256]; // = {}; // "grid_mapping_or_any_other_long_enough_name";
-	char grid_mappingValue[256] = { NULL }; // "grid_mapping_or_any_other_long_enough_name";	
+	char grid_mappingValue[256] = { '\0' }; // "grid_mapping_or_any_other_long_enough_name";	
 
 	const char* fillValueName = "_FillValue";
 	//float missVal = -9999;

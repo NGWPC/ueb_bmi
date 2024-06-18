@@ -38,10 +38,10 @@ int main(int argc, char *argv[])
   model->GetValue( std::string( "ts" ), ts );
   std::cout << "ts = " << *(float*)ts << std::endl;
 
-  float newts = 2.f;
-  model->SetValue( std::string( "ts" ), &newts );
-  model->GetValue( std::string( "ts" ), ts );
-  std::cout << "New ts = " << *(float*)ts << std::endl;
+//  float newts = 2.f;
+//  model->SetValue( std::string( "ts" ), &newts );
+//  model->GetValue( std::string( "ts" ), ts );
+//  std::cout << "New ts = " << *(float*)ts << std::endl;
 
   //get the start time
   model->GetStartTimeInGregorianCalendar( year, month, day, hour );
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 
   double currenttime = model->GetCurrentTime();
 
-  double tendaysafter = currenttime + 10.0;
+  double tendaysafter = currenttime + 10.0 * 24 * 3600;
 
   //advance the model 10 days and  pause
   //

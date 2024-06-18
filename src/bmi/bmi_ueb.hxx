@@ -101,7 +101,7 @@ class BmiUEB : public bmi::Bmi {
     ForcingVariables _forcings;
     OutControl _outcontrol;
 
-    double _currentModelDateTime;
+    double _currentModelDateTime; //this is Julian date in days
 
     std::vector< std::array< float, nxv> > _statev;
 
@@ -132,7 +132,8 @@ class BmiUEB : public bmi::Bmi {
 				int const& istep,        //input
 				int const& numTotalTs,   //input
 				int const& irad,         //input
-              std::array<float*, NFORCS> const& tsvarArray,       //input
+				int const& cell,         //input
+              std::array<float**, NFORCS> const& tsvarArray,       //input
 				int& MYear,              //output
 				int& MMonth,             //output
 				int& MDay,               //output
@@ -203,6 +204,17 @@ void  updatOutVars(
          float const& Eacl,                   //input,
          float const* OutArr );      //array of 53 elements,  input     
 				    //
+    void  outputAggregratedFiles();
+    void  outputNcFiles();
+    void  outputPointFiles();
+    //
+    //Get the UEB start time, this is different form the GetStartTime API.
+    //The NextGen frameword require the GetStartTime returns 0.
+    //Here it returns the time in the unit used internaly by UEB.
+    //
+    double getUEBStartTime();
+    double getUEBEndTime();
+
     std::array< float, nsv > getSitevForCell( int const& cell);
 
     std::array<float, NSITEVARS> getSiteState( int const& cell );

@@ -202,38 +202,38 @@ const std::array< std::string, NSITEVARS> ueb::SiteVariables::site_var_names{
 };
 
 const std::map < std::string, std::string > ueb::SiteVariables::site_var_units{
-   {"USic", "kJ/m^3"},   //  Energy content initial condition (kg m-3)
+   {"USic", "kJ m-3"},   //  Energy content initial condition (kg m-3)
    {"WSis", "m"},   //  Snow water equivalent initial condition (m)
-   {"Tic",  "DLESS"}, //  Snow surface dimensionless age initial condition 
+   {"Tic",  "1"}, //  Snow surface dimensionless age initial condition 
    {"WCic", "m"},  //  Snow water equivalent of canopy conditio(m) 
-   {"df",   "DLESS"}, // Drift factor multiplier
+   {"df",   "1"}, // Drift factor multiplier
    {"apr",  "Pa"}, // Average atmospheric pressure         
    {"Aep",  "m"}, // Albedo extinction coefficient             
-   {"cc",   "DLESS"}, // Canopy coverage fraction         
+   {"cc",   "1"}, // Canopy coverage fraction         
    {"hcan",  "m"}, // Canopy height           
-   {"lai",   "DLESS"},// Leaf area index
-   {"Sbar",  "kg/m^2"}, // Maximum snow load held per unit branch area        
-   {"ycage", "DLESS"},  // Forest age flag for wind speed profile parameterization            
-   {"slope", "Degree"},  // A 2-D grid that contains the slope at each grid point     
-   {"aspect", "Degree"},   // A 2-D grid that contains the aspect at each grid point   
-   {"latitude", "Degree"},   // A 2-D grid that contains the latitude at each grid point    
-   {"subalb",  "fraction"}, // Albedo (fraction 0-1) of the substrate beneath the snow (ground, or glacier)
-   {"subtype",  "DLESS"}, // Type of beneath snow substrate encoded as (0 = Ground/Non Glacier, 1=Clean Ice/glacier, 2= Debris covered ice/glacier, 3= Glacier snow accumulation zone)
-   {"gsurf",  "fraction"}, // The fraction of surface melt that runs off (e.g. from a glacier)
-   {"b01", "C"},   // Bristow-Campbell B for January (1)
-   {"b02", "C"},   // Bristow-Campbell B for February (2)
-   {"b03", "C"},   // Bristow-Campbell B for March(3)
-   {"b04", "C"},   // Bristow-Campbell B for April (4)
-   {"b05", "C"},   // Bristow-Campbell B for may (5)
-   {"b06", "C"},   // Bristow-Campbell B for June (6)
-   {"b07", "C"},   // Bristow-Campbell B for July (7)
-   {"b08", "C"},   //  Bristow-Campbell B for August (8)
-   {"b09", "C"},   // Bristow-Campbell B for September (9)
-   {"b10", "C"},   // Bristow-Campbell B for October (10)
-   {"b11", "C"},   // Bristow-Campbell B for November (11)
-   {"b12", "C"},   // Bristow-Campbell B for December (12)
-   {"ts_last", "C"},  //  degree celsius 
-   {"longitude", "Degree"}   // A 2-D grid that contains the latitude at each grid 
+   {"lai",   "1"},// Leaf area index
+   {"Sbar",  "kg m-2"}, // Maximum snow load held per unit branch area        
+   {"ycage", "none"},  // Forest age flag for wind speed profile parameterization            
+   {"slope", "degree"},  // A 2-D grid that contains the slope at each grid point     
+   {"aspect", "degree"},   // A 2-D grid that contains the aspect at each grid point   
+   {"latitude", "degree"},   // A 2-D grid that contains the latitude at each grid point    
+   {"subalb",  "1"}, // Albedo (fraction 0-1) of the substrate beneath the snow (ground, or glacier)
+   {"subtype",  "none"}, // Type of beneath snow substrate encoded as (0 = Ground/Non Glacier, 1=Clean Ice/glacier, 2= Debris covered ice/glacier, 3= Glacier snow accumulation zone)
+   {"gsurf",  "1"}, // The fraction of surface melt that runs off (e.g. from a glacier)
+   {"b01", "degC"},   // Bristow-Campbell B for January (1)
+   {"b02", "degC"},   // Bristow-Campbell B for February (2)
+   {"b03", "degC"},   // Bristow-Campbell B for March(3)
+   {"b04", "degC"},   // Bristow-Campbell B for April (4)
+   {"b05", "degC"},   // Bristow-Campbell B for may (5)
+   {"b06", "degC"},   // Bristow-Campbell B for June (6)
+   {"b07", "degC"},   // Bristow-Campbell B for July (7)
+   {"b08", "degC"},   //  Bristow-Campbell B for August (8)
+   {"b09", "degC"},   // Bristow-Campbell B for September (9)
+   {"b10", "degC"},   // Bristow-Campbell B for October (10)
+   {"b11", "degC"},   // Bristow-Campbell B for November (11)
+   {"b12", "degC"},   // Bristow-Campbell B for December (12)
+   {"ts_last", "degC"},  //  degree celsius 
+   {"longitude", "degree"}   // A 2-D grid that contains the latitude at each grid 
 };
 
 std::ostream& operator<< ( std::ostream &os, ueb::SiteVariables p)

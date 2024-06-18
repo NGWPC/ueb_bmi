@@ -3,6 +3,7 @@
 
 #include <string>
 #include <array>
+#include <map>
 #include "uebpgdecls.h"
 
 #define NOUTPUTS  70
@@ -63,6 +64,7 @@ namespace ueb {
       OutControl& operator=(OutControl const& o);
 
       static const std::array< std::string, NOUTPUTS> output_var_names;
+      static const std::map< std::string, std::string > output_var_units;
 
     friend std::ostream& ::operator<< ( std::ostream &os, OutControl const& fv);
   };

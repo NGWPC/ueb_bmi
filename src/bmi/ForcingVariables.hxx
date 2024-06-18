@@ -18,15 +18,20 @@ namespace ueb {
       std::string _forcingfile;
       std::array<inpforcvar, NFORCS> _strinpforcArray;
 
-      std::array<float*, NFORCS> _tsvarArray;
+      std::array<float**, NFORCS> _tsvarArray;
 
       std::array<int, NFORCS> _ntimesteps;
+
+      std::vector< std::pair< int, int > > _activeCells;
 
       void deepCopy( ForcingVariables const& f );
 
     public:
       ForcingVariables();
-      ForcingVariables( std::string const& forcfile );
+      ForcingVariables( std::string const& forcfile,
+             std::vector< std::pair< int, int > > const& activeCells,
+	     std::string const& wsycorName,
+	     std::string const& wsxcorName );
 
       //copy constructor
       ForcingVariables( ForcingVariables const& );
@@ -38,7 +43,7 @@ namespace ueb {
 
       std::array<inpforcvar, NFORCS> getStrinpforcArray() const;
 
-      std::array<float*, NFORCS> getTsvarArray() const;
+      std::array<float**, NFORCS> getTsvarArray() const;
 
       std::array<int, NFORCS> getNtimesteps() const;
       void setNtimesteps( std::array<int, NFORCS> const& nt );
