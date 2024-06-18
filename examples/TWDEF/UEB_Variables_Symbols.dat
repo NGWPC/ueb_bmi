@@ -1,0 +1,71 @@
+Var_Symbol	Symb_in_UEBfort	Name
+ Year	 Year	 Year
+Month	Month	Month
+Day	Day	Day
+dHour	dHour	dHour
+atff	ATF-BC	  Atmospheric transmission factor
+HRI	HRI	  Radiation index
+Eacl	Eacl	 Clear sky emissivity
+Ema	Ema	 Atmospheric emissivity
+conZen	Os	 Cos of solar zenith angle (Zen)
+Ta	Ta	 Air temperature(C)
+P	P	 Precipitation (m/hr)
+V	V	 Wind speed (m/s)
+RH	RH	 Relative humidity
+Qsi	Qsi	 Incoming solar radiation (kJ/m2/hr)
+Qli	Qli	 Incoming longwave radiation (kJ/m2/hr)
+Qnet	Qnet	 Input net radiation (kJ/m2/hr)
+ Us	Ub	 Energy content (kJ/m2)
+ Ws	SWE	 Surface snow water equivalent (m)
+tausn	tausn	 Dimensionless age of the snow surface
+ Pr	Prain	 Precipitation in the form of rain (m/hr)
+Ps	Psnow	 Precipitation in the form of snow (m/hr)
+Alb	Alb	Snow surface albedo
+QHs	Qh	 Surface Sensible heat flux (kJ/m2/hr)
+QEs	Qe	 Surface Latent heat flux (kJ/m2/hr)
+ Es	E	 Surface sublimation (m)
+SWIT	SWIT	" Total outflow (m/hr).  This combines rainfall (in the case of no snow/glacier) snow/glacier melt, and it the surface water input to the runoff generation process."
+QMs	Qm	 Surface melt energy (kJ/m2/hr)
+Q	Q	 Net surface energy exchange (kJ/m2/hr)
+ FM	dMdt	 Net surface mass exchange (m/h)
+Tave	Tave	 Average snow temperature (C)
+TSURFs	Ts	 Surface snow temperature (C)
+cump	CumP	 Cumulative precipitation (m)
+cumes	CumE	 Cumulative surface sublimation (m)
+cumMr	CumMelt	 Cumulative surface melt (m)
+Qnet	NetRads	 Modeled surface net radiation (kJ/m2/hr)
+smelt	Smelt	 Melt generated at surface (m/hr).  This is melt generated at the surface and modeled to infiltrate into the snow or glacier where it may refreeze.  It is not base of the snow/glacier outflow.
+refDepth	refDep	 Depth of penetration of top refreezing (m)
+totalRefDepth	totRefDep	 Total depth of refreezing (m)
+cf	Cf	 Cloudiness fraction
+Taufb	Taufb	 Direct solar radiation fraction
+Taufd	Taufd	 Diffuse solar radiation fraction
+Qsib	Qsib	 Direct solar radiation
+Qsid	Qsid	 Diffuse solar radiation
+Taub	Taub	 Direct solar radiation canopy transmission fraction
+Taud	Taud	 Diffuse solar radiation canopy transmission fraction
+Qsns	Qsns	 Solar radiation absorbed at surface (kJ/m2/hr)
+Qsnc	Qsnc	 Solar radiation absorbed in canopy (kJ/m2/hr)
+Qlns	Qlns	 Longwave radiation absorbed a tsurface (kJ/m2/hr)
+Qlnc 	Qlnc	 Longwave radiation absorbed in canopy (kJ/m2/hr)
+Vz	Vz	 Modeled wind beneath canopy (m/s)
+Rkinsc	Rkinsc	 Was canopy aerodynamic resistance -not used presently
+Rkinc	Rkinc	 Aerodynamic resistance of surface (below canopy)
+Inmax	Inmax	 Canopy snow interception capacity (m)
+intc	int	 Canopy snow interception (m/hr)
+ieff	ieff	 Fraction of precipitation intercepted (m/hr)
+Ur	Ur	 Canopy mass unloading (m/hr)
+Wc	SWEc	 Canopy snow water equivalent (m)
+Tc	Tc	 Canopy temperature(C)
+Tac	Tac	 Air temperature within canopy (C)
+QHc	QHc	 Canopy sensible heat flux (kJ/m2/hr)
+QEc	QEc	 Canopy latent heat flux (kJ/m2/hr)
+Ec	Ec	 Canopy sublimation (m/hr)
+Qpc	Qpc	 Precipitation energy advected to canopy (kJ/m2/hr)
+Qmc	Qmc	 Canopy melt energy (kJ/m2/hr)
+Mc	Mc	 Melt from canopy (m/hr)
+FMc	FMc	 Net canopy energy exchange (m/hr)
+SWIGM	SWIGM	  Glacier melt outflow (m/hr).  This is the part of total outflow that originates from glacier melting.
+SWISM	SWIR	  Rainfall outflow (m/hr).  This is the part of total outflow that is from rainfall in the case of no snow/glacier.
+SWIR	SWISM	  Snow melt outflow (m/hr).  This is the part of total outflow that originates from the melting of seasonal snow pack (as distinct from glacier ice)
+errMB	MassError	 Mass balance closure error (m)
