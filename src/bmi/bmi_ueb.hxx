@@ -117,7 +117,13 @@ class BmiUEB : public bmi::Bmi {
     std::vector< std::vector< float > > _tsprevday;
     std::vector< std::vector< float > > _taveprevday;
 
-    std::vector< std::vector< std::vector< float > > > _outvarArray;
+    //
+    //use 1d array to store 3D data to obtain
+    //a contiguous block of memory
+    //The formular to obtain the value for the ith forcing, jth timestep, 
+    //and kth cell is
+    //i * (ntimesteps * ncells)  + j * ncells + k 
+    std::vector< float > _outvarArray;
 
     void setStatev();
 
@@ -190,7 +196,9 @@ void  runPointUEB(
          float& Eacl,                   //output,
          float* OutArr );      //array of 53 elements,  output     
 			       //
-void  updatOutVars( 
+void  updateOutVars( 
+         int const& totalNumOfSteps,    //input
+         int const& totalNumOfCells,    //input
          int const& cell,               //input
 	 int const& istep,              //input
 	 int const& Year,               //input
