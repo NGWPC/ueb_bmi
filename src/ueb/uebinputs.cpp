@@ -102,7 +102,7 @@ void readSiteVars(const char* inpFile, sitevar *svArr)
 	for(int i=0; i<32;i++)
 	{
 		pinFile.getline(headerLine,256,':');
-		sscanf(headerLine,"%s ",&svArr[i].svName);   
+		sscanf(headerLine,"%s ",svArr[i].svName);   
 		pinFile.getline(headerLine,256,'\n'); 
 		pinFile.getline(headerLine,256,'\n');
 		sscanf(headerLine,"%d ",&svArr[i].svType);  		
@@ -119,7 +119,7 @@ void readSiteVars(const char* inpFile, sitevar *svArr)
 				break;
 			case 1:
 				pinFile.getline(headerLine,256,'\n');
-		        sscanf(headerLine,"%s %s ",&svArr[i].svFile, &svArr[i].svVarName);
+		        sscanf(headerLine,"%s %s ",svArr[i].svFile, svArr[i].svVarName);
 				break;			
 			default:
 				cout<<"Wrong site variable type; has to be -1 (Use default values), 0 (single value) or 1 (2D netcdf)"<<endl;
@@ -135,7 +135,7 @@ void readSiteVars(const char* inpFile, sitevar *svArr)
 	return;	
 }
 
-
+#if 0
 //function to read site variables (and initial contitions??)
 //#_15 ics should come separate?
 void readSiteVars(const char* inpFile, float svSValue[], char* svFile[], char* svVarName[], int svType[] )
@@ -149,7 +149,7 @@ void readSiteVars(const char* inpFile, float svSValue[], char* svFile[], char* s
 		fgets(headerLine,256,pinFile); 
 		if(headerLine[0] != ' ')
 		{
-			sscanf(headerLine,"%[^':'] %s",&svVarName[i]);
+			sscanf(headerLine,"%[^':'] %s",&(svVarName[i]));
 			fgets(headerLine,256,pinFile); 
 			sscanf(headerLine,"%d ",&svType[i]);
 			//fscanf(pinFile,"%d\n",&svArr[i].svType);
@@ -164,7 +164,7 @@ void readSiteVars(const char* inpFile, float svSValue[], char* svFile[], char* s
 				break;
 			case 1:
 				fgets(headerLine,256,pinFile);
-				sscanf(headerLine,"%s %s",&svFile[i],&svVarName[i]);
+				sscanf(headerLine,"%s %s",svFile[i],svVarName[i]);
 				break;			
 			default:
 				cout<<"Wrong site variable type; has to be -1 (Use default values), 0 (single value) or 1 (2D netcdf)"<<endl;
@@ -195,7 +195,7 @@ void readSiteVars(const char* inpFile, sitevar svArr[], int indx)
 		fgets(headerLine,256,pinFile); 
 		if (headerLine[0] != ' ')                                  //while(fgets(headerLine,256,pinFile) != NULL) //
 		{
-			sscanf(headerLine,"%[^':'] %s",&svArr[i].svName);
+			sscanf(headerLine,"%[^':'] %s",&(svArr[i].svName));
 			fgets(headerLine,256,pinFile); 
 			sscanf(headerLine,"%d ",&svArr[i].svType);
 			headerLine[0] = 0;
@@ -228,6 +228,8 @@ void readSiteVars(const char* inpFile, sitevar svArr[], int indx)
 	
 }
 
+#endif //if 0
+
 //function  to read forcing/weather variables
 void readInputForcVars(const char* inputconFile, inpforcvar *frArr)
 {
@@ -238,7 +240,7 @@ void readInputForcVars(const char* inputconFile, inpforcvar *frArr)
 	for(int i=0; i<13;i++)
 	{
 		pinFile.getline(headerLine,256,':');
-		sscanf(headerLine,"%s ",&frArr[i].infName);   
+		sscanf(headerLine,"%s ",frArr[i].infName);   
 		pinFile.getline(headerLine,256,'\n'); 
 		pinFile.getline(headerLine,256,'\n');
 		sscanf(headerLine,"%d ",&frArr[i].infType);  		
@@ -252,11 +254,11 @@ void readInputForcVars(const char* inputconFile, inpforcvar *frArr)
 				break;
 			case 0:
 				pinFile.getline(headerLine,256,'\n');
-		        sscanf(headerLine,"%s ",&frArr[i].infFile);
+		        sscanf(headerLine,"%s ",frArr[i].infFile);
 				break;
 			case 1:
 				pinFile.getline(headerLine,256,'\n');
-				sscanf(headerLine,"%s %s %s %d",&frArr[i].infFile,&frArr[i].infvarName,&frArr[i].inftimeVar,&frArr[i].numNcfiles);
+				sscanf(headerLine,"%s %s %s %d",frArr[i].infFile,frArr[i].infvarName,frArr[i].inftimeVar,&frArr[i].numNcfiles);
 				break;	
 			case 2:
 				pinFile.getline(headerLine,256,'\n');
@@ -292,7 +294,7 @@ void readOutputControl(const char* outputconFile, pointOutput* &pOut, ncOutput* 
 	for (int i = 0; i < nout; i++)
 	{
 		poutFile.getline(headerLine, 256);
-		sscanf(headerLine, "%d %d %s ", &pOut[i].ycoord, &pOut[i].xcoord, &pOut[i].outfName);
+		sscanf(headerLine, "%d %d %s ", &pOut[i].ycoord, &pOut[i].xcoord, pOut[i].outfName);
 	}
 	//distributed netcdf output
 	poutFile.getline(headerLine, 256);
@@ -302,7 +304,7 @@ void readOutputControl(const char* outputconFile, pointOutput* &pOut, ncOutput* 
 	for (int i = 0; i < nout; i++)
 	{
 		poutFile.getline(headerLine, 256);
-		sscanf(headerLine, "%s %s %s ", &ncOut[i].symbol, &ncOut[i].outfName, &ncOut[i].units);
+		sscanf(headerLine, "%s %s %s ", ncOut[i].symbol, ncOut[i].outfName, ncOut[i].units);
 	}	
 	//poutFile.close();
 	//aggregated outputs
@@ -315,7 +317,7 @@ void readOutputControl(const char* outputconFile, pointOutput* &pOut, ncOutput* 
 	for (int i = 0; i < nout; i++)
 	{
 		poutFile.getline(headerLine, 256);
-		sscanf(headerLine, "%s %s %s ", &aggOut[i].symbol, &aggOut[i].units, &aggOut[i].aggop);
+		sscanf(headerLine, "%s %s %s ", aggOut[i].symbol, aggOut[i].units, aggOut[i].aggop);
 	}	
 	poutFile.close();
 	//paoutFile.close();

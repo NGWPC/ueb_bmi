@@ -11,39 +11,153 @@ ueb::ForcingVariables::ForcingVariables()
 {
    for (int i = 0; i < NFORCS; i++)
    {
-       _tsvarArray[i] = (float*)NULL;
+       _tsvarArray[i] = (float**)NULL;
        _ntimesteps[i] = 0;
    }  
 }
 
-ueb::ForcingVariables::ForcingVariables( std::string const& forcfile )
+ueb::ForcingVariables::ForcingVariables( std::string const& forcfile, 
+             std::vector< std::pair< int, int > > const& activeCells,
+	     std::string const& wsycorName,
+	     std::string const& wsxcorName )
 {
    _forcingfile = forcfile;
+   _activeCells = activeCells;
 
    readInputForcVars(forcfile.c_str(), _strinpforcArray.data());
+
 
    //read time series forcing data only once outside of the main loop
    for (int it = 0; it < NFORCS; it++)
    {
 	if (_strinpforcArray[it].infType == 0)
 	{
+            float* temp = (float*)NULL;
+
 	    readTextData( _strinpforcArray[it].infFile, 
-			    _tsvarArray[it], 
+			    temp, 
 			    _ntimesteps[it]);   //ntimesteps[0] 12.18.14
-											}
+						//
+            //allocat a block of contigous memmory	
+            _tsvarArray[ it ] = new float*[ _ntimesteps[it] ];
+            _tsvarArray[ it ][ 0 ] = new float[ _ntimesteps[it] * 
+		                                  activeCells.size() ];    
+
+//            std::copy_n( temp,  _ntimesteps[ it], _tsvarArray[ it ][ 0 ] );
+
+	    for ( int j = 0; j < _ntimesteps[it]; ++j )
+	    {
+              _tsvarArray[ it ][ j ] =  _tsvarArray[ it ][ 0 ] + 
+		                             j * activeCells.size();
+
+	      for ( int i = 0; i < activeCells.size(); ++i )
+	      {
+                //spatially constant, all cells use the same 
+		//timeseries.
+                 _tsvarArray[ it ][ j ][ i ] = temp[ j ];
+	      }
+
+	    }
+
+	    delete[] temp;
+        }
 	else if (_strinpforcArray[it].infType == 2 || 
                          	_strinpforcArray[it].infType == -1)
         {
-			//######TBC 6.20.13 better way to handle this is needed
-			_tsvarArray[it] = new float[2];
-			_ntimesteps[it] = 2;
-			//just copy the default value if a single value is the option				
-			_tsvarArray[it][0] = _strinpforcArray[it].infType;
-			_tsvarArray[it][1] = _strinpforcArray[it].infdefValue;
+	    //######TBC 6.20.13 better way to handle this is needed
+            //allocat a block of contigous memmory	
+	    _ntimesteps[ it ] = 2;
+            _tsvarArray[ it ] = new float*[ _ntimesteps[ it ] ];
+            _tsvarArray[ it ][ 0 ] = new float[ 
+		    _ntimesteps[ it ] * activeCells.size() ];    
+
+	    //just copy the default value if a single value is the option
+	   // _tsvarArray[it][ 0 ][0] = _strinpforcArray[it].infType;
+	    //_tsvarArray[it][ 0 ][1] = _strinpforcArray[it].infdefValue;
+
+	    _tsvarArray[it][ 1 ] =  _tsvarArray[ it ][ 0 ] + activeCells.size();
+
+	    for ( int i = 0; i < activeCells.size(); ++i )
+	    {
+                 //values are constant, let all grid cells use
+		 //the same value
+                 _tsvarArray[ it ][0][ i ] = _strinpforcArray[it].infType;
+                 _tsvarArray[ it ][1][ i ] = _strinpforcArray[it].infdefValue;
+	    }
 	}
 	else if (_strinpforcArray[it].infType == 1 )
 	{
-		//TODO
+  	    int ncTotaltimestep = 0;
+	    float* tcorvar = (float*)NULL;
+	    float* tsvarArrayTemp[ NFORCS ][ activeCells.size() ];
+
+	    int ntimesteps[ NFORCS ];
+	    for (int numNc = 0; numNc < _strinpforcArray[it].numNcfiles; numNc++)
+	      //if multiple netcdf for a single variable, 
+	      //they are read one by one and copied to single array
+	    {
+	       //read 3D netcdf (regridded array processed by uebInputs)
+	       char numtoStr[256];
+	       sprintf(numtoStr, "%d", numNc);
+	       char tsInputfile[256];
+	       strcpy(tsInputfile, _strinpforcArray[it].infFile);
+	       strcat(tsInputfile, numtoStr);
+	       strcat(tsInputfile, ".nc");
+	       //cout<<"%s\n",tsInputfile);
+	       for ( int i = 0; i < activeCells.size(); ++i )
+	       { 
+	           int retvalue = readNC_TS(tsInputfile, 
+			       _strinpforcArray[it].infvarName, 
+			       _strinpforcArray[it].inftimeVar,
+			       wsycorName.c_str(), wsxcorName.c_str(), 
+			       tsvarArrayTemp[numNc][ i ], 
+			       tcorvar, 
+			       activeCells[i].first, 
+			       activeCells[i].second, 
+			       ntimesteps[numNc]);
+	       }
+	       ncTotaltimestep += ntimesteps[numNc];
+	       /*for(int tps=0;tps<ncTotaltimestep;tps++)
+	       cout << "  " << tsvarArrayTemp[numNc][xstrt][tps];
+	       cout<<"  "<<ncTotaltimestep<<endl;*/
+            }
+	    if ( tcorvar != NULL )
+	    {
+		    delete[] tcorvar;
+	    }
+	    _ntimesteps[ it ] = ncTotaltimestep;
+
+            _tsvarArray[ it ] = new float*[ncTotaltimestep];
+            _tsvarArray[it][0] = new float[ncTotaltimestep*activeCells.size()];
+	    for ( int i = 0; i < ncTotaltimestep; ++i )
+	    {
+                 _tsvarArray[it][i] = _tsvarArray[it][0] + 
+			                i * activeCells.size();
+	    }
+
+            int tinitTime = 0;
+
+            for (int numNc = 0; numNc < _strinpforcArray[it].numNcfiles; numNc++)
+            {
+               for (int tts = 0; tts < ntimesteps[numNc]; tts++)
+	       {
+	          for ( int c = 0; c < activeCells.size(); ++c )
+	          {
+
+	  	     _tsvarArray[it][tts + tinitTime][c] = 
+			                  tsvarArrayTemp[numNc][ c ][tts];
+
+	          }
+	       }
+	       tinitTime += ntimesteps[numNc];
+	    }
+            for (int numNc = 0; numNc < _strinpforcArray[it].numNcfiles; numNc++)
+            {
+	       for ( int i = 0; i < activeCells.size(); ++i )
+	       {
+                    delete[] tsvarArrayTemp[numNc][ i ]; 
+	       }
+	    }
 	}
 	else
 	{
@@ -64,6 +178,7 @@ ueb::ForcingVariables::~ForcingVariables()
    {
       if( _tsvarArray[i] != NULL )
       {
+	      delete[] _tsvarArray[i][0];
 	      delete[] _tsvarArray[i];
       }
    }
@@ -73,6 +188,7 @@ void ueb::ForcingVariables::deepCopy( ForcingVariables const& fv)
 {
    _forcingfile = fv._forcingfile;
    _ntimesteps = fv._ntimesteps;
+   _activeCells = fv._activeCells;
 
     for (int i = 0; i < NFORCS; i++)
     {
@@ -90,26 +206,24 @@ void ueb::ForcingVariables::deepCopy( ForcingVariables const& fv)
 
         _strinpforcArray[i].numNcfiles = fv._strinpforcArray[i].numNcfiles;
 
-	if (_strinpforcArray[i].infType == 0)
-	{
-		_tsvarArray[i] = new float[ _ntimesteps[i] ];
+	if (_strinpforcArray[i].infType == 0 ||
+	    _strinpforcArray[i].infType == 2 || 
+            _strinpforcArray[i].infType == -1 ||
+	    _strinpforcArray[i].infType == 1 )
 
-		std::copy_n( fv._tsvarArray[i], _ntimesteps[i],
-                               _tsvarArray[i] );
-											}
-	else if (_strinpforcArray[i].infType == 2 || 
-                         	_strinpforcArray[i].infType == -1)
-        {
-			//######TBC 6.20.13 better way to handle this is needed
-			_tsvarArray[i] = new float[2];
-			_ntimesteps[i] = 2;
-			//just copy the default value if a single value is the option				
-			_tsvarArray[i][0] = fv._tsvarArray[i][0];
-			_tsvarArray[i][1] = fv._tsvarArray[i][1];
-	}
-	else if (_strinpforcArray[i].infType == 1 )
 	{
-		//TODO
+	   _tsvarArray[i] = new float*[ _ntimesteps[ i ] ];
+	   _tsvarArray[i][0] = new float[ _ntimesteps[i] * _activeCells.size() ];
+
+	   std::copy_n( fv._tsvarArray[i][0], 
+			      _ntimesteps[i] * _activeCells.size(),
+                           _tsvarArray[i][0] );
+
+	   for ( int j = 0; j < _ntimesteps[i]; ++j )
+	   {
+                _tsvarArray[i][ j ] = _tsvarArray[ i ][ 0 ] + 
+			                        j * _activeCells.size();
+	   } 
 	}
 	else
 	{
@@ -133,7 +247,7 @@ std::array<inpforcvar, NFORCS> ueb::ForcingVariables::getStrinpforcArray() const
     return _strinpforcArray;
 }
 
-std::array<float*, NFORCS> ueb::ForcingVariables::getTsvarArray() const
+std::array<float**, NFORCS> ueb::ForcingVariables::getTsvarArray() const
 {
     return _tsvarArray;
 }
@@ -212,34 +326,34 @@ ueb::ForcingVariables& ueb::ForcingVariables::operator=(
 
    const std::map< std::string, std::string > 
          ueb::ForcingVariables::forcing_var_units{ 
-		 {"Prec", "m/hr"} , //Precipitation, m/hr
-		 {"Ta",  "C"}, //Air temperature (oC)
-		 {"Tmin", "C"},//Min Air Temperature, oC
+		 {"Prec", "m hr-1"} , //Precipitation, m/hr
+		 {"Ta",  "degC"}, //Air temperature (oC)
+		 {"Tmin", "degC"},//Min Air Temperature, oC
 				      //
-		 {"Tmax","C"}, //Max Air Temperature, oC
+		 {"Tmax","degC"}, //Max Air Temperature, oC
 				      //
-		 {"v", "m/h"}, //Wind Speed at a point z m above the 
+		 {"v", "m hr-1"}, //Wind Speed at a point z m above the 
 				   //snow surface or top of canopy if present,
 				   //m/h
-                 {"RH", "DLESS"}, //Relative humidity at a point z m above 
+                 {"RH", "1"}, //Relative humidity at a point z m above 
 				    //the snow surface or top of canopy if 
 				    //present		   
 		 {"Vp", "Pa"}, //Air vapor pressure, Pa
 		 {"AP", "Pa"}, //Air pressure, Pa
-		 {"Qsi", "kJ/m^2/hr"}, //Incoming shortwave radiation measured 
+		 {"Qsi", "kJ m-2 hr-1"}, //Incoming shortwave radiation measured 
 				     //or that would be measured on a 
 				     //horizontal surface above the snow and 
 				     //canopy if present, kJ/m^2/hr
-		 {"Qli","kJ/m^2/hr"},  //Incoming longwave radiation that would 
+		 {"Qli","kJ m-2 hr-1"},  //Incoming longwave radiation that would 
 				     //be measured above the snow and canopy 
 				     //if present, kJ/m^2/hr		     
-		 {"Qnet", "kJ/M^2/hr"},  //Net radiation that would be measured 
+		 {"Qnet", "kJ m-2 hr-1"},  //Net radiation that would be measured 
 				      //on a horizontal surface above the snow 
 				      //and canopy if present.  This is only 
 				      //required if irad=3. kJ/m^2/hr
-		 {"Qg", "kJ/M^2/hr"},  //Ground heat flux, kJ/m^2/hr
+		 {"Qg", "kJ m-2 hr-1"},  //Ground heat flux, kJ/m^2/hr
 				       //
-		 {"Snowalb", "DLESS"} //Snow Albedo - The fraction of 
+		 {"Snowalb", "1"} //Snow Albedo - The fraction of 
 					 //incident solar radiation reflected 
 					 //by the snow surface (in the range 0 
 					 //to 1).  This is only required as an 
@@ -257,6 +371,15 @@ std::ostream& operator<< ( std::ostream &os, ueb::ForcingVariables p)
 
    os << "_ntimesteps[0]: " << p._ntimesteps[0] << std::endl;
 
+   os << "_activeCells: " << std::endl;
+  
+   std::for_each( p._activeCells.begin(), p._activeCells.end(),
+		   []( auto const& c ) -> void {
+		     std::cout << "(" << c.second <<"," << c.first
+		               << ")" << std::endl;
+			       });
+
+
    for (int i = 0; i < NFORCS; i++)
    {
       os << "infName: " << p._strinpforcArray[i].infName << std::endl;
@@ -269,17 +392,11 @@ std::ostream& operator<< ( std::ostream &os, ueb::ForcingVariables p)
 
       os << "_tsvarArray[" << i << "] : ";
 
-      if ( p._strinpforcArray[i].infType == 0 || 
-           p._strinpforcArray[i].infType == 2 || 
-                         	 p._strinpforcArray[i].infType == -1)
+      for ( int c = 0; c < p._ntimesteps[i]; ++c )
       {
-          std::copy_n( p._tsvarArray[i], p._ntimesteps[i],
+          std::copy_n( p._tsvarArray[i][c], p._activeCells.size(),
 		   std::ostream_iterator<float>(std::cout, ", " ));
           os << std::endl;
-      }
-      else if ( p._strinpforcArray[i].infType == 0  )
-      {
-          os << "to be implemented!" << std::endl;
       }
    }
    return ( os );
