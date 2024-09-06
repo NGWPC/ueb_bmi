@@ -12,6 +12,10 @@
 void ueb::BmiUEB::
 Initialize (std::string config_file)
 {
+#ifdef DEBUG_UEB_BMI
+  std::cerr << "Entering ueb::BmiUEB::Initialize!" << std::endl;
+  std::cerr << "config file = " << config_file << std::endl;
+#endif //#ifdef DEBUG_UEB_BMI
   if (config_file.compare("") != 0 )
   {
      _confile = ControlFile( config_file );
@@ -107,12 +111,18 @@ Initialize (std::string config_file)
 
      }
   }
+#ifdef DEBUG_UEB_BMI
+  std::cerr << "Leaving ueb::BmiUEB::Initialize! " << std::endl;
+#endif //#ifdef DEBUG_UEB_BMI
 }
 
 
 void ueb::BmiUEB::
 Update()
 {
+#ifdef DEBUG_UEB_BMI
+  std::cerr << "Entering ueb:BmiUEB::Update!" << std::endl;
+#endif //#ifdef DEBUG_UEB_BMI
      int Year, Month, Day, MYear, MMonth, MDay; 	  
      double dHour;
      float fHour, fModeldt;
@@ -272,12 +282,19 @@ Update()
 
      UPDATEtime(Year, Month, Day, dHour,modelDT);  			
      _currentModelDateTime = julian(Year, Month, Day, dHour); 
+#ifdef DEBUG_UEB_BMI
+  std::cerr << "Leaving ueb:BmiUEB::Update!" << std::endl;
+#endif //#ifdef DEBUG_UEB_BMI
 }
 
 
 void ueb::BmiUEB::
 UpdateUntil(double t) //t unit is in seconds since the start time
 {
+#ifdef DEBUG_UEB_BMI
+  std::cerr << "Entering ueb:BmiUEB::UpdateUntil!" << std::endl;
+#endif//#ifdef DEBUG_UEB_BMI
+
                             //convert days to seconds
   double time= ( _currentModelDateTime - this->getUEBStartTime() ) * 24 * 3600;
 
@@ -297,6 +314,9 @@ UpdateUntil(double t) //t unit is in seconds since the start time
 //    this->_model.advance_in_time();
 //    this->_model.dt = dt;
   }
+#ifdef DEBUG_UEB_BMI
+  std::cerr << "Leaving ueb:BmiUEB::UpdateUntil!" << std::endl;
+#endif//#ifdef DEBUG_UEB_BMI
 }
 
 
@@ -843,24 +863,44 @@ GetComponentName()
 int ueb::BmiUEB::
 GetInputItemCount()
 {
-  return Parameters::npar + 
-	  NSITEVARS +
-          NFORCS;
+	
+//  return Parameters::npar + 
+//	  NSITEVARS +
+//          NFORCS;
+   return 2;
 }
 
 
 int ueb::BmiUEB::
 GetOutputItemCount()
 {
-  return NOUTPUTS;
+
+  //
+  //NGen doesn't allow the same variable to
+  //be both input and output variables. Here,
+  //we remove 'Ta' from the output variables, 
+  //so that ngen will not throw exceptions.
+  //
+  return NOUTPUTS - 1;
 }
 
 
 std::vector<std::string> ueb::BmiUEB::
 GetInputVarNames()
 {
+#ifdef DEBUG_UEB_BMI
+  std::cerr << "Enterning ueb::BmiUEB::GetInputVarNames!" << std::endl;
+#endif//#ifdef DEBUG_UEB_BMI
   std::vector<std::string> names;
 
+  names.push_back( "Prec" );
+  names.push_back( "Ta" );
+
+  //ngen check all input variables to see if there is
+  //a provider. So here we can't list all input variables.
+  //We will need to a way to get all input values into
+  //ngen to do so.
+ /*
   for (int i=0; i<Parameters::npar; i++)
     names.push_back(Parameters::parameter_names[i]);
 
@@ -869,7 +909,10 @@ GetInputVarNames()
 
   for (int i=0; i<NSITEVARS; i++)
     names.push_back(SiteVariables::site_var_names[i]);
-
+*/
+#ifdef DEBUG_UEB_BMI
+  std::cerr << "Leaving ueb::BmiUEB::GetInputVarNames!" << std::endl;
+#endif//#ifdef DEBUG_UEB_BMI
   return names;
 }
 
@@ -879,8 +922,19 @@ GetOutputVarNames()
 {
   std::vector<std::string> names;
 
+  //
+  //NGen doesn't allow the same variable to
+  //be both input and output variables. Here,
+  //we remove 'Ta' from the output variables, 
+  //so that ngen will not throw exceptions.
+  //
   for (int i=0; i<NOUTPUTS; i++)
-    names.push_back(OutControl::output_var_names[i]);
+  {
+    if ( OutControl::output_var_names[i] != "Ta" )
+    {
+      names.push_back(OutControl::output_var_names[i]);
+    }
+  }
 
   return names;
 }
@@ -1792,8 +1846,10 @@ void  ueb::BmiUEB::outputPointFiles()
 		{
 			if (uebCellY == pOut[ipout].ycoord && uebCellX == pOut[ipout].xcoord)
 			{
+#ifdef DEBUG_UEB_BMI
 				std::cerr << "output point " << uebCellY
 					<< ", " << uebCellX << std::endl;
+#endif //#ifdef DEBUG_UEB_BMI
 				FILE* pointoutFile = fopen((const char*)pOut[ipout].outfName, "w");
 				for (int istep = 0; istep < numTimeSteps; istep++)
 				{
@@ -1853,6 +1909,9 @@ extern "C"
     */
 	ueb::BmiUEB *bmi_model_create()
 	{
+#ifdef DEBUG_UEB_BMI
+		std::cerr << "bmi_model_create!" << std::endl;
+#endif //#ifdef DEBUG_UEB_BMI
 		return new ueb::BmiUEB();
 	}
 
