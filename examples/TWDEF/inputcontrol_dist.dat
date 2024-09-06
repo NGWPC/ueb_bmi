@@ -6,11 +6,11 @@ Ta: Air temperature  (always required)
 0  
 Ta.dat
 Tmin: Min Air temperature 
+2
 0
-Tamin.dat		
 Tmax: Max Air temperature  
+2
 0
-Tamax.dat		
 v: Wind speed   (always required)
 0
 V.dat

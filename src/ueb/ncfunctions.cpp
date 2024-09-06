@@ -296,7 +296,7 @@ int create3DNC_uebAggregatedOutputs(const char* FileName, aggOutput *aggOut, int
 #ifdef MPI_PARALLEL
 	if ((retncval = nc_open_par(ws_FileName, NC_MPIIO, inpComm, inpInfo, &ncid)))
 #else
-	if ((retncval = nc_open(ws_FileName, NC_WRITE, &ncid)))
+	if ((retncval = nc_open(ws_FileName, NC_NOWRITE, &ncid)))
 #endif //MPI_PARALLEL
 		ERR(retncval);	
 	if ((retncval = nc_inq_varid(ncid, ws_VarName, &pvarid)))
