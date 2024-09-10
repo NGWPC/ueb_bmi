@@ -25,63 +25,59 @@ class NotImplemented : public std::logic_error {
 
 class BmiUEB : public bmi::Bmi {
   public:
-    BmiUEB() {
-#ifdef DEBUG_UEB_BMI
-	  std::cerr << "BmiUEB()!" << std::endl;
-#endif //if DEBUG_UEB_BMI
-    };
-    virtual ~BmiUEB(){};
-    void Initialize(std::string config_file) override;
-    void Update() override;
-    void UpdateUntil(double time) override;
-    void Finalize() override;
+    BmiUEB() {};
+    ~BmiUEB(){};
+    void Initialize(std::string config_file);
+    void Update();
+    void UpdateUntil(double time);
+    void Finalize();
 
-    std::string GetComponentName() override;
-    int GetInputItemCount() override;
-    int GetOutputItemCount() override;
-    std::vector<std::string> GetInputVarNames() override;
-    std::vector<std::string> GetOutputVarNames() override;
+    std::string GetComponentName();
+    int GetInputItemCount();
+    int GetOutputItemCount();
+    std::vector<std::string> GetInputVarNames();
+    std::vector<std::string> GetOutputVarNames();
 
-    int GetVarGrid(std::string name) override;
-    std::string GetVarType(std::string name) override;
-    int GetVarItemsize(std::string name) override;
-    std::string GetVarUnits(std::string name) override;
-    int GetVarNbytes(std::string name) override;
-    std::string GetVarLocation(std::string name) override;
+    int GetVarGrid(std::string name);
+    std::string GetVarType(std::string name);
+    int GetVarItemsize(std::string name);
+    std::string GetVarUnits(std::string name);
+    int GetVarNbytes(std::string name);
+    std::string GetVarLocation(std::string name);
 
-    double GetCurrentTime() override;
-    double GetStartTime() override;
-    double GetEndTime() override;
-    std::string GetTimeUnits() override;
-    double GetTimeStep() override;
+    double GetCurrentTime();
+    double GetStartTime();
+    double GetEndTime();
+    std::string GetTimeUnits();
+    double GetTimeStep();
 
-    void GetValue(std::string name, void *dest) override;
-    void *GetValuePtr(std::string name) override;
-    void GetValueAtIndices(std::string name, void *dest, int *inds, int count) override;
+    void GetValue(std::string name, void *dest);
+    void *GetValuePtr(std::string name);
+    void GetValueAtIndices(std::string name, void *dest, int *inds, int count);
 
-    void SetValue(std::string name, void *src) override;
-    void SetValueAtIndices(std::string name, int *inds, int len, void *src) override;
+    void SetValue(std::string name, void *src);
+    void SetValueAtIndices(std::string name, int *inds, int len, void *src);
 
-    int GetGridRank(const int grid) override;
-    int GetGridSize(const int grid) override;
-    std::string GetGridType(const int grid) override;
+    int GetGridRank(const int grid);
+    int GetGridSize(const int grid);
+    std::string GetGridType(const int grid);
 
-    void GetGridShape(const int grid, int *shape) override;
-    void GetGridSpacing(const int grid, double *spacing) override;
-    void GetGridOrigin(const int grid, double *origin) override;
+    void GetGridShape(const int grid, int *shape);
+    void GetGridSpacing(const int grid, double *spacing);
+    void GetGridOrigin(const int grid, double *origin);
 
-    void GetGridX(const int grid, double *x) override;
-    void GetGridY(const int grid, double *y) override;
-    void GetGridZ(const int grid, double *z) override;
+    void GetGridX(const int grid, double *x);
+    void GetGridY(const int grid, double *y);
+    void GetGridZ(const int grid, double *z);
 
-    int GetGridNodeCount(const int grid) override;
-    int GetGridEdgeCount(const int grid) override;
-    int GetGridFaceCount(const int grid) override;
+    int GetGridNodeCount(const int grid);
+    int GetGridEdgeCount(const int grid);
+    int GetGridFaceCount(const int grid);
 
-    void GetGridEdgeNodes(const int grid, int *edge_nodes) override;
-    void GetGridFaceEdges(const int grid, int *face_edges) override;
-    void GetGridFaceNodes(const int grid, int *face_nodes) override;
-    void GetGridNodesPerFace(const int grid, int *nodes_per_face) override;
+    void GetGridEdgeNodes(const int grid, int *edge_nodes);
+    void GetGridFaceEdges(const int grid, int *face_edges);
+    void GetGridFaceNodes(const int grid, int *face_nodes);
+    void GetGridNodesPerFace(const int grid, int *nodes_per_face);
 
 
     void GetStartTimeInGregorianCalendar( int& y, int& m, 
@@ -121,13 +117,7 @@ class BmiUEB : public bmi::Bmi {
     std::vector< std::vector< float > > _tsprevday;
     std::vector< std::vector< float > > _taveprevday;
 
-    //
-    //use 1d array to store 3D data to obtain
-    //a contiguous block of memory
-    //The formular to obtain the value for the ith forcing, jth timestep, 
-    //and kth cell is
-    //i * (ntimesteps * ncells)  + j * ncells + k 
-    std::vector< float > _outvarArray;
+    std::vector< std::vector< std::vector< float > > > _outvarArray;
 
     void setStatev();
 
@@ -201,9 +191,7 @@ void  runPointUEB(
          float& Eacl,                   //output,
          float* OutArr );      //array of 53 elements,  output     
 			       //
-void  updateOutVars( 
-         int const& totalNumOfSteps,    //input
-         int const& totalNumOfCells,    //input
+void  updatOutVars( 
          int const& cell,               //input
 	 int const& istep,              //input
 	 int const& Year,               //input
@@ -244,10 +232,9 @@ extern "C"
     * @return A pointer to the newly allocated instance.
     */
 	ueb::BmiUEB *bmi_model_create();
-/*	{
-		return new ueb::BmiUEB();
-	}
-*/
+//	{
+//		return new ueb::BmiUEB();
+//	}
 
     /**
      * @brief Destroy/free an instance created with @see bmi_model_create
@@ -255,10 +242,10 @@ extern "C"
      * @param ptr 
      */
 	void bmi_model_destroy(ueb::BmiUEB *ptr);
-/*	{
-		delete ptr;
-	}
-*/
+//	{
+//		delete ptr;
+//	}
 }
+
 
 #endif

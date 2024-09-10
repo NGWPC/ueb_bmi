@@ -30,6 +30,8 @@ ueb::ForcingVariables::ForcingVariables( std::string const& forcfile,
    //read time series forcing data only once outside of the main loop
    for (int it = 0; it < NFORCS; it++)
    {
+	_tsvarArray[ it ] =  new float*[ activeCells.size() ];
+
 	if (_strinpforcArray[it].infType == 0)
 	{
             float* temp = (float*)NULL;
@@ -39,23 +41,16 @@ ueb::ForcingVariables::ForcingVariables( std::string const& forcfile,
 			    _ntimesteps[it]);   //ntimesteps[0] 12.18.14
 						//
             //allocat a block of contigous memmory	
-            _tsvarArray[ it ] = new float*[ _ntimesteps[it] ];
-            _tsvarArray[ it ][ 0 ] = new float[ _ntimesteps[it] * 
-		                                  activeCells.size() ];    
+            _tsvarArray[ it ] = new float*[ activeCells.size() ];    
+            _tsvarArray[ it ][ 0 ] = new float[ _ntimesteps[it] ];    
 
-//            std::copy_n( temp,  _ntimesteps[ it], _tsvarArray[ it ][ 0 ] );
+            std::copy_n( temp,  _ntimesteps[ it], _tsvarArray[ it ][ 0 ] );
 
-	    for ( int j = 0; j < _ntimesteps[it]; ++j )
+	    for ( int i = 0; i < activeCells.size(); ++i )
 	    {
-              _tsvarArray[ it ][ j ] =  _tsvarArray[ it ][ 0 ] + 
-		                             j * activeCells.size();
-
-	      for ( int i = 0; i < activeCells.size(); ++i )
-	      {
                 //spatially constant, all cells use the same 
 		//timeseries.
-                 _tsvarArray[ it ][ j ][ i ] = temp[ j ];
-	      }
+                 _tsvarArray[ it ][ i ] = _tsvarArray[ it ][ 0 ]; 
 
 	    }
 
@@ -68,22 +63,18 @@ ueb::ForcingVariables::ForcingVariables( std::string const& forcfile,
 	    //######TBC 6.20.13 better way to handle this is needed
             //allocat a block of contigous memmory	
 	    _ntimesteps[ it ] = 2;
-            _tsvarArray[ it ] = new float*[ _ntimesteps[ it ] ];
-            _tsvarArray[ it ][ 0 ] = new float[ 
-		    _ntimesteps[ it ] * activeCells.size() ];    
+            _tsvarArray[ it ] = new float*[ activeCells.size() ];    
+            _tsvarArray[ it ][ 0 ] = new float[ _ntimesteps[ it ] ];    
 
 	    //just copy the default value if a single value is the option
-	   // _tsvarArray[it][ 0 ][0] = _strinpforcArray[it].infType;
-	    //_tsvarArray[it][ 0 ][1] = _strinpforcArray[it].infdefValue;
-
-	    _tsvarArray[it][ 1 ] =  _tsvarArray[ it ][ 0 ] + activeCells.size();
+	    _tsvarArray[it][ 0 ][0] = _strinpforcArray[it].infType;
+	    _tsvarArray[it][ 0 ][1] = _strinpforcArray[it].infdefValue;
 
 	    for ( int i = 0; i < activeCells.size(); ++i )
 	    {
                  //values are constant, let all grid cells use
 		 //the same value
-                 _tsvarArray[ it ][0][ i ] = _strinpforcArray[it].infType;
-                 _tsvarArray[ it ][1][ i ] = _strinpforcArray[it].infdefValue;
+                 _tsvarArray[ it ][ i ] = _tsvarArray[ it ][ 0 ];
 	    }
 	}
 	else if (_strinpforcArray[it].infType == 1 )
@@ -128,12 +119,11 @@ ueb::ForcingVariables::ForcingVariables( std::string const& forcfile,
 	    }
 	    _ntimesteps[ it ] = ncTotaltimestep;
 
-            _tsvarArray[ it ] = new float*[ncTotaltimestep];
+            _tsvarArray[ it ] = new float*[ activeCells.size() ];    
             _tsvarArray[it][0] = new float[ncTotaltimestep*activeCells.size()];
-	    for ( int i = 0; i < ncTotaltimestep; ++i )
+	    for ( int i = 0; i < activeCells.size(); ++i )
 	    {
-                 _tsvarArray[it][i] = _tsvarArray[it][0] + 
-			                i * activeCells.size();
+                 _tsvarArray[it][i] = _tsvarArray[it][0] + i * ncTotaltimestep;
 	    }
 
             int tinitTime = 0;
@@ -145,7 +135,7 @@ ueb::ForcingVariables::ForcingVariables( std::string const& forcfile,
 	          for ( int c = 0; c < activeCells.size(); ++c )
 	          {
 
-	  	     _tsvarArray[it][tts + tinitTime][c] = 
+	  	     _tsvarArray[it][c][tts + tinitTime] = 
 			                  tsvarArrayTemp[numNc][ c ][tts];
 
 	          }
@@ -207,10 +197,13 @@ void ueb::ForcingVariables::deepCopy( ForcingVariables const& fv)
 
         _strinpforcArray[i].numNcfiles = fv._strinpforcArray[i].numNcfiles;
 
-	if (_strinpforcArray[i].infType == 0 ||
-	    _strinpforcArray[i].infType == 2 || 
-            _strinpforcArray[i].infType == -1 ||
-	    _strinpforcArray[i].infType == 1 )
+	if (_strinpforcArray[i].infType == 0 )
+	{
+	   _tsvarArray[i] = new float*[  _activeCells.size() ];
+	   _tsvarArray[i][0] = new float[ _ntimesteps[i] ];
+
+	   std::copy_n( fv._tsvarArray[i][0], _ntimesteps[i] ,
+                           _tsvarArray[i][0] );
 
 	   for ( int cell = 0; cell < _activeCells.size(); ++cell )
 	   {
@@ -239,18 +232,19 @@ void ueb::ForcingVariables::deepCopy( ForcingVariables const& fv)
 	}
 	else if ( _strinpforcArray[i].infType == 1 )
 	{
-	   _tsvarArray[i] = new float*[ _ntimesteps[ i ] ];
+	   _tsvarArray[i] = new float*[  _activeCells.size() ];
 	   _tsvarArray[i][0] = new float[ _ntimesteps[i] * _activeCells.size() ];
 
 	   std::copy_n( fv._tsvarArray[i][0], 
-			      _ntimesteps[i] * _activeCells.size(),
+			   _ntimesteps[i] * _activeCells.size(),
                            _tsvarArray[i][0] );
 
-	   for ( int j = 0; j < _ntimesteps[i]; ++j )
+	   for ( int cell = 0; cell < _activeCells.size(); ++cell )
 	   {
-                _tsvarArray[i][ j ] = _tsvarArray[ i ][ 0 ] + 
-			                        j * _activeCells.size();
+                _tsvarArray[i][ cell ] = _tsvarArray[ i ][ 0 ] +
+			            cell * _ntimesteps[i];
 	   } 
+
 	}
 	else
 	{
@@ -645,9 +639,9 @@ std::ostream& operator<< ( std::ostream &os, ueb::ForcingVariables p)
 
       os << "_tsvarArray[" << i << "] : ";
 
-      for ( int c = 0; c < p._ntimesteps[i]; ++c )
+      for ( int c = 0; c < p._activeCells.size(); ++c )
       {
-          std::copy_n( p._tsvarArray[i][c], p._activeCells.size(),
+          std::copy_n( p._tsvarArray[i][c], p._ntimesteps[i],
 		   std::ostream_iterator<float>(std::cout, ", " ));
           os << std::endl;
       }
