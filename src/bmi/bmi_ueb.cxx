@@ -12,10 +12,6 @@
 void ueb::BmiUEB::
 Initialize (std::string config_file)
 {
-#ifdef DEBUG_UEB_BMI
-  std::cerr << "Entering ueb::BmiUEB::Initialize!" << std::endl;
-  std::cerr << "config file = " << config_file << std::endl;
-#endif //#ifdef DEBUG_UEB_BMI
   if (config_file.compare("") != 0 )
   {
      _confile = ControlFile( config_file );
@@ -61,13 +57,7 @@ Initialize (std::string config_file)
 
      auto Param = _parms.getParams();
 
-     //
-     //use 1d array to store 3D data to obtain
-     //a contiguous block of memory
-     //The formular to obtain the value for the ith forcing, jth timestep, 
-     //and kth cell is
-     //i * (ntimesteps * ncells)  + j * ncells + k 
-     _outvarArray.resize( ueb::BmiUEB::numOut * numTotalTs *numOfActiveCells );
+     _outvarArray.resize( numOfActiveCells );
 
      for ( int cell = 0; cell < numOfActiveCells; ++cell)
      {
@@ -109,20 +99,19 @@ Initialize (std::string config_file)
    	    _taveprevday[cell][nstepinaDay-1] = tave;      
          }
 
+	 _outvarArray[ cell ].resize( numOut );
+         for ( auto& v : _outvarArray[ cell ] )
+	 {
+		 v.resize( numTotalTs ); 
+	 }
      }
   }
-#ifdef DEBUG_UEB_BMI
-  std::cerr << "Leaving ueb::BmiUEB::Initialize! " << std::endl;
-#endif //#ifdef DEBUG_UEB_BMI
 }
 
 
 void ueb::BmiUEB::
 Update()
 {
-#ifdef DEBUG_UEB_BMI
-  std::cerr << "Entering ueb:BmiUEB::Update!" << std::endl;
-#endif //#ifdef DEBUG_UEB_BMI
      int Year, Month, Day, MYear, MMonth, MDay; 	  
      double dHour;
      float fHour, fModeldt;
@@ -153,7 +142,6 @@ Update()
      int ireadalb=_parms.getParArray()[ 1 ];
 
      int numTotalTs = _confile.getModelTotalTimeSteps();
-     int numTotalCells = activeCells.size();
      
      int nstepinaDay = _confile.getStepsInADay();
 
@@ -253,9 +241,7 @@ Update()
        	                     Ema,                //output
                              Eacl,               //output,
                              OutArr );           //array of 53 elements, output     
-          this->updateOutVars( 
-                             numTotalTs,         //input
-                             numTotalCells,      //input
+          this->updatOutVars( 
                              cell,               //input
                              istep,              //input
 	                     Year,               //input
@@ -276,27 +262,18 @@ Update()
 		for (int i=0;i<53;i++)
 		      OutArr[i] = 0.0;
 		for (int i= 0;i <70;i++)
-		      _outvarArray[ i * numTotalTs * activeCells.size() +
-			            istep * activeCells.size() + 
-				    cell ] = 0.0;              
+		      _outvarArray[cell][i][istep] = 0.0;              
 	   }     
      }
 
      UPDATEtime(Year, Month, Day, dHour,modelDT);  			
      _currentModelDateTime = julian(Year, Month, Day, dHour); 
-#ifdef DEBUG_UEB_BMI
-  std::cerr << "Leaving ueb:BmiUEB::Update!" << std::endl;
-#endif //#ifdef DEBUG_UEB_BMI
 }
 
 
 void ueb::BmiUEB::
 UpdateUntil(double t) //t unit is in seconds since the start time
 {
-#ifdef DEBUG_UEB_BMI
-  std::cerr << "Entering ueb:BmiUEB::UpdateUntil!" << std::endl;
-#endif//#ifdef DEBUG_UEB_BMI
-
                             //convert days to seconds
   double time= ( _currentModelDateTime - this->getUEBStartTime() ) * 24 * 3600;
 
@@ -316,9 +293,6 @@ UpdateUntil(double t) //t unit is in seconds since the start time
 //    this->_model.advance_in_time();
 //    this->_model.dt = dt;
   }
-#ifdef DEBUG_UEB_BMI
-  std::cerr << "Leaving ueb:BmiUEB::UpdateUntil!" << std::endl;
-#endif//#ifdef DEBUG_UEB_BMI
 }
 
 
@@ -759,12 +733,9 @@ GetValuePtr (std::string name)
   {
        auto strinpArray = _forcings.getStrinpforcArray();
 
-       int istep = std::round( ( _currentModelDateTime - 
-		this->getUEBStartTime() ) * 24 *3600 / this->GetTimeStep() );
        int i = std::distance( ueb::ForcingVariables::forcing_var_names.begin(),
 		            it_forc );
        //SCTV and SVTV inputs
-       //returns a flattened array for the gridded values
        if ( strinpArray[ i ].infType == 0 || strinpArray[ i ].infType == 1 )
        {
            int istep = std::round( ( _currentModelDateTime - 
@@ -819,8 +790,7 @@ GetValuePtr (std::string name)
        //need to check for gridded model
        //this only return the first grid cell's value 
        //How about other grid cells?
-       return (void*)&_outvarArray[ i * numTotalTs * numTotalCells +
-	                            istep * numTotalCells ];
+       return (void*)&_outvarArray[0][i][istep];
   }
   return (void*)NULL;
 }
@@ -921,9 +891,6 @@ GetOutputItemCount()
 std::vector<std::string> ueb::BmiUEB::
 GetInputVarNames()
 {
-#ifdef DEBUG_UEB_BMI
-  std::cerr << "Enterning ueb::BmiUEB::GetInputVarNames!" << std::endl;
-#endif//#ifdef DEBUG_UEB_BMI
   std::vector<std::string> names;
 
   names.push_back( "Prec" );
@@ -949,9 +916,6 @@ GetInputVarNames()
   for (int i=0; i<NSITEVARS; i++)
     names.push_back(SiteVariables::site_var_names[i]);
 */
-#ifdef DEBUG_UEB_BMI
-  std::cerr << "Leaving ueb::BmiUEB::GetInputVarNames!" << std::endl;
-#endif//#ifdef DEBUG_UEB_BMI
   return names;
 }
 
@@ -961,12 +925,6 @@ GetOutputVarNames()
 {
   std::vector<std::string> names;
 
-  //
-  //NGen doesn't allow the same variable to
-  //be both input and output variables. Here,
-  //we remove 'Ta' from the output variables, 
-  //so that ngen will not throw exceptions.
-  //
   for (int i=0; i<NOUTPUTS; i++)
   {
     if ( OutControl::output_var_names[i] != "Ta" &&
@@ -1211,14 +1169,14 @@ void  ueb::BmiUEB::prepareInputForPoint( double const& UTCHour,   //input
    	     switch(irad)
 	     {
 	       case 0:
-		Qsiobs = tsvarArray[8][1][cell];
-                Qli = tsvarArray[9][1][cell];
-	        Qnetob = tsvarArray[10][1][cell];						
+		Qsiobs = tsvarArray[8][cell][1];
+                Qli = tsvarArray[9][cell][1];
+	        Qnetob = tsvarArray[10][cell][1];						
 	        break;
 	       case 1:
-	        Qsiobs = tsvarArray[8][istep][cell]; // *3.6; // Daymet srad in W/m^2
-		Qli = tsvarArray[9][1][cell];
-		Qnetob = tsvarArray[10][1][cell];
+	        Qsiobs = tsvarArray[8][cell][istep]; // *3.6; // Daymet srad in W/m^2
+		Qli = tsvarArray[9][cell][1];
+		Qnetob = tsvarArray[10][cell][1];
 		break;
 	       case 2:
 		//Qsiobs = tsvarArray[8][cell][istep];                         // *3.6; // Daymet srad in W/m^2
@@ -1229,9 +1187,9 @@ void  ueb::BmiUEB::prepareInputForPoint( double const& UTCHour,   //input
 		Qnetob = _forcings.getForcingForCellByNameAtStep( "Qnet", cell, istep);
 		break;
 	       case 3:
-		Qsiobs = tsvarArray[8][1][cell];
-		Qli = tsvarArray[9][1][cell];
-		Qnetob = tsvarArray[10][istep][cell];
+		Qsiobs = tsvarArray[8][cell][1];
+		Qli = tsvarArray[9][cell][1];
+		Qnetob = tsvarArray[10][cell][istep];
 		break;
 	       default:
 	        cout<<" The radiation flag is not the right number; must be between 0 and 3"<<endl;
@@ -1272,11 +1230,11 @@ void  ueb::BmiUEB::prepareInputForPoint( double const& UTCHour,   //input
             Vp =_forcings.getForcingForCellByNameAtStep( "Vp", cell, istep);
 	    //relative humidity computed or read from file
 	    //#12.18.14 may need revision
-	    if (tsvarArray[5][0][cell] == 2)
+	    if (tsvarArray[5][cell][0] == 2)
 	    {
-	        RH = tsvarArray[5][1][cell];
+	        RH = tsvarArray[5][cell][1];
 	    }
-	    else if (tsvarArray[5][0][cell] == -1) //RH computed internally 
+	    else if (tsvarArray[5][cell][0] == -1) //RH computed internally 
 	    {
 	        float eSat = 611 * exp(17.27*Ta / (Ta + 237.3)); //Pa
 	        RH = Vp / eSat;
@@ -1296,12 +1254,12 @@ void  ueb::BmiUEB::prepareInputForPoint( double const& UTCHour,   //input
 	  else		//inputs are given as AVERAGE daily values, precip unit is always m/hr, Tmax and Tmin are required
 	  {
 	    //average daily value of precip in units of m/hr 4.22.14
-	    P = tsvarArray[0][istep / nstepinaDay][cell];            // /24000 #12.19.14 Daymet prcp in mm/day           
-	    V = tsvarArray[4][istep/nstepinaDay][cell];
+	    P = tsvarArray[0][cell][istep / nstepinaDay];            // /24000 #12.19.14 Daymet prcp in mm/day           
+	    V = tsvarArray[4][cell][istep/nstepinaDay];
 				    
 	    //get min max temp
-	    Tmin = tsvarArray[2][istep/nstepinaDay][cell];				  
-	    Tmax = tsvarArray[3][istep/nstepinaDay][cell];
+	    Tmin = tsvarArray[2][cell][istep/nstepinaDay];				  
+	    Tmax = tsvarArray[3][cell][istep/nstepinaDay];
 	    //cout << "Tmin = " << Tmin << "Tmax = " << Tmax << " ";
 
 	    Trange = Tmax - Tmin;
@@ -1326,24 +1284,24 @@ void  ueb::BmiUEB::prepareInputForPoint( double const& UTCHour,   //input
 	    switch(irad)
 	    {
 	        case 0:
-		   Qsiobs = tsvarArray[8][1][cell];
-		   Qli = tsvarArray[9][1][cell];
-		   Qnetob = tsvarArray[10][1][cell];						
+		   Qsiobs = tsvarArray[8][cell][1];
+		   Qli = tsvarArray[9][cell][1];
+		   Qnetob = tsvarArray[10][cell][1];						
 		   break;
 		case 1:
-		   Qsiobs = tsvarArray[8][istep / nstepinaDay][cell];                 // *3.6; // Daymet srad in W/m^2
-		   Qli = tsvarArray[9][1][cell];
-		   Qnetob = tsvarArray[10][1][cell];
+		   Qsiobs = tsvarArray[8][cell][istep / nstepinaDay];                 // *3.6; // Daymet srad in W/m^2
+		   Qli = tsvarArray[9][cell][1];
+		   Qnetob = tsvarArray[10][cell][1];
 		   break;
 		case 2:
-		   Qsiobs = tsvarArray[8][istep / nstepinaDay][cell];                 // *3.6; // Daymet srad in W/m^2
-		   Qli = tsvarArray[9][istep/nstepinaDay][cell];
-		   Qnetob = tsvarArray[10][1][cell];
+		   Qsiobs = tsvarArray[8][cell][istep / nstepinaDay];                 // *3.6; // Daymet srad in W/m^2
+		   Qli = tsvarArray[9][cell][istep/nstepinaDay];
+		   Qnetob = tsvarArray[10][cell][1];
 		   break;
 		case 3:
-		   Qsiobs = tsvarArray[8][1][cell];
-		   Qli = tsvarArray[9][1][cell];
-		   Qnetob = tsvarArray[10][istep/nstepinaDay][cell];
+		   Qsiobs = tsvarArray[8][cell][1];
+		   Qli = tsvarArray[9][cell][1];
+		   Qnetob = tsvarArray[10][cell][istep/nstepinaDay];
 		   break;
 		default:
 		   cout<<" The radiation flag is not the right number; must be between 0 and 3"<<endl;
@@ -1352,42 +1310,42 @@ void  ueb::BmiUEB::prepareInputForPoint( double const& UTCHour,   //input
 	      }
 	      //atm. pressure from netcdf 10.30.13
 	      //this may need revision 		//####TBC_6.20.13
-	      if(tsvarArray[7][0][cell] == 2)
-	        sitev[1] = tsvarArray[7][1][cell];
+	      if(tsvarArray[7][cell][0] == 2)
+	        sitev[1] = tsvarArray[7][cell][1];
 	      else
-	        sitev[1] = tsvarArray[7][istep/nstepinaDay][cell];
+	        sitev[1] = tsvarArray[7][cell][istep/nstepinaDay];
 
 	      //this may need revision 		//####TBC_6.20.13
-	      if(tsvarArray[11][0][cell] == 2)
-		Qg = tsvarArray[11][1][cell];
+	      if(tsvarArray[11][cell][0] == 2)
+		Qg = tsvarArray[11][cell][1];
 	      else
-	        Qg = tsvarArray[11][istep/nstepinaDay][cell];
+	        Qg = tsvarArray[11][cell][istep/nstepinaDay];
 	      //!     Flag to control albedo (ireadalb)  
 	      //!     0 is no measurements - albedo estimated internally
 	      //!     1 is albedo read from file (provided: measured or obtained from another model)
 	      //these need revision //####TBC_6.20.13
-	      if(tsvarArray[12][0][cell] == 2)
-		Snowalb = tsvarArray[12][1][cell];
+	      if(tsvarArray[12][cell][0] == 2)
+		Snowalb = tsvarArray[12][cell][1];
   	      else
-	        Snowalb = tsvarArray[12][istep/nstepinaDay][cell];
+	        Snowalb = tsvarArray[12][cell][istep/nstepinaDay];
 	      //12.18.14 Vapor pressure of air
-	      if (tsvarArray[6][0][cell] == 2)
-		Vp = tsvarArray[6][1][cell];
+	      if (tsvarArray[6][cell][0] == 2)
+		Vp = tsvarArray[6][cell][1];
 	      else
-		Vp = tsvarArray[6][istep/nstepinaDay][cell];
+		Vp = tsvarArray[6][cell][istep/nstepinaDay];
 	      //relative humidity computed or read from file
 	      //#12.18.14 may need revision
-	      if (tsvarArray[5][0][cell] == 2)
+	      if (tsvarArray[5][cell][0] == 2)
 	      {
-		RH = tsvarArray[5][1][cell];
+		RH = tsvarArray[5][cell][1];
 	      }
-	      else if (tsvarArray[5][0][cell] == -1)          //RH computed internally 
+	      else if (tsvarArray[5][cell][0] == -1)          //RH computed internally 
 	      {
 	         float eSat = 611 * exp(17.27*Ta / (Ta + 237.3)); //Pa
 		 RH = Vp / eSat;
 	      }
 	      else
-	          RH = tsvarArray[5][istep/nstepinaDay][cell];
+	          RH = tsvarArray[5][cell][istep/nstepinaDay];
 	      if (RH > 1)
 	      {
 	          //cout<<"relative humidity >= 1 at time step "<<istep<<endl;
@@ -1562,9 +1520,7 @@ void  ueb::BmiUEB::runPointUEB(
 		  
 }
 
-void  ueb::BmiUEB::updateOutVars( 
-         int const& totalNumOfSteps,    //input
-         int const& totalNumOfCells,    //input
+void  ueb::BmiUEB::updatOutVars( 
          int const& cell,               //input
 	 int const& istep,              //input
 	 int const& Year,               //input
@@ -1583,52 +1539,33 @@ void  ueb::BmiUEB::updateOutVars(
       float errMB= _cumP[cell]-_cumMr[cell]-_cumEs[cell]-_cumEc[cell] 
 		    -dStorage+_cumGm[cell] - _cumEg[cell]; 
 				
-      _outvarArray[ 0 * totalNumOfSteps * totalNumOfCells +
-                    istep * totalNumOfCells + cell ]= Year;
-      _outvarArray[ 1 * totalNumOfSteps * totalNumOfCells +
-                    istep * totalNumOfCells + cell ]= Month;
-      _outvarArray[ 2 * totalNumOfSteps * totalNumOfCells +
-                    istep * totalNumOfCells + cell ]= Day;
-      _outvarArray[ 3 * totalNumOfSteps * totalNumOfCells +
-                    istep * totalNumOfCells + cell ]= dHour;
-      _outvarArray[ 4 * totalNumOfSteps * totalNumOfCells +
-                    istep * totalNumOfCells + cell ]= atff;
-      _outvarArray[ 5 * totalNumOfSteps * totalNumOfCells +
-                    istep * totalNumOfCells + cell ]= HRI;
-      _outvarArray[ 6 * totalNumOfSteps * totalNumOfCells +
-                    istep * totalNumOfCells + cell ]= Eacl;
-      _outvarArray[ 7 * totalNumOfSteps * totalNumOfCells +
-                    istep * totalNumOfCells + cell ]= Ema;
-      _outvarArray[ 8 * totalNumOfSteps * totalNumOfCells +
-                    istep * totalNumOfCells + cell ]= Inpt[7]; //cosZen
-      _outvarArray[ 9 * totalNumOfSteps * totalNumOfCells +
-                    istep * totalNumOfCells + cell ]= Inpt[0];
-      _outvarArray[ 10 * totalNumOfSteps * totalNumOfCells +
-                    istep * totalNumOfCells + cell ]= Inpt[1];
-      _outvarArray[ 11 * totalNumOfSteps * totalNumOfCells +
-                    istep * totalNumOfCells + cell ]= Inpt[2];
-      _outvarArray[ 12 * totalNumOfSteps * totalNumOfCells +
-                    istep * totalNumOfCells + cell ]= Inpt[3];
-      _outvarArray[ 13 * totalNumOfSteps * totalNumOfCells +
-                    istep * totalNumOfCells + cell ]= Inpt[4];
-      _outvarArray[ 14 * totalNumOfSteps * totalNumOfCells +
-                    istep * totalNumOfCells + cell ]= Inpt[5];
-      _outvarArray[ 15 * totalNumOfSteps * totalNumOfCells +
-                    istep * totalNumOfCells + cell ]= Inpt[6];
+      _outvarArray[cell][0][istep]= Year;
+      _outvarArray[cell][1][istep]=Month;
+      _outvarArray[cell][2][istep]=Day;
+      _outvarArray[cell][3][istep]=dHour;
+      _outvarArray[cell][4][istep]=atff;
+      _outvarArray[cell][5][istep]=HRI;
+      _outvarArray[cell][6][istep]=Eacl;
+      _outvarArray[cell][7][istep]=Ema;
+      _outvarArray[cell][8][istep]=Inpt[7]; //cosZen
+      _outvarArray[cell][9][istep]=Inpt[0];
+      _outvarArray[cell][10][istep]=Inpt[1];
+      _outvarArray[cell][11][istep]=Inpt[2];
+      _outvarArray[cell][12][istep]=Inpt[3];
+      _outvarArray[cell][13][istep]=Inpt[4];
+      _outvarArray[cell][14][istep]=Inpt[5];
+      _outvarArray[cell][15][istep]=Inpt[6];	
 							
       for (int i=16;i<69;i++)
       {		   
- 	  _outvarArray[i * totalNumOfSteps * totalNumOfCells +
-		        istep * totalNumOfCells + cell ] = OutArr[i-16];					
+ 	  _outvarArray[cell][i][istep] = OutArr[i-16];					
       }
-      _outvarArray[ 69 * totalNumOfSteps * totalNumOfCells +
-		        istep * totalNumOfCells + cell ] = errMB;
+      _outvarArray[cell][69][istep] = errMB;
 
       if (snowdgt_outflag == 1)             //if debug mode 
       {
 	       for(int uit = 0; uit<70; uit++)
-               cout<<_outvarArray[ uit * totalNumOfSteps * totalNumOfCells +
-		        istep * totalNumOfCells + cell ] << " ";
+	       cout<<_outvarArray[cell][uit][istep]<<" ";
 	       cout<<endl;
                cout<<endl;
       }
@@ -1637,8 +1574,6 @@ void  ueb::BmiUEB::updateOutVars(
 void  ueb::BmiUEB::outputAggregratedFiles()
 {
      auto activeCells = _ws.getActiveCells( _sitevars.getSiteVars().data() );
-     int numTimeSteps = _confile.getModelTotalTimeSteps();
-     int numTotalCells = activeCells.size();
 
      //aggregated output arrays 
      int nZones = _ws.getNZones();
@@ -1738,9 +1673,7 @@ void  ueb::BmiUEB::outputAggregratedFiles()
 		 }
 		 for (int it = 0; it < outtSteps; it++)
 			aggoutvarArray[zoneid][iagout][it] += 
-			   _outvarArray[ 
-			      aggoutvarindx * numTimeSteps * numTotalCells  +
-			         outtStride*it * numTotalCells + c ];
+				_outvarArray[c][aggoutvarindx][outtStride*it];
 	   }
      }
 
@@ -1826,8 +1759,6 @@ void  ueb::BmiUEB::outputNcFiles()
      }
 
      auto activeCells = _ws.getActiveCells( _sitevars.getSiteVars().data() );
-     int numTimeSteps = _confile.getModelTotalTimeSteps();
-     int numTotalCells = activeCells.size();
 
      //output array written to netcdf files
      float*** ncoutArray = new float**[nncout];
@@ -1854,9 +1785,8 @@ void  ueb::BmiUEB::outputNcFiles()
          for ( int c = 0; c < activeCells.size(); ++c )
          {
  	    for (int it = 0; it < outtSteps; ++it)
-	       ncoutArray[icout][c][it] = _outvarArray[ 
-		       outvarindx * numTimeSteps * numTotalCells +
-                        outtStride*it * numTotalCells + c ];
+	       ncoutArray[icout][c][it] = 
+		     _outvarArray[c][outvarindx][outtStride*it];
               	    //t_out[it]3.20.15  //use timeStiride to sample outputs if it is dense (e.g hourly data for a year may be too big to save in one nc file)
          }
       }
@@ -1902,8 +1832,7 @@ void  ueb::BmiUEB::outputNcFiles()
 void  ueb::BmiUEB::outputPointFiles()
 {
      auto activeCells = _ws.getActiveCells( _sitevars.getSiteVars().data() );
-     int numTimeSteps = _confile.getModelTotalTimeSteps();
-     int numTotalCells = activeCells.size();
+     int numTimeStep = _confile.getModelTotalTimeSteps();
 
      auto pOut = _outcontrol.getPOut();
      int npout = _outcontrol.getNumPointOut();
@@ -1918,28 +1847,14 @@ void  ueb::BmiUEB::outputPointFiles()
 		{
 			if (uebCellY == pOut[ipout].ycoord && uebCellX == pOut[ipout].xcoord)
 			{
-#ifdef DEBUG_UEB_BMI
 				std::cerr << "output point " << uebCellY
 					<< ", " << uebCellX << std::endl;
-#endif //#ifdef DEBUG_UEB_BMI
 				FILE* pointoutFile = fopen((const char*)pOut[ipout].outfName, "w");
-				for (int istep = 0; istep < numTimeSteps; istep++)
+				for (int istep = 0; istep < numTimeStep; istep++)
 				{
-					fprintf(pointoutFile, "\n %d %d %d %8.3f ", 
-			(int)_outvarArray[ istep * numTotalCells + irank ], 
-			(int)_outvarArray[1 * numTotalCells * numTimeSteps +
-			                  istep * numTotalCells + irank], 
-			(int)_outvarArray[2 * numTotalCells * numTimeSteps +
-			                  istep * numTotalCells + irank], 
-			_outvarArray[3 * numTotalCells * numTimeSteps +
-			                  istep * numTotalCells + irank] );
+					fprintf(pointoutFile, "\n %d %d %d %8.3f ", (int)_outvarArray[irank][0][istep], (int)_outvarArray[irank][1][istep], (int)_outvarArray[irank][2][istep], _outvarArray[irank][3][istep]);
 					for (int vnum = 4; vnum < 70; vnum++)
-						fprintf(pointoutFile, " %16.6f ",
-					       	_outvarArray[ vnum * 
-						              numTotalCells *
-					                 	numTimeSteps + 
-							istep * numTotalCells + 
-							irank]);
+						fprintf(pointoutFile, " %16.6f ", _outvarArray[irank][vnum][istep]);
 				}
 				fclose(pointoutFile);
 			}
@@ -1981,9 +1896,6 @@ extern "C"
     */
 	ueb::BmiUEB *bmi_model_create()
 	{
-#ifdef DEBUG_UEB_BMI
-		std::cerr << "bmi_model_create!" << std::endl;
-#endif //#ifdef DEBUG_UEB_BMI
 		return new ueb::BmiUEB();
 	}
 
