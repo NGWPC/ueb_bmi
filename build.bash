@@ -19,6 +19,8 @@ cmake -B cmake_build -DCMAKE_BUILD_TYPE=Debug \
         -DNETCDF_C_INCLUDE_DIR=/usr/include  \
 	-S ./
 
+make -C ./cmake_build
+
 #make install
-make -C cmake_build
+#make
 

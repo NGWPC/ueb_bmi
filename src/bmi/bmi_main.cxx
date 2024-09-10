@@ -37,11 +37,12 @@ int main(int argc, char *argv[])
 
   model->GetValue( std::string( "ts" ), ts );
   std::cout << "ts = " << *(float*)ts << std::endl;
-
-//  float newts = 2.f;
-//  model->SetValue( std::string( "ts" ), &newts );
-//  model->GetValue( std::string( "ts" ), ts );
-//  std::cout << "New ts = " << *(float*)ts << std::endl;
+/*
+  float newts = 2.f;
+  model->SetValue( std::string( "ts" ), &newts );
+  model->GetValue( std::string( "ts" ), ts );
+  std::cout << "New ts = " << *(float*)ts << std::endl;
+*/
 
   //get the start time
   model->GetStartTimeInGregorianCalendar( year, month, day, hour );
