@@ -144,6 +144,7 @@ class BmiUEB : public bmi::Bmi {
 				int const& irad,         //input
 				int const& cell,         //input
               std::array<float**, NFORCS> const& tsvarArray,       //input
+              std::array<inpforcvar, NFORCS> forcingtype,         //input 
 				int& MYear,              //output
 				int& MMonth,             //output
 				int& MDay,               //output
@@ -230,6 +231,7 @@ void  updateOutVars(
     std::array< float, nsv > getSitevForCell( int const& cell);
 
     std::array<float, NSITEVARS> getSiteState( int const& cell );
+
 };
 
 };

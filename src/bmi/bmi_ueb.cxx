@@ -147,6 +147,7 @@ Update()
 		             * 24 * 3600 / this->GetTimeStep() );
      
      auto tsvarArray = _forcings.getTsvarArray();
+     auto forcingtype = _forcings.getStrinpforcArray();
 
      int irad = _parms.getIrad();
      int ireadalb=_parms.getParArray()[ 1 ];
@@ -196,6 +197,7 @@ Update()
 			    	    irad,             //input
                                     cell,             //input
                                     tsvarArray,       //input
+                                    forcingtype,       //input
 				    MYear,            //output
 				    MMonth,           //output
 				    MDay,             //output
@@ -400,6 +402,14 @@ GetVarType(std::string name)
        return "float";
   }
 
+  auto it_aorc_forc = std::find( ueb::ForcingVariables::forcing_aorc_var_names.begin(),
+                       ueb::ForcingVariables::forcing_aorc_var_names.end(),
+		       name );
+  if ( it_aorc_forc != ueb::ForcingVariables::forcing_aorc_var_names.end() )
+  {
+       return "float";
+  }
+
   auto it_out = std::find( ueb::OutControl::output_var_names.begin(),
                        ueb::OutControl::output_var_names.end(),
 		       name );
@@ -436,6 +446,14 @@ GetVarItemsize(std::string name)
                        ueb::ForcingVariables::forcing_var_names.end(),
 		       name );
   if ( it_forc != ueb::ForcingVariables::forcing_var_names.end() )
+  {
+       return sizeof(float);
+  }
+
+  auto it_aorc_forc = std::find( ueb::ForcingVariables::forcing_aorc_var_names.begin(),
+                       ueb::ForcingVariables::forcing_aorc_var_names.end(),
+		       name );
+  if ( it_aorc_forc != ueb::ForcingVariables::forcing_aorc_var_names.end() )
   {
        return sizeof(float);
   }
@@ -749,21 +767,44 @@ GetValuePtr (std::string name)
        //returns a flattened array for the gridded values
        if ( strinpArray[ i ].infType == 0 || strinpArray[ i ].infType == 1 )
        {
-           return (void*) _forcings.getTsvarArray()[ i ][istep];
+           int istep = std::round( ( _currentModelDateTime - 
+		this->getUEBStartTime() ) * 24 *3600 / this->GetTimeStep() ) -1 ;
+
+	   //Only set the value for the first cell
+	   //NGen wouldn't pass gradded values, only one value at a time
+	   //will be passed.
+           return (void*) &_forcings.getTsvarArray()[i][0][ istep ];
        }
-       //SCTV inputs, 0 is type (infType), 1 is value( infdefValue )
-       //
-       else if (strinpArray[i].infType == 2 || strinpArray[i].infType == -1)
+       //SCTC inputs, 0 is type (infType), 1 is value( infdefValue )
+       //infType == 3 - input from NGen AORC forcings
+       else if (strinpArray[i].infType == 2 || strinpArray[i].infType == -1
+                                           || strinpArray[i].infType == 3 )
        {
-           //return only 1 of the two values
-	   //to get the other value, calculate from the returned address
-	   //that is [i][1] = [i][0] + totalNumOfCells
-           return (void*) _forcings.getTsvarArray()[i][ 0 ];
+           return (void*) &_forcings.getTsvarArray()[i][0][ 1 ];
        }
        else
        {
            return (void*)NULL;
        }
+  }
+  auto it_aorc_forc = std::find( ueb::ForcingVariables::forcing_aorc_var_names.begin(),
+                       ueb::ForcingVariables::forcing_aorc_var_names.end(),
+		       name );
+  if ( it_aorc_forc != ueb::ForcingVariables::forcing_aorc_var_names.end() )
+  {
+       if ( name == "qair" )
+       {
+           return _forcings.getQairSpecificPtr();
+       } 
+       if ( name == "uebv2d" )
+       {
+           return _forcings.getV2dMPerSPtr();
+       } 
+       if ( name == "uebu2d" )
+       {
+           return _forcings.getU2dMPerSPtr();
+       } 
+       return (void*)NULL;
   }
 
   auto it_out = std::find( ueb::OutControl::output_var_names.begin(),
@@ -774,14 +815,7 @@ GetValuePtr (std::string name)
        int i = std::distance( ueb::OutControl::output_var_names.begin(),
 		            it_out );
        int istep = std::round( ( _currentModelDateTime - 
-		this->getUEBStartTime() ) * 24 *3600 / this->GetTimeStep() );
-
-       int numTotalTs = _confile.getModelTotalTimeSteps();
-
-       int numTotalCells = 
-	       _ws.getActiveCells( _sitevars.getSiteVars().data() ).size();
-       //
-       //return a flattened 1d array for the gridded values
+		this->getUEBStartTime() ) * 24 *3600 / this->GetTimeStep() ) - 1;
        //need to check for gridded model
        //this only return the first grid cell's value 
        //How about other grid cells?
@@ -867,21 +901,20 @@ GetInputItemCount()
 //  return Parameters::npar + 
 //	  NSITEVARS +
 //          NFORCS;
-   return 2;
+   return 8;
 }
 
 
 int ueb::BmiUEB::
 GetOutputItemCount()
 {
-
   //
   //NGen doesn't allow the same variable to
   //be both input and output variables. Here,
   //we remove 'Ta' from the output variables, 
   //so that ngen will not throw exceptions.
   //
-  return NOUTPUTS - 1;
+  return NOUTPUTS - 4;
 }
 
 
@@ -895,6 +928,12 @@ GetInputVarNames()
 
   names.push_back( "Prec" );
   names.push_back( "Ta" );
+  names.push_back( "Qsi" );
+  names.push_back( "Qli" );
+  names.push_back( "AP" );
+  names.push_back( "qair" );
+  names.push_back( "uebv2d" );
+  names.push_back( "uebu2d" );
 
   //ngen check all input variables to see if there is
   //a provider. So here we can't list all input variables.
@@ -930,7 +969,10 @@ GetOutputVarNames()
   //
   for (int i=0; i<NOUTPUTS; i++)
   {
-    if ( OutControl::output_var_names[i] != "Ta" )
+    if ( OutControl::output_var_names[i] != "Ta" &&
+         OutControl::output_var_names[i] != "RH" &&
+         OutControl::output_var_names[i] != "Qsi" && 
+         OutControl::output_var_names[i] != "Qli" )
     {
       names.push_back(OutControl::output_var_names[i]);
     }
@@ -1079,6 +1121,7 @@ void  ueb::BmiUEB::prepareInputForPoint( double const& UTCHour,   //input
 					 int const& irad,         //input
                                          int const& cell,         //input
               std::array<float**, NFORCS> const& tsvarArray,       //input
+              std::array<inpforcvar, NFORCS> forcingtype,         //input 
 					 int& MYear,              //output
 					 int& MMonth,             //output
 					 int& MDay,               //output
@@ -1110,12 +1153,13 @@ void  ueb::BmiUEB::prepareInputForPoint( double const& UTCHour,   //input
 	  //      Map from wrapper input variables to UEB variables     
 	  if ( _confile.getInpDailyorSubdaily() == 0)       //inputs are given for each time step (sub-daily time step)--in m/hr units 
 	  {	
-	     P = tsvarArray[0][istep][cell];  // / 24000;   #12.19.14 --Daymet prcp in mm/day				             
-	     Ta =tsvarArray[1][istep][cell];
-	     V = tsvarArray[4][istep][cell];
+	     P = _forcings.getForcingForCellByNameAtStep( "Prec", cell, istep); 
+	                                                    // / 24000;   #12.19.14 --Daymet prcp in mm/day				             
+	     Ta = _forcings.getForcingForCellByNameAtStep( "Ta", cell, istep);
+	     V = _forcings.getForcingForCellByNameAtStep( "v", cell, istep);
 	     //get min max temp
-	     Tmin = tsvarArray[2][istep][cell]; 
-	     Tmax = tsvarArray[3][istep][cell];
+	     Tmin = _forcings.getForcingForCellByNameAtStep( "Tmin", cell, istep); 
+	     Tmax = _forcings.getForcingForCellByNameAtStep( "Tmax", cell, istep);
 				   
 	     Trange = 8;
 	     //get max/min temperature during the day 
@@ -1124,18 +1168,22 @@ void  ueb::BmiUEB::prepareInputForPoint( double const& UTCHour,   //input
 	     //#_TBC 9.13.13 look for better method for the following
 	     if(dHour > 23)                  //to take care of hour 24, <=>0hr
 	     {
-	        nb = 0;
-	        nf = 24/modelDT;
+	       nb = 0;
+	       nf = 24/modelDT;
 	     }
+	     /*
 	     nbstart = findMax(istep-nb,0);  //to guard against going out of lower bound near start time when the start time is not 0 hr (istep < nb )
 	     nfend = findMin(istep + nf, numTotalTs - 1); //don't go out of upper limit		
-				
+             */
+	     nbstart = findMax(istep-nb,0);  //to guard against going out of lower bound near start time when the start time is not 0 hr (istep < nb )
+	     nfend = findMin(istep + nf, numTotalTs - 1); //don't go out of upper limit		
+	     float Ta_tmp;
 	     for (int it = nbstart; it < nfend; ++it)
 	     {
-	        if (tsvarArray[1][it][cell] <= Tmin)
-		   Tmin = tsvarArray[1][it][cell];
-		if (tsvarArray[1][it][cell] >= Tmax)
-		   Tmax = tsvarArray[1][it][cell];
+                   Ta_tmp = _forcings.getForcingForCellByNameAtStep( "Ta", cell, it);
+
+	           if (Ta_tmp <= Tmin) Tmin = Ta_tmp;
+	      	   if (Ta_tmp >= Tmax) Tmax = Ta_tmp;
 	     }
 	     Trange = Tmax - Tmin;
 	     //cout<<Trange<<endl;
@@ -1143,13 +1191,18 @@ void  ueb::BmiUEB::prepareInputForPoint( double const& UTCHour,   //input
 	     {
 	        if (snowdgtvariteflag==1)	
 		{
-		   cout<<"Input Diurnal temperature range is less than or equal to 0 which is unrealistic "<<endl;
-		   cout<< "Diurnal temperature range is assumed as 8 degree celsius on "<<endl;
-		   cout<< Year<<" "<< Month<<" "<<Day<<endl;
+		      cout<<"Input Diurnal temperature range is less than or equal to 0 which is unrealistic "<<endl;
+		      cout<< "Diurnal temperature range is assumed as 8 degree celsius on "<<endl;
+		      cout<< Year<<" "<< Month<<" "<<Day<<endl;
 		}
-		Trange = 8.0;
+		   Trange = 8.0;
 	     }
-
+             //In NextGen, the temperature series is not availabe for the future
+	     //here, we use the default value of 8
+	     if ( forcingtype[ 1 ].infType == 3 )
+	     {
+	        Trange = 8.f;
+	     }
 		//Flag to control radiation (irad)
   //!     0 is no measurements - radiation estimated from diurnal temperature range
   //!     1 is incoming shortwave radiation read from file (measured), incoming longwave estimated
@@ -1168,9 +1221,12 @@ void  ueb::BmiUEB::prepareInputForPoint( double const& UTCHour,   //input
 		Qnetob = tsvarArray[10][1][cell];
 		break;
 	       case 2:
-		Qsiobs = tsvarArray[8][istep][cell];                         // *3.6; // Daymet srad in W/m^2
-		Qli = tsvarArray[9][istep][cell];
-		Qnetob = tsvarArray[10][1][cell];
+		//Qsiobs = tsvarArray[8][cell][istep];                         // *3.6; // Daymet srad in W/m^2
+		//Qli = tsvarArray[9][cell][istep];
+		//Qnetob = tsvarArray[10][cell][1];
+		Qsiobs = _forcings.getForcingForCellByNameAtStep( "Qsi", cell, istep);
+		Qli = _forcings.getForcingForCellByNameAtStep( "Qli", cell, istep);
+		Qnetob = _forcings.getForcingForCellByNameAtStep( "Qnet", cell, istep);
 		break;
 	       case 3:
 		Qsiobs = tsvarArray[8][1][cell];
@@ -1184,30 +1240,36 @@ void  ueb::BmiUEB::prepareInputForPoint( double const& UTCHour,   //input
 	    }
 	    //atm. pressure from netcdf 10.30.13
 	    //this may need revision 		//####TBC_6.20.13
-	    if(tsvarArray[7][0][cell] == 2)
-	        sitev[1] = tsvarArray[7][1][cell];
-	    else
-	        sitev[1] = tsvarArray[7][istep][cell];
+//	    if(tsvarArray[7][cell][0] == 2)
+//	        sitev[1] = tsvarArray[7][cell][1];
+//	    else
+//	        sitev[1] = tsvarArray[7][cell][istep];
+//
+            sitev[ 1 ] =_forcings.getForcingForCellByNameAtStep( "AP", cell, istep);
 
 	   //this may need revision 		//####TBC_6.20.13
-	    if(tsvarArray[11][0][cell] == 2)
-	       Qg = tsvarArray[11][1][cell];
-	    else
-	       Qg = tsvarArray[11][istep][cell];
+//	    if(tsvarArray[11][cell][0] == 2)
+//	       Qg = tsvarArray[11][cell][1];
+//	    else
+//	       Qg = tsvarArray[11][cell][istep];
+            Qg =_forcings.getForcingForCellByNameAtStep( "Qg", cell, istep);
+
 	    //!     Flag to control albedo (ireadalb)  
 	    //!     0 is no measurements - albedo estimated internally
             //!     1 is albedo read from file (provided: measured or obtained from another model)
 	    //these need revision //####TBC_6.20.13
-	    if(tsvarArray[12][0][cell] == 2)
-	       Snowalb = tsvarArray[12][1][cell];
-	    else
-	       Snowalb = tsvarArray[12][istep][cell];	
+//	    if(tsvarArray[12][cell][0] == 2)
+//	       Snowalb = tsvarArray[12][cell][1];
+//	    else
+//	       Snowalb = tsvarArray[12][cell][istep];	
+            Snowalb =_forcings.getForcingForCellByNameAtStep( "Snowalb", cell, istep);
 
 	    //12.18.14 Vapor pressure of air
-	    if(tsvarArray[6][0][cell] == 2)
-          	Vp = tsvarArray[6][1][cell];
-	    else
-	        Vp = tsvarArray[6][istep][cell];
+//	    if(tsvarArray[6][cell][0] == 2)
+//          	Vp = tsvarArray[6][cell][1];
+//	    else
+//	        Vp = tsvarArray[6][cell][istep];
+            Vp =_forcings.getForcingForCellByNameAtStep( "Vp", cell, istep);
 	    //relative humidity computed or read from file
 	    //#12.18.14 may need revision
 	    if (tsvarArray[5][0][cell] == 2)
@@ -1220,7 +1282,11 @@ void  ueb::BmiUEB::prepareInputForPoint( double const& UTCHour,   //input
 	        RH = Vp / eSat;
 	    }
 	    else
-	        RH = tsvarArray[5][istep][cell];
+	    {
+	       // RH = tsvarArray[5][cell][istep];
+                RH =_forcings.getForcingForCellByNameAtStep( "RH", cell, istep);
+	    }
+
 	    if (RH > 1)
 	    {
 	        //cout<<"relative humidity >= 1 at time step "<<istep<<endl;
@@ -1580,6 +1646,12 @@ void  ueb::BmiUEB::outputAggregratedFiles()
      int outtSteps = _confile.getModelTotalTimeSteps() / outtStride;
 
      int naggout = _outcontrol.getNumAggOut();
+
+
+     if ( naggout < 1 )
+     {
+	return;
+     }
 
      float*** aggoutvarArray = new float**[nZones];
      int* ZonesArr = new int[nZones];

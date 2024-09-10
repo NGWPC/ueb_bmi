@@ -38,7 +38,7 @@ add_executable(run_bmiuebcxx bmi/bmi_main.cxx bmi/ControlFile.cxx
 
 target_include_directories(run_bmiuebcxx PRIVATE ueb )
 #target_link_libraries(run_bmiuebcxx libnetcdf.a -lhdf5_hl -lhdf5 -lz libcurl.a libpnetcdf.a -lmpi -lmpicxx)
-target_link_libraries(run_bmiuebcxx ${NETCDF_C_LIB_DIR}/libnetcdf.so -lhdf5_hl -lhdf5 -lz libcurl.a )
+target_link_libraries(run_bmiuebcxx -lnetcdf -lhdf5_hl -lhdf5 -lz libcurl.a )
 
 install(
   TARGETS run_bmiuebcxx

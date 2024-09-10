@@ -264,6 +264,14 @@ void readInputForcVars(const char* inputconFile, inpforcvar *frArr)
 				pinFile.getline(headerLine,256,'\n');
 		        sscanf(headerLine,"%f ",&frArr[i].infdefValue);
 				break;
+                        //
+			//Add an new input type for forcings probided by
+			//NextGen AORC forcing data
+			//
+			case 3:
+				pinFile.getline(headerLine,256,'\n');
+		        sscanf(headerLine,"%f ",&frArr[i].infdefValue);
+				break;
 			default:
 				cout<<"Wrong input/forcing type; has to be -1 (compute by the model), 2 (single value) , 0 (time-series text file) or 1 (3D netcdf)"<<endl;
 				cout<<"Using default value..."<<endl;

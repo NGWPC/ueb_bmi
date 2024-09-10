@@ -62,7 +62,8 @@ ueb::ForcingVariables::ForcingVariables( std::string const& forcfile,
 	    delete[] temp;
         }
 	else if (_strinpforcArray[it].infType == 2 || 
-                         	_strinpforcArray[it].infType == -1)
+                         	_strinpforcArray[it].infType == -1 ||
+                         	_strinpforcArray[it].infType == 3)
         {
 	    //######TBC 6.20.13 better way to handle this is needed
             //allocat a block of contigous memmory	
@@ -211,6 +212,32 @@ void ueb::ForcingVariables::deepCopy( ForcingVariables const& fv)
             _strinpforcArray[i].infType == -1 ||
 	    _strinpforcArray[i].infType == 1 )
 
+	   for ( int cell = 0; cell < _activeCells.size(); ++cell )
+	   {
+                _tsvarArray[i][ cell ] = _tsvarArray[ i ][ 0 ];
+	   } 
+        }
+	//
+	//infType = 3 - use the AORC data as input
+	else if (_strinpforcArray[i].infType == 2 || 
+                         	_strinpforcArray[i].infType == -1 || 
+                         	_strinpforcArray[i].infType == 3 )
+        {
+	    //######TBC 6.20.13 better way to handle this is needed
+	   _ntimesteps[i] = 2;
+	   _tsvarArray[i] = new float*[_activeCells.size() ];
+	   _tsvarArray[i][0] = new float[_ntimesteps[i] ];
+	   //just copy the default value if a single value is the option				
+	  // _tsvarArray[i][0] = fv._tsvarArray[i][0];
+	  // _tsvarArray[i][1] = fv._tsvarArray[i][1];
+	   std::copy_n( fv._tsvarArray[i][0], _ntimesteps[i],
+                           _tsvarArray[i][0] );
+	   for ( int cell = 0; cell < _activeCells.size(); ++cell )
+	   {
+                _tsvarArray[i][ cell ] = _tsvarArray[ i ][ 0 ];
+	   } 
+	}
+	else if ( _strinpforcArray[i].infType == 1 )
 	{
 	   _tsvarArray[i] = new float*[ _ntimesteps[ i ] ];
 	   _tsvarArray[i][0] = new float[ _ntimesteps[i] * _activeCells.size() ];
@@ -260,6 +287,210 @@ std::array<int,NFORCS> ueb::ForcingVariables::getNtimesteps() const
 void ueb::ForcingVariables::setNtimesteps( std::array<int, NFORCS> const& nt )
 {
     _ntimesteps = nt;
+}
+
+float ueb::ForcingVariables::getV2dMPerS() const
+{
+	return _v2d_m_per_s;
+}
+
+float* ueb::ForcingVariables::getV2dMPerSPtr()
+{
+	return &_v2d_m_per_s;
+}
+
+void ueb::ForcingVariables::setV2dMPerS( float const& v2d)
+{
+	_v2d_m_per_s = v2d;
+}
+
+float ueb::ForcingVariables::getU2dMPerS() const
+{
+	return _u2d_m_per_s;
+}
+
+float* ueb::ForcingVariables::getU2dMPerSPtr()
+{
+	return &_u2d_m_per_s;
+}
+void ueb::ForcingVariables::setU2dMPerS( float const& u2d)
+{
+	_u2d_m_per_s = u2d;
+}
+
+float ueb::ForcingVariables::getQairSpecific() const
+{
+	return _qair_specific;
+}
+
+float* ueb::ForcingVariables::getQairSpecificPtr()
+{
+	return &_qair_specific;
+}
+
+void  ueb::ForcingVariables::setQairSpecific( float const& qair )
+{
+       _qair_specific = qair;
+}
+/*
+float ueb::ForcingVariables::getShortWaveRadDownWPerM2()
+{
+	return _short_wave_rad_down_W_per_m_2;
+}	
+
+void ueb::ForcingVariables::setShortWaveRadDownWPerM2( float const& srad )
+{
+        _short_wave_rad_down_W_per_m_2 = srad;
+}
+
+float ueb::ForcingVariables::getLongWaveRadDownWPerM2()
+{
+	return _long_wave_rad_down_W_per_m_2;
+}
+
+void ueb::ForcingVariables::setLongWaveRadDownWPerM2( float const& lrad )
+{
+        _long_wave_rad_down_W_per_m_2 = lrad;
+}
+
+float ueb::ForcingVariables::getPressPa()
+{
+	return _press_Pa;
+}
+
+void ueb::ForcingVariables::setPressPa( float const& press )
+{
+	_press_Pa = press;
+}
+*/
+
+float ueb::ForcingVariables::getForcingForCellByNameAtStep( 
+		                     std::string const& vname, 
+		                     int const& cell, 
+				     int const& step ) const
+{
+	int index = -1;
+
+        for (int it = 0; it < NFORCS; it++)
+	{
+              if ( vname == forcing_var_names[ it ] )
+	      {
+		   index = it;    
+		   break;
+	      }
+	}
+
+	if ( index < 0 )
+	{
+            throw std::runtime_error("Unknown forcing varible name: " +
+			     vname + '!');
+	}
+
+	if ( vname == "Prec" )
+	{
+	   if (_strinpforcArray[index].infType == 0 ||
+	        _strinpforcArray[index].infType == 1 )
+	   {
+               return _tsvarArray[index][ cell ][ step ];
+	   }
+	   else if (  _strinpforcArray[index].infType == 3 )
+	   {
+		   //convert from mm/s to m/hr
+               return _tsvarArray[index][ cell ][ 1 ];
+               //return _tsvarArray[index][ cell ][ 1 ] *
+               //		       3600.f / 1000;
+	   }
+	   else
+	   {
+               return _tsvarArray[index][ cell ][ 1 ];
+	   }
+	}
+	else if ( vname == "Ta" )
+	{
+	   if (_strinpforcArray[index].infType == 0 ||
+	        _strinpforcArray[index].infType == 1 )
+	   {
+               return _tsvarArray[index][ cell ][ step ];
+	   }
+	   else if (  _strinpforcArray[index].infType == 3 )
+	   {
+               return _tsvarArray[index][ cell ][ 1 ];
+		   //convert K to C
+               //return _tsvarArray[index][ cell ][ 1 ] -
+		//       ZERO_C;
+	   }
+	   else
+	   {
+               return _tsvarArray[index][ cell ][ 1 ];
+	   }
+	}
+	else if ( vname == "v" )
+	{
+	   if (_strinpforcArray[index].infType == 0 ||
+	        _strinpforcArray[index].infType == 1 )
+	   {
+               return _tsvarArray[index][ cell ][ step ];
+	   }
+	   else if (  _strinpforcArray[index].infType == 3 )
+	   {
+		//convert from vector wind speed  to scaler 
+		//speed
+          
+               //_tsvarArray[index][ cell ][ 1 ] = sqrtf( 
+		//	      _u2d_m_per_s * _u2d_m_per_s +
+		 //             _v2d_m_per_s * _v2d_m_per_s );
+		              
+
+               //return _tsvarArray[index][ cell ][ 1 ];
+               return sqrtf( _u2d_m_per_s * _u2d_m_per_s +
+		             _v2d_m_per_s * _v2d_m_per_s ); 
+	   }
+	   else
+	   {
+               return _tsvarArray[index][ cell ][ 1 ];
+	   }
+	}
+	else if ( vname == "RH" )
+	{
+	   if (_strinpforcArray[index].infType == 0 ||
+	        _strinpforcArray[index].infType == 1 )
+	   {
+               return _tsvarArray[index][ cell ][ step ];
+	   }
+	   else if (  _strinpforcArray[index].infType == 3 )
+	   {
+               
+                return qair2rh( 
+		    this->getQairSpecific(),
+                    this->getForcingForCellByNameAtStep("Ta",
+			                                 cell,
+						         step),
+                    this->getForcingForCellByNameAtStep("AP",
+			                                 cell,
+						         step) );
+	   }
+	   else
+	   {
+               return _tsvarArray[index][ cell ][ 1 ];
+	   }
+	}
+	else
+	{
+	   if (_strinpforcArray[index].infType == 0 ||
+	        _strinpforcArray[index].infType == 1 )
+	   {
+               return _tsvarArray[index][ cell ][ step ];
+	   }
+	   else if (  _strinpforcArray[index].infType == 3 )
+	   {
+                return _tsvarArray[index][ cell ][ 1 ];
+	   }
+	   else
+	   {
+               return _tsvarArray[index][ cell ][ 1 ];
+	   }
+	}
+
 }
 
 ueb::ForcingVariables& ueb::ForcingVariables::operator=( 
@@ -332,7 +563,7 @@ ueb::ForcingVariables& ueb::ForcingVariables::operator=(
 				      //
 		 {"Tmax","degC"}, //Max Air Temperature, oC
 				      //
-		 {"v", "m hr-1"}, //Wind Speed at a point z m above the 
+		 {"v", "m s-1"}, //Wind Speed at a point z m above the 
 				   //snow surface or top of canopy if present,
 				   //m/h
                  {"RH", "1"}, //Relative humidity at a point z m above 
@@ -353,7 +584,7 @@ ueb::ForcingVariables& ueb::ForcingVariables::operator=(
 				      //required if irad=3. kJ/m^2/hr
 		 {"Qg", "kJ m-2 hr-1"},  //Ground heat flux, kJ/m^2/hr
 				       //
-		 {"Snowalb", "1"} //Snow Albedo - The fraction of 
+		 {"Snowalb", "1"}, //Snow Albedo - The fraction of 
 					 //incident solar radiation reflected 
 					 //by the snow surface (in the range 0 
 					 //to 1).  This is only required as an 
@@ -361,7 +592,29 @@ ueb::ForcingVariables& ueb::ForcingVariables::operator=(
 					 //values of ireadalb, the snow albedo 
 					 //is calculated internally based on 
 					 //snow surface age.   	      
+		 {"qair", "kg/kg"}, //Specific humidity (kg/kg)
+		 {"uebv2d", "m s-1"}, //U-Component of Wind (m/s)
+		 {"uebu2d", "m s-1"}, //V-Component of Wind (m/s)
 	};
+
+   const std::array< std::string, AORC_NFORCS > 
+         ueb::ForcingVariables::forcing_aorc_var_names{ 
+		    std::string( "qair" ), //Specific humidity (kg/kg)
+		    std::string("uebv2d"), //V-Component of Wind (m/s)
+		              "uebu2d", //U-Component of Wind (m/s)
+	};
+float ueb::ForcingVariables::qair2rh( const float& qair, 
+		           const float& temp_C, 
+			   const float& press_Pa )
+	 
+{
+      float press_mb = press_Pa * 0.01f;
+
+      float es = 6.112 * exp((17.67 * temp_C) / (temp_C + 243.5));
+      float e = qair * press_mb / (0.378 * qair + 0.622);
+      float rh = e / es;
+      return rh > 1.f ? 1.f : ( rh < 0.f ? 0.f: rh );
+}
 
 
 std::ostream& operator<< ( std::ostream &os, ueb::ForcingVariables p)
