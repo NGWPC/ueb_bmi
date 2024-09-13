@@ -1847,8 +1847,10 @@ void  ueb::BmiUEB::outputPointFiles()
 		{
 			if (uebCellY == pOut[ipout].ycoord && uebCellX == pOut[ipout].xcoord)
 			{
+#ifdef DEBUG_UEB
 				std::cerr << "output point " << uebCellY
 					<< ", " << uebCellX << std::endl;
+#endif //ifdef DEBUG_UEB
 				FILE* pointoutFile = fopen((const char*)pOut[ipout].outfName, "w");
 				for (int istep = 0; istep < numTimeStep; istep++)
 				{
