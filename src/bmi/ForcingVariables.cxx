@@ -30,7 +30,7 @@ ueb::ForcingVariables::ForcingVariables( std::string const& forcfile,
    //read time series forcing data only once outside of the main loop
    for (int it = 0; it < NFORCS; it++)
    {
-	_tsvarArray[ it ] =  new float*[ activeCells.size() ];
+	//_tsvarArray[ it ] =  new float*[ activeCells.size() ];
 
 	if (_strinpforcArray[it].infType == 0)
 	{
@@ -180,6 +180,9 @@ void ueb::ForcingVariables::deepCopy( ForcingVariables const& fv)
    _forcingfile = fv._forcingfile;
    _ntimesteps = fv._ntimesteps;
    _activeCells = fv._activeCells;
+   _v2d_m_per_s = fv._v2d_m_per_s;
+   _u2d_m_per_s = fv._u2d_m_per_s;
+   _qair_specific = fv._qair_specific;
 
     for (int i = 0; i < NFORCS; i++)
     {
