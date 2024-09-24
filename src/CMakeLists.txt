@@ -14,7 +14,7 @@ set(bmi_ueb_lib_SRCS "bmi/ControlFile.cxx" "bmi/Watershed.cxx"
                     "ueb/matrixnvector.cpp" "ueb/uebdecls.cpp"
 	            "ueb/ncfunctions.cpp" "ueb/uebinputs.cpp"
 		    "ueb/uebpgdecls.h" "ueb/snowxv.cpp"
-		    "ueb/canopy.cpp" "ueb/snowdgtv.cpp")
+		    "ueb/canopy.cpp" "ueb/snowdgtv.cpp" "utilities/Logger.cpp")
 if(WIN32)
   add_library(bmiuebcxx ${bmi_ueb_lib_SRCS})
 else()
@@ -34,9 +34,9 @@ add_executable(run_bmiuebcxx bmi/bmi_main.cxx bmi/ControlFile.cxx
                     "ueb/matrixnvector.cpp" "ueb/uebdecls.cpp"
 	            "ueb/ncfunctions.cpp" "ueb/uebpgdecls.h"
 		    "ueb/uebinputs.cpp" "ueb/snowxv.cpp" "ueb/canopy.cpp"
-		    "ueb/snowdgtv.cpp" )
+		    "ueb/snowdgtv.cpp" "utilities/Logger.cpp")
 
-target_include_directories(run_bmiuebcxx PRIVATE ueb )
+target_include_directories(run_bmiuebcxx PRIVATE ueb utilities )
 #target_link_libraries(run_bmiuebcxx libnetcdf.a -lhdf5_hl -lhdf5 -lz libcurl.a libpnetcdf.a -lmpi -lmpicxx)
 target_link_libraries(run_bmiuebcxx -lnetcdf -lhdf5_hl -lhdf5 -lz libcurl.a )
 

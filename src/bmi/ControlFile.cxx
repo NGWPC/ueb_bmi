@@ -19,13 +19,12 @@ ueb::ControlFile::ControlFile( std::string const& contrl_file ) :
                                   _outDimord( 0 ),
                                   _aggoutDimord( 1 )
 {
-    _conFilename = contrl_file;
-    loadControlFile( );
+    loadControlFile(contrl_file);
 }
 
 ueb::ControlFile::~ControlFile(){}
 
-void ueb::ControlFile::loadControlFile()
+void ueb::ControlFile::loadControlFile(std::string const& contrl_file)
 {
     std::cout << "Control File is " << _conFilename << std::endl;
     char headerLine[256];
@@ -34,10 +33,10 @@ void ueb::ControlFile::loadControlFile()
 	 aggoutputFile1[256];
     char wsvarName1[256], wsycorName1[256], wsxcorName1[256];
 
-    FILE* pconFile = fopen(_conFilename.c_str(), "rt");
+    FILE* pconFile = fopen(contrl_file.c_str(), "rt");
     if ( pconFile == NULL )
     {
-       throw std::ios_base::failure( "Couldn't open control file: " + _conFilename );
+       throw std::ios_base::failure( "Couldn't open control file: " + contrl_file );
     } // pconFile
 
     fgets(headerLine, 256, pconFile);
