@@ -11,6 +11,7 @@
 namespace ueb { class SiteVariables; }
 
 std::ostream& operator<< ( std::ostream &os, ueb::SiteVariables sv);
+void swap(ueb::SiteVariables& obj1, ueb::SiteVariables& obj2);
 
 namespace ueb {
   class SiteVariables {
@@ -48,12 +49,13 @@ namespace ueb {
 
       const sitevar* getSiteVarsPtr() const;
 
-      SiteVariables& operator=( SiteVariables const& sv );
+      SiteVariables& operator=( SiteVariables sv );
 
       static const std::array< std::string, NSITEVARS> site_var_names;
       static const std::map< std::string, std::string> site_var_units;
 
     friend std::ostream& ::operator<< ( std::ostream &os, SiteVariables sv);
+    friend void ::swap(ueb::SiteVariables& obj1, ueb::SiteVariables& obj2);
   };
 
 };

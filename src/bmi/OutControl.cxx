@@ -159,9 +159,9 @@ void ueb::OutControl::setAggOut( aggOutput* const& aggout )
 	_aggOut = aggout;
 }
 
-ueb::OutControl& ueb::OutControl::operator=(OutControl const& o)
+ueb::OutControl& ueb::OutControl::operator=(OutControl o)
 {
-   this->deepCopy( o );
+   swap( *this, o );
    return *this; 
 }
 
@@ -634,3 +634,15 @@ std::ostream& operator<< ( std::ostream &os, ueb::OutControl const& p)
 
    return ( os );
 } //operator<<
+  //
+void swap( ueb::OutControl& obj1, ueb::OutControl& obj2)
+{
+   std::swap( obj1._outcontrolfile, obj2._outcontrolfile );
+   std::swap( obj1._npout, obj2._npout );
+   std::swap( obj1._nncout, obj2._nncout );
+   std::swap( obj1._naggout, obj2._naggout );
+
+   std::swap( obj1._pOut, obj2._pOut );
+   std::swap( obj1._ncOut, obj2._ncOut );
+   std::swap( obj1._aggOut, obj2._aggOut );
+}

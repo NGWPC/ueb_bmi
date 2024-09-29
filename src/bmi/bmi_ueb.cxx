@@ -22,6 +22,7 @@ Initialize (std::string config_file)
      _parms = Parameters( _confile.getParamFile() );
      _sitevars = SiteVariables( _confile.getSitevarFile() );
      _forcings = ForcingVariables( _confile.getInputconFile(),
+     //_forcings = new ForcingVariables( _confile.getInputconFile(),
                       _ws.getActiveCells( _sitevars.getSiteVars().data() ),
 		      _confile.getWsycorName(),
 		      _confile.getWsxcorName() );
@@ -1079,6 +1080,7 @@ void  ueb::BmiUEB::prepareInputForPoint( double const& UTCHour,   //input
 					 int const& irad,         //input
                                          int const& cell,         //input
               std::array<float**, NFORCS> const& tsvarArray,       //input
+//                          float*** const tsvarArray,       //input
               std::array<inpforcvar, NFORCS> forcingtype,         //input 
 					 int& MYear,              //output
 					 int& MMonth,             //output

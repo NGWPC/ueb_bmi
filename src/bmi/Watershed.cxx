@@ -230,9 +230,9 @@ std::vector< std::pair<int,int> > ueb::Watershed::getActiveCells(
         return activeCells; 
 }
 
-ueb::Watershed& ueb::Watershed::operator=( Watershed const& ws )
+ueb::Watershed& ueb::Watershed::operator=( Watershed ws )
 {
-	this->deepCopy( ws );
+	swap( *this, ws );
 	return *this;
 }
 
@@ -265,3 +265,17 @@ std::ostream& operator<< ( std::ostream &os, ueb::Watershed w)
    return ( os );
 
 } //operator<<
+  //
+void swap( ueb::Watershed& obj1, ueb::Watershed& obj2)
+{
+   std::swap( obj1._wsncfile, obj2._wsncfile);
+   std::swap( obj1._wsvarName, obj2._wsvarName);
+   std::swap( obj1._wsycorName, obj2._wsycorName);
+   std::swap( obj1._wsxcorName, obj2._wsxcorName);
+   std::swap( obj1._nydim, obj2._nydim);
+   std::swap( obj1._nxdim, obj2._nxdim);
+   std::swap( obj1._wsfillVal, obj2._wsfillVal);
+   std::swap( obj1._wsycorArray, obj2._wsycorArray);
+   std::swap( obj1._wsxcorArray, obj2._wsxcorArray);
+   std::swap( obj1._wsArray, obj2._wsArray);
+}
