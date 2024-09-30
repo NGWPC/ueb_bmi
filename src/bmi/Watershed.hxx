@@ -10,6 +10,7 @@
 namespace ueb { class Watershed; }
 
 std::ostream& operator<< ( std::ostream &os, ueb::Watershed w);
+void swap(ueb::Watershed& obj1, ueb::Watershed& obj2);
 
 namespace ueb {
   class Watershed {
@@ -77,9 +78,10 @@ namespace ueb {
 
       std::vector< std::pair<int,int> > getActiveCells( sitevar* const& strsvArray ); 
 
-      Watershed& operator=( Watershed const& ws );
+      Watershed& operator=( Watershed ws );
 
     friend std::ostream& ::operator<< ( std::ostream &os, Watershed w);
+    friend void ::swap(ueb::Watershed& obj1, ueb::Watershed& obj2);
   };
 
 };

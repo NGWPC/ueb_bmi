@@ -25,6 +25,7 @@ Initialize (std::string config_file)
      _parms = Parameters( _confile.getParamFile() );
      _sitevars = SiteVariables( _confile.getSitevarFile() );
      _forcings = ForcingVariables( _confile.getInputconFile(),
+     //_forcings = new ForcingVariables( _confile.getInputconFile(),
                       _ws.getActiveCells( _sitevars.getSiteVars().data() ),
 		      _confile.getWsycorName(),
 		      _confile.getWsxcorName() );

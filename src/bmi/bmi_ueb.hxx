@@ -25,6 +25,7 @@ class NotImplemented : public std::logic_error {
 
 
 class BmiUEB : public bmi::Bmi {
+
   public:
     BmiUEB() {};
     ~BmiUEB(){};

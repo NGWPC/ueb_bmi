@@ -4,6 +4,7 @@
 #include <string>
 #include <array>
 #include <map>
+#include <mutex>
 #include "uebpgdecls.h"
 
 #define NFORCS 13
@@ -14,9 +15,12 @@ namespace ueb { class ForcingVariables; }
 
 std::ostream& operator<< ( std::ostream &os, ueb::ForcingVariables fv);
 
+void swap(ueb::ForcingVariables& obj1, ueb::ForcingVariables& obj2);
+
 namespace ueb {
   class ForcingVariables {
     private:
+      mutable std::mutex _mutex;
       std::string _forcingfile;
       std::array<inpforcvar, NFORCS> _strinpforcArray;
 
@@ -60,6 +64,7 @@ namespace ueb {
       std::array<inpforcvar, NFORCS> getStrinpforcArray() const;
 
       std::array<float**, NFORCS> getTsvarArray() const;
+      //float*** getTsvarArray();
 
       std::array<int, NFORCS> getNtimesteps() const;
       void setNtimesteps( std::array<int, NFORCS> const& nt );
@@ -88,7 +93,7 @@ namespace ueb {
 		                     int const& cell, 
 				     int const& step ) const;
 
-      ForcingVariables& operator=( ForcingVariables const& f );
+      ForcingVariables& operator=( ForcingVariables f );
 
       static const std::array< std::string, NFORCS > forcing_var_names;
       static const std::map< std::string, std::string > forcing_var_units;
@@ -105,6 +110,7 @@ namespace ueb {
       static float qair2rh( const float& qair, const float& temp_K, const float& press_Pa );
 
     friend std::ostream& ::operator<< ( std::ostream &os, ForcingVariables fv);
+    friend void ::swap(ueb::ForcingVariables& obj1, ueb::ForcingVariables& obj2);
   };
 
 };

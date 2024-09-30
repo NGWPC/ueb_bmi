@@ -26,12 +26,9 @@ ueb::ForcingVariables::ForcingVariables( std::string const& forcfile,
 
    readInputForcVars(forcfile.c_str(), _strinpforcArray.data());
 
-
    //read time series forcing data only once outside of the main loop
    for (int it = 0; it < NFORCS; it++)
    {
-	//_tsvarArray[ it ] =  new float*[ activeCells.size() ];
-
 	if (_strinpforcArray[it].infType == 0)
 	{
             float* temp = (float*)NULL;
@@ -165,18 +162,28 @@ ueb::ForcingVariables::ForcingVariables( ForcingVariables const& fv)
 
 ueb::ForcingVariables::~ForcingVariables()
 {
-   for (int i = 0; i < NFORCS; i++)
-   {
-      if( _tsvarArray[i] != NULL )
-      {
-	      delete[] _tsvarArray[i][0];
+     for (int i = 0; i < NFORCS; i++)
+     {
+        if( _tsvarArray[i] != NULL )
+        {
+  	      delete[] _tsvarArray[i][0];
 	      delete[] _tsvarArray[i];
-      }
-   }
+        }
+     }
 }
 
 void ueb::ForcingVariables::deepCopy( ForcingVariables const& fv)
 {
+
+    if ( this == &fv )
+    {
+        return;
+    }
+
+    std::lock(_mutex, fv._mutex);
+    std::lock_guard<std::mutex> lock1(_mutex, std::adopt_lock);
+    std::lock_guard<std::mutex> lock2(fv._mutex, std::adopt_lock);
+
    _forcingfile = fv._forcingfile;
    _ntimesteps = fv._ntimesteps;
    _activeCells = fv._activeCells;
@@ -218,16 +225,15 @@ void ueb::ForcingVariables::deepCopy( ForcingVariables const& fv)
 	else if (_strinpforcArray[i].infType == 2 || 
                          	_strinpforcArray[i].infType == -1 || 
                          	_strinpforcArray[i].infType == 3 )
-        {
+	{
 	    //######TBC 6.20.13 better way to handle this is needed
 	   _ntimesteps[i] = 2;
 	   _tsvarArray[i] = new float*[_activeCells.size() ];
 	   _tsvarArray[i][0] = new float[_ntimesteps[i] ];
 	   //just copy the default value if a single value is the option				
-	  // _tsvarArray[i][0] = fv._tsvarArray[i][0];
-	  // _tsvarArray[i][1] = fv._tsvarArray[i][1];
-	   std::copy_n( fv._tsvarArray[i][0], _ntimesteps[i],
-                           _tsvarArray[i][0] );
+	     memmove( _tsvarArray[i][0], fv._tsvarArray[i][0],
+			    _ntimesteps[i] * sizeof( float ) );
+
 	   for ( int cell = 0; cell < _activeCells.size(); ++cell )
 	   {
                 _tsvarArray[i][ cell ] = _tsvarArray[ i ][ 0 ];
@@ -491,9 +497,9 @@ float ueb::ForcingVariables::getForcingForCellByNameAtStep(
 }
 
 ueb::ForcingVariables& ueb::ForcingVariables::operator=( 
-		                ueb::ForcingVariables const& f )
+		                ueb::ForcingVariables f )
 {
-	this->deepCopy( f );
+	swap( *this, f );
 	return *this;
 }
 
@@ -651,3 +657,15 @@ std::ostream& operator<< ( std::ostream &os, ueb::ForcingVariables p)
    }
    return ( os );
 } //operator<<
+
+void swap( ueb::ForcingVariables& obj1, ueb::ForcingVariables& obj2)
+{
+     std::swap( obj1._forcingfile, obj2._forcingfile );
+     std::swap( obj1._ntimesteps, obj2._ntimesteps );
+     std::swap( obj1._activeCells, obj2._activeCells );
+     std::swap( obj1._v2d_m_per_s, obj2._v2d_m_per_s );
+     std::swap( obj1._u2d_m_per_s, obj2._u2d_m_per_s );
+     std::swap( obj1._qair_specific, obj2._qair_specific );
+     std::swap( obj1._strinpforcArray, obj2._strinpforcArray ); 
+     std::swap( obj1._tsvarArray, obj2._tsvarArray ); 
+} 

@@ -11,6 +11,7 @@
 namespace ueb { class OutControl; }
 
 std::ostream& operator<< ( std::ostream &os, ueb::OutControl const& fv);
+void swap(ueb::OutControl& obj1, ueb::OutControl& obj2);
 
 namespace ueb {
   class OutControl {
@@ -61,12 +62,13 @@ namespace ueb {
 
       void setAggOut( aggOutput* const& aggout );
 
-      OutControl& operator=(OutControl const& o);
+      OutControl& operator=(OutControl o);
 
       static const std::array< std::string, NOUTPUTS> output_var_names;
       static const std::map< std::string, std::string > output_var_units;
 
     friend std::ostream& ::operator<< ( std::ostream &os, OutControl const& fv);
+    friend void ::swap(ueb::OutControl& obj1, ueb::OutControl& obj2);
   };
 
 };

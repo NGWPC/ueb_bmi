@@ -124,9 +124,9 @@ const sitevar* ueb::SiteVariables::getSiteVarsPtr() const
     return _strsvArray.data();
 }
 
-ueb::SiteVariables& ueb::SiteVariables::operator=( SiteVariables const& sv )
+ueb::SiteVariables& ueb::SiteVariables::operator=( SiteVariables sv )
 {
-	this->deepCopy( sv );
+	swap( *this, sv);
 	return *this;
 }
 
@@ -266,3 +266,11 @@ std::ostream& operator<< ( std::ostream &os, ueb::SiteVariables p)
    }
    return ( os );
 } //operator<<
+  //
+void swap( ueb::SiteVariables& obj1, ueb::SiteVariables& obj2)
+{
+   std::swap( obj1._sitefile, obj2._sitefile );
+   std::swap( obj1._nydim, obj2._nydim );
+   std::swap( obj1._nxdim, obj2._nxdim );
+   std::swap( obj1._strsvArray, obj2._strsvArray );
+}
