@@ -109,7 +109,9 @@ Initialize (std::string config_file)
 	 }
      }
   }
-     std::cout<<__FILE__<<":"<<__LINE__<< std::endl;
+    std::stringstream ss;
+    ss << "In ueb::BmiUEB::Initialize:" << __FILE__<<":"<<__LINE__<< std::endl;
+    (Logger::GetInstance())->Log(ss.str(), LogLevel::INFO); ss.str("");
 }
 
 

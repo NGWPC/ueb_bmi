@@ -34,28 +34,47 @@ std::string module_name[static_cast<int>(LoggingModule::MODULE_COUNT)]
 * @return void
 */
 void Logger::SetLogPreferences(LogLevel level = LogLevel::ERROR) {
-	logLevel = level;
-    std::string fwd_slash = "/";
-    std::string logFileName = "ueb_log.txt";
-    std::string logFileDir = "./ngen_" + Logger::createTimestamp() + fwd_slash;
-    std::cout << "Log File Directory:" << logFileDir << std::endl;
+	std::stringstream ss;
 
-	if (!logFileName.empty()) {
-    	// creating the directory
+	// set the logging level
+ 	logLevel = level;
+    
+	// get the log file path
+	ss.str("");
+	ss << getenv("NGEN_LOG_FILE_PATH");
+	logFilePath = ss.str();
+	ss.str("");
+
+	logFile.open(logFilePath, std::ios::app);
+	if (!logFile.good()) {
+		std::cerr << "Warning: Can't Open shared Log File referenced from NGEN_LOG_FILE_PATH env. variable" << std::endl;
+    	// create a local log file for UEB module instead
+		std::string fwd_slash = "/";
+    	std::string logFileName = "ueb_log.txt";
+    	std::string logFileDir = "./run-logs/ngen_" + Logger::createTimestamp() + fwd_slash;
    		int status;
-		std::string mkdir_cmd = "mkdir --parents " + logFileDir;
+		std::string mkdir_cmd = "mkdir -p " + logFileDir;
 		const char *cstr = mkdir_cmd.c_str();
    		status = system(cstr);
    		if (status == -1)
-   		   	std::cerr << "Error : " << strerror(errno) << std::endl;
-   		else {
-   		   	std::cout << "Directories are created" << std::endl;
-			logFile.open(logFileDir+logFileName, ios::out);
-			if (!logFile.good()) {
-				std::cerr << "Can't Open Log File" << std::endl;
-			}
+   		   std::cerr << "Error(" << (errno) << ") creating log file directory: " << logFileDir << std::endl;
+   		else
+   		   std::cout << "Log directory: " << logFileDir <<std::endl;
+		// create a local log file for UEB module
+		logFilePath = logFileDir+logFileName;
+		logFile.open(logFilePath, ios::out | ios::app);
+		if (!logFile.good()) {
+			std::cerr << "Can't Open local directory Log File:" << logFilePath <<std::endl;			
 		}
+		else {
+			std::cout << "Logging instead into: " << logFilePath << std::endl;
+		}
+			
 	}
+	else {
+		std::cout << "Log File Path:" << logFilePath << std::endl;
+	}
+
 }
 
 /**
@@ -77,7 +96,9 @@ std::shared_ptr<Logger> Logger::GetInstance() {
 * @param message: Log Message
 * @param messageLevel: Log Level, LogLevel::DEBUG by default
 */
-void Logger::Log(std::string message, LogLevel messageLevel = LogLevel::DEBUG, LoggingModule module=LoggingModule::NGEN) {
+void Logger::Log(std::string message, LogLevel messageLevel = LogLevel::DEBUG) {
+	LoggingModule module=LoggingModule::UEB;
+	
 	// don't log if messageLevel < logLevel 
 	if (messageLevel >= logLevel) {
 		std::string logType;
@@ -109,8 +130,11 @@ void Logger::Log(std::string message, LogLevel messageLevel = LogLevel::DEBUG, L
 		std::string separator = " ";
 		// log the message while handling multiline cases
 		final_message = createTimestamp() + separator + mod_name + separator + logType + message;
-		logFile << final_message;
-		logFile.flush();
+		if (!logFile.bad()) {
+			logFile << final_message;
+			logFile.flush();
+		}
+
 	}
 }
 
@@ -143,47 +167,60 @@ using std::chrono::system_clock;
 
 std::string Logger::createTimestamp() {
     std::chrono::_V2::system_clock::time_point currentTime = std::chrono::system_clock::now();
-    char buffer[120];
-    
+    char buffer1[120];
+    char buffer2[120];
+    std::stringstream ss;
+
     long transformed = currentTime.time_since_epoch().count() / 1000000;
     
     long millis = transformed % 1000;
     
     std::time_t tt;
     tt = system_clock::to_time_t ( currentTime );
-    tm *timeinfo = localtime (&tt);
-    strftime (buffer,100,"%FT%H:%M:%S",timeinfo);
-    sprintf(buffer, "%s:%03d",buffer,(int)millis);
+    tm *timeinfo = gmtime (&tt);
+    strftime (buffer1,100,"%FT%H:%M:%S",timeinfo);
+    sprintf(buffer2, ":%03d", (int)millis);
+	ss << buffer1 << buffer2;
     
-    return std::string(buffer);
+    return ss.str();
 }
 
 void Logger::setup_logger(void) {
 	std::stringstream ss;
+
+	// get the log file path
+	ss.str("");
+	ss << getenv("NGEN_LOG_FILE_PATH");
+	logFilePath = ss.str();
+	ss.str("");
 
     // One time log preferences
     (Logger::GetInstance())->SetLogPreferences(LogLevel::NONE);
 
     // sample logging for different log levels
     ss << "Sample Log for LogLevel::ERROR" << std::endl;
-    (Logger::GetInstance())->Log(ss.str(), LogLevel::ERROR, LoggingModule::UEB); ss.str("");
+    (Logger::GetInstance())->Log(ss.str(), LogLevel::ERROR); ss.str("");
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
     ss << "Sample Log for LogLevel::FATAL" << std::endl;
-    (Logger::GetInstance())->Log(ss.str(), LogLevel::FATAL, LoggingModule::UEB); ss.str("");
+    (Logger::GetInstance())->Log(ss.str(), LogLevel::FATAL); ss.str("");
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
     ss << "Sample Log for LogLevel::WARN" << std::endl;
-    (Logger::GetInstance())->Log(ss.str(), LogLevel::WARN, LoggingModule::UEB); ss.str("");
+    (Logger::GetInstance())->Log(ss.str(), LogLevel::WARN); ss.str("");
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
     ss << "Sample Log for LogLevel::INFO" << std::endl;
-    (Logger::GetInstance())->Log(ss.str(), LogLevel::INFO, LoggingModule::UEB); ss.str("");
+    (Logger::GetInstance())->Log(ss.str(), LogLevel::INFO); ss.str("");
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
     ss << "Sample Log for LogLevel::DEBUG" << std::endl;
-    (Logger::GetInstance())->Log(ss.str(), LogLevel::DEBUG, LoggingModule::UEB); ss.str("");
+    (Logger::GetInstance())->Log(ss.str(), LogLevel::DEBUG); ss.str("");
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
     // multiline logging
     ss << "First line of multiline log:" << std::endl
        << "   Indented second line of multiline log" << std::endl
        << "         Indented third line of multiline log" << std::endl
        << "                Indented fourth line of multiline log" << std::endl;
-    (Logger::GetInstance())->Log(ss.str(), LogLevel::INFO, LoggingModule::UEB); ss.str("");
+    (Logger::GetInstance())->Log(ss.str(), LogLevel::INFO); ss.str("");
+}
+
+std::string Logger::getLogFilePath() {
+	return logFilePath;
 }

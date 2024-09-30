@@ -1,6 +1,7 @@
 #ifndef LOGGER_HPP
 #define LOGGER_HPP
 
+#include <stdlib.h>
 #include <string>
 #include <iostream>
 #include <memory>
@@ -42,15 +43,18 @@ class Logger {
   public:
 	static std::shared_ptr<Logger> GetInstance();
 	void SetLogPreferences(LogLevel level);
-	void Log(std::string message, LogLevel messageLevel, LoggingModule module);
+	void Log(std::string message, LogLevel messageLevel);
 	LogLevel GetLogLevel(const std::string& logLevel);
 	std::string createTimestamp();
 	void setup_logger(void);
+	std::string getLogFilePath();
 
   private:
 	LogLevel logLevel;
 	std::fstream logFile;
 	static std::shared_ptr<Logger> loggerInstance;
+	std::string logFilePath;
+
 };
 
 
