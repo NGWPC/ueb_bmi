@@ -12,6 +12,9 @@
 void ueb::BmiUEB::
 Initialize (std::string config_file)
 {
+  // Setup the logger
+  (Logger::GetInstance())->setup_logger();
+  
   if (config_file.compare("") != 0 )
   {
      _confile = ControlFile( config_file );
@@ -106,6 +109,9 @@ Initialize (std::string config_file)
 	 }
      }
   }
+    std::stringstream ss;
+    ss << "In ueb::BmiUEB::Initialize:" << __FILE__<<":"<<__LINE__<< std::endl;
+    (Logger::GetInstance())->Log(ss.str(), LogLevel::INFO); ss.str("");
 }
 
 

@@ -38,7 +38,7 @@ namespace ueb {
       ControlFile( std::string const& contrl_file );
       virtual ~ControlFile();
 
-      void loadControlFile( );
+      void loadControlFile(std::string const& contrl_file);
 
       std::string getControlFile();
       void setControlFile( std::string const& fname );
