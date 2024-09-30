@@ -9,7 +9,6 @@
 
 ueb::ForcingVariables::ForcingVariables()
 {
-   //_tsvarArray = (float***)NULL;
    for (int i = 0; i < NFORCS; i++)
    {
        _tsvarArray[i] = (float**)NULL;
@@ -27,13 +26,9 @@ ueb::ForcingVariables::ForcingVariables( std::string const& forcfile,
 
    readInputForcVars(forcfile.c_str(), _strinpforcArray.data());
 
-   //_tsvarArray = new float**[ NFORCS ];
-
    //read time series forcing data only once outside of the main loop
    for (int it = 0; it < NFORCS; it++)
    {
-	//_tsvarArray[ it ] =  new float*[ activeCells.size() ];
-
 	if (_strinpforcArray[it].infType == 0)
 	{
             float* temp = (float*)NULL;
@@ -167,8 +162,6 @@ ueb::ForcingVariables::ForcingVariables( ForcingVariables const& fv)
 
 ueb::ForcingVariables::~ForcingVariables()
 {
-//   if ( _tsvarArray != NULL )
-//   {
      for (int i = 0; i < NFORCS; i++)
      {
         if( _tsvarArray[i] != NULL )
@@ -177,8 +170,6 @@ ueb::ForcingVariables::~ForcingVariables()
 	      delete[] _tsvarArray[i];
         }
      }
-//     delete[] _tsvarArray;
-//   }
 }
 
 void ueb::ForcingVariables::deepCopy( ForcingVariables const& fv)
@@ -200,7 +191,6 @@ void ueb::ForcingVariables::deepCopy( ForcingVariables const& fv)
    _u2d_m_per_s = fv._u2d_m_per_s;
    _qair_specific = fv._qair_specific;
 
-    //_tsvarArray = new float**[NFORCS ]; 
     for (int i = 0; i < NFORCS; i++)
     {
         std::strcpy( _strinpforcArray[i].infName, 
@@ -241,10 +231,6 @@ void ueb::ForcingVariables::deepCopy( ForcingVariables const& fv)
 	   _tsvarArray[i] = new float*[_activeCells.size() ];
 	   _tsvarArray[i][0] = new float[_ntimesteps[i] ];
 	   //just copy the default value if a single value is the option				
-	  // _tsvarArray[i][0] = fv._tsvarArray[i][0];
-	  // _tsvarArray[i][1] = fv._tsvarArray[i][1];
-	  // std::copy_n( fv._tsvarArray[i][0], _ntimesteps[i],
-          //                _tsvarArray[i][0] );
 	     memmove( _tsvarArray[i][0], fv._tsvarArray[i][0],
 			    _ntimesteps[i] * sizeof( float ) );
 
@@ -292,7 +278,6 @@ std::array<inpforcvar, NFORCS> ueb::ForcingVariables::getStrinpforcArray() const
 }
 
 std::array<float**, NFORCS> ueb::ForcingVariables::getTsvarArray() const
-//float*** ueb::ForcingVariables::getTsvarArray()
 {
     return _tsvarArray;
 }

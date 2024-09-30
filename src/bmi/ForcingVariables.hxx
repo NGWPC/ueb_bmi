@@ -25,8 +25,6 @@ namespace ueb {
       std::array<inpforcvar, NFORCS> _strinpforcArray;
 
       std::array<float**, NFORCS> _tsvarArray;
-      //float** _tsvarArray[ NFORCS ];
-      //float*** _tsvarArray;
 
       std::array<int, NFORCS> _ntimesteps;
 

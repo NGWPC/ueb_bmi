@@ -135,7 +135,6 @@ class BmiUEB : public bmi::Bmi {
 				int const& irad,         //input
 				int const& cell,         //input
               std::array<float**, NFORCS> const& tsvarArray,       //input
-              //                 float*** const tsvarArray,       //input
               std::array<inpforcvar, NFORCS> forcingtype,         //input 
 				int& MYear,              //output
 				int& MMonth,             //output
