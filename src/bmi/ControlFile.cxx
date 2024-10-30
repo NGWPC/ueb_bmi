@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <ios>
 #include "ControlFile.hxx"
+#include "../utilities/Logger.hpp"
 
 ueb::ControlFile::ControlFile() : _outtStride( 1 ),
                                   _outyStep( 1 ),
@@ -26,7 +27,10 @@ ueb::ControlFile::~ControlFile(){}
 
 void ueb::ControlFile::loadControlFile(std::string const& contrl_file)
 {
-    std::cout << "Control File is " << _conFilename << std::endl;
+    	std::stringstream std_ss("");
+
+    std_ss << "Control File is " << contrl_file << std::endl;
+    (Logger::GetInstance())->Log(std_ss.str(), LogLevel::INFO); std_ss.str("");
     char headerLine[256];
     char paramFile1[256], sitevarFile1[256], inputconFile1[256], 
 	 outputconFile1[256], watershedFile1[256], aggoutputconFile1[256], 
@@ -36,6 +40,8 @@ void ueb::ControlFile::loadControlFile(std::string const& contrl_file)
     FILE* pconFile = fopen(contrl_file.c_str(), "rt");
     if ( pconFile == NULL )
     {
+        std_ss << "Couldn't open control file: " << contrl_file << std::endl;
+        (Logger::GetInstance())->Log(std_ss.str(), LogLevel::ERROR); std_ss.str("");
        throw std::ios_base::failure( "Couldn't open control file: " + contrl_file );
     } // pconFile
 

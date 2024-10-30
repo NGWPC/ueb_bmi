@@ -8,6 +8,7 @@
 #include <bmi.hxx>
 #include "bmi_ueb.hxx"
 
+std::stringstream bmi_ueb_ss("");
 
 void ueb::BmiUEB::
 Initialize (std::string config_file)
@@ -110,7 +111,7 @@ Initialize (std::string config_file)
 	 }
      }
   }
-    std::stringstream ss;
+    std::stringstream ss("");
     ss << "In ueb::BmiUEB::Initialize:" << __FILE__<<":"<<__LINE__<< std::endl;
     (Logger::GetInstance())->Log(ss.str(), LogLevel::INFO); ss.str("");
 }
@@ -1151,14 +1152,17 @@ void  ueb::BmiUEB::prepareInputForPoint( double const& UTCHour,   //input
 	      	   if (Ta_tmp >= Tmax) Tmax = Ta_tmp;
 	     }
 	     Trange = Tmax - Tmin;
-	     //cout<<Trange<<endl;
+	     //bmi_ueb_ss <<Trange<<endl;
 	     if (Trange <= 0)
 	     {
 	        if (snowdgtvariteflag==1)	
 		{
-		      cout<<"Input Diurnal temperature range is less than or equal to 0 which is unrealistic "<<endl;
-		      cout<< "Diurnal temperature range is assumed as 8 degree celsius on "<<endl;
-		      cout<< Year<<" "<< Month<<" "<<Day<<endl;
+		      bmi_ueb_ss.str("");
+          bmi_ueb_ss <<"Input Diurnal temperature range is less than or equal to 0 which is unrealistic "<<endl;
+		      bmi_ueb_ss << "Diurnal temperature range is assumed as 8 degree celsius on "<<endl;
+		      bmi_ueb_ss << Year<<" "<< Month<<" "<<Day<<endl;
+          (Logger::GetInstance())->Log(bmi_ueb_ss.str(), LogLevel::WARN); bmi_ueb_ss.str("");
+
 		}
 		   Trange = 8.0;
 	     }
@@ -1199,7 +1203,8 @@ void  ueb::BmiUEB::prepareInputForPoint( double const& UTCHour,   //input
 		Qnetob = tsvarArray[10][cell][istep];
 		break;
 	       default:
-	        cout<<" The radiation flag is not the right number; must be between 0 and 3"<<endl;
+	        bmi_ueb_ss <<" The radiation flag is not the right number; must be between 0 and 3"<<endl;
+          (Logger::GetInstance())->Log(bmi_ueb_ss.str(), LogLevel::ERROR); bmi_ueb_ss.str("");
 	        getchar();
 	        break;				
 	    }
@@ -1254,7 +1259,7 @@ void  ueb::BmiUEB::prepareInputForPoint( double const& UTCHour,   //input
 
 	    if (RH > 1)
 	    {
-	        //cout<<"relative humidity >= 1 at time step "<<istep<<endl;
+	        //bmi_ueb_ss <<"relative humidity >= 1 at time step "<<istep<<endl;
 	        RH = 0.99;
 	    }
 	  }   //if ( inpDailyorSubdaily == 0)
@@ -1267,17 +1272,18 @@ void  ueb::BmiUEB::prepareInputForPoint( double const& UTCHour,   //input
 	    //get min max temp
 	    Tmin = tsvarArray[2][cell][istep/nstepinaDay];				  
 	    Tmax = tsvarArray[3][cell][istep/nstepinaDay];
-	    //cout << "Tmin = " << Tmin << "Tmax = " << Tmax << " ";
+	    //bmi_ueb_ss  << "Tmin = " << Tmin << "Tmax = " << Tmax << " ";
 
 	    Trange = Tmax - Tmin;
-	    //cout<<Trange<<endl;
+	    //bmi_ueb_ss <<Trange<<endl;
 	    if (Trange <= 0)
 	    {
 	       if (snowdgtvariteflag==1)	
 	       {
-		cout<<"Input Diurnal temperature range is less than or equal to 0 which is unrealistic "<<endl;
-		cout<< "Diurnal temperature range is assumed as 8 degree celsius on "<<endl;
-		cout<< Year<<" "<< Month<<" "<<Day<<endl;
+		        bmi_ueb_ss <<"Input Diurnal temperature range is less than or equal to 0 which is unrealistic "<<endl;
+		        bmi_ueb_ss << "Diurnal temperature range is assumed as 8 degree celsius on "<<endl;
+		        bmi_ueb_ss << Year<<" "<< Month<<" "<<Day<<endl;
+            (Logger::GetInstance())->Log(bmi_ueb_ss.str(), LogLevel::ERROR); bmi_ueb_ss.str("");
 	       }
 	       Trange = 8.0;
 	    }
@@ -1311,7 +1317,8 @@ void  ueb::BmiUEB::prepareInputForPoint( double const& UTCHour,   //input
 		   Qnetob = tsvarArray[10][cell][istep/nstepinaDay];
 		   break;
 		default:
-		   cout<<" The radiation flag is not the right number; must be between 0 and 3"<<endl;
+		   bmi_ueb_ss <<" The radiation flag is not the right number; must be between 0 and 3"<<endl;
+       (Logger::GetInstance())->Log(bmi_ueb_ss.str(), LogLevel::ERROR); bmi_ueb_ss.str("");
 		   getchar();
 		   break;				
 	      }
@@ -1355,7 +1362,7 @@ void  ueb::BmiUEB::prepareInputForPoint( double const& UTCHour,   //input
 	          RH = tsvarArray[5][cell][istep/nstepinaDay];
 	      if (RH > 1)
 	      {
-	          //cout<<"relative humidity >= 1 at time step "<<istep<<endl;
+	          //bmi_ueb_ss <<"relative humidity >= 1 at time step "<<istep<<endl;
 		  RH = 0.99;
 	      }
 	}	
@@ -1444,7 +1451,7 @@ void  ueb::BmiUEB::runPointUEB(
 		//      not it indicates a potential measurement problem. i.e. moonshine
 		if(HRI0 > 0) 
 		{
-		   //cout<<Qsiobs;
+		   //bmi_ueb_ss <<Qsiobs;
 		   atfimplied =  findMin(Qsiobs/(HRI0*Io),0.9); // To avoid unreasonably large radiation when HRI0 is small
 		   Inpt[4] = atfimplied * HRI * Io;
 		 }
@@ -1455,8 +1462,9 @@ void  ueb::BmiUEB::runPointUEB(
 		     {
 		       if (radwarnflag < 3)   //leave this warning only three times--enough to alert to non- -ve night time solar rad
 		       {
-			   cout<<"Warning: you have nonzero nightime incident radiation of "<<Qsiobs<<endl;
-			   cout<<"at date "<<Year<<"   "<< Month<<"   "<< Day<<"     "<<dHour<<endl;
+			   bmi_ueb_ss <<"Warning: you have nonzero nightime incident radiation of "<<Qsiobs<<endl;
+			   bmi_ueb_ss <<"at date "<<Year<<"   "<< Month<<"   "<< Day<<"     "<<dHour<<endl;
+         (Logger::GetInstance())->Log(bmi_ueb_ss.str(), LogLevel::WARN); bmi_ueb_ss.str("");
 			   ++radwarnflag;
 			}
 		      }
@@ -1572,9 +1580,10 @@ void  ueb::BmiUEB::updatOutVars(
       if (snowdgt_outflag == 1)             //if debug mode 
       {
 	       for(int uit = 0; uit<70; uit++)
-	       cout<<_outvarArray[cell][uit][istep]<<" ";
-	       cout<<endl;
-               cout<<endl;
+	       bmi_ueb_ss <<_outvarArray[cell][uit][istep]<<" ";
+	       bmi_ueb_ss <<endl;
+         bmi_ueb_ss <<endl;
+         (Logger::GetInstance())->Log(bmi_ueb_ss.str(), LogLevel::DEBUG); bmi_ueb_ss.str("");
       }
 }
 
@@ -1633,7 +1642,7 @@ void  ueb::BmiUEB::outputAggregratedFiles()
 		//#_12.24.14 change these with actual outlet locations coordinates
 		z_ycor[iz] = 0.0;
 		z_xcor[iz] = 0.0;
-		//cout << zValues[iz];		
+		//bmi_ueb_ss  << zValues[iz];		
       }
       auto aggOut = _outcontrol.getAggOut();
       //create aggregate ouput file

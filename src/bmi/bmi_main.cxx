@@ -11,6 +11,9 @@
 #include "ForcingVariables.hxx"
 #include "OutControl.hxx"
 #include "bmi_ueb.hxx"
+#include "../utilities/Logger.hpp"
+
+std::stringstream bmimain_ss("");
 
 
 int main(int argc, char *argv[])
@@ -27,43 +30,51 @@ int main(int argc, char *argv[])
   //create the model object
   ueb::BmiUEB* model = bmi_model_create();
 
-  std::cout << "Model name: " << model->GetComponentName() << std::endl;
+  bmimain_ss << "Model name: " << model->GetComponentName() << std::endl;
+  (Logger::GetInstance())->Log(bmimain_ss.str(), LogLevel::INFO); bmimain_ss.str("");
 
   //setup the model
-  std::cout << "Setup the model." << std::endl;
+  bmimain_ss << "Setup the model." << std::endl;
+  (Logger::GetInstance())->Log(bmimain_ss.str(), LogLevel::INFO); bmimain_ss.str("");
   model->Initialize(argv[1]);
 
   void* ts = new float();
 
   model->GetValue( std::string( "ts" ), ts );
-  std::cout << "ts = " << *(float*)ts << std::endl;
+  bmimain_ss << "ts = " << *(float*)ts << std::endl;
+  (Logger::GetInstance())->Log(bmimain_ss.str(), LogLevel::INFO); bmimain_ss.str("");
 /*
   float newts = 2.f;
   model->SetValue( std::string( "ts" ), &newts );
   model->GetValue( std::string( "ts" ), ts );
-  std::cout << "New ts = " << *(float*)ts << std::endl;
+  bmimain_ss << "New ts = " << *(float*)ts << std::endl;
+  (Logger::GetInstance())->Log(bmimain_ss.str(), LogLevel::INFO); bmimain_ss.str("");
 */
 
   //get the start time
   model->GetStartTimeInGregorianCalendar( year, month, day, hour );
 
-  std::cout << "Model start datetime is " << year << '/' << month << '/'
+  bmimain_ss << "Model start datetime is " << year << '/' << month << '/'
 	                                  << day << ' ' << hour << std::endl;
+  (Logger::GetInstance())->Log(bmimain_ss.str(), LogLevel::INFO); bmimain_ss.str("");
   //get the end time
   model->GetEndTimeInGregorianCalendar( year, month, day, hour );
 
-  std::cout << "Model end datetime is " << year << '/' << month << '/'
+  bmimain_ss << "Model end datetime is " << year << '/' << month << '/'
 	                                  << day << ' ' << hour << std::endl;
+  (Logger::GetInstance())->Log(bmimain_ss.str(), LogLevel::INFO); bmimain_ss.str("");
   //advance the model one timestep and pause
   
-  std::cout << "Advance the model one timestep and pause." << std::endl;
+  bmimain_ss << "Advance the model one timestep and pause." << std::endl;
+  (Logger::GetInstance())->Log(bmimain_ss.str(), LogLevel::INFO); bmimain_ss.str("");
   model->Update();
 
   //get the current time
   model->GetCurrentTimeInGregorianCalendar( year, month, day, hour );
 
-  std::cout << "Model current datetime is " << year << '/' << month << '/'
+  bmimain_ss << "Model current datetime is " << year << '/' << month << '/'
 	                                  << day << ' ' << hour << std::endl;
+  (Logger::GetInstance())->Log(bmimain_ss.str(), LogLevel::INFO); bmimain_ss.str("");
 
   double currenttime = model->GetCurrentTime();
 
@@ -71,23 +82,28 @@ int main(int argc, char *argv[])
 
   //advance the model 10 days and  pause
   //
-  std::cout << "Advance the model ten days and pause." << std::endl;
-  model->UpdateUntil( tendaysafter );
+  bmimain_ss << "Advance the model ten days and pause." << std::endl;
+  (Logger::GetInstance())->Log(bmimain_ss.str(), LogLevel::INFO); bmimain_ss.str("");
+  //model->UpdateUntil( tendaysafter );
   model->GetCurrentTimeInGregorianCalendar( year, month, day, hour );
-  std::cout << "Model current datetime is " << year << '/' << month << '/'
+  bmimain_ss << "Model current datetime is " << year << '/' << month << '/'
 	                                  << day << ' ' << hour << std::endl;
+  (Logger::GetInstance())->Log(bmimain_ss.str(), LogLevel::INFO); bmimain_ss.str("");
 
   double endtime = model->GetEndTime();
 
   //advance to the end
-  std::cout << "Advance the model to the end." << std::endl;
-  model->UpdateUntil( endtime );
+  bmimain_ss << "Advance the model to the end." << std::endl;
+  (Logger::GetInstance())->Log(bmimain_ss.str(), LogLevel::INFO); bmimain_ss.str("");
+  //model->UpdateUntil( endtime );
 
   model->GetCurrentTimeInGregorianCalendar( year, month, day, hour );
-  std::cout << "Model current datetime is " << year << '/' << month << '/'
+  bmimain_ss << "Model current datetime is " << year << '/' << month << '/'
 	                                  << day << ' ' << hour << std::endl;
+  (Logger::GetInstance())->Log(bmimain_ss.str(), LogLevel::INFO); bmimain_ss.str("");
   //cleaning up
-  std::cout << "Output and clean up." << std::endl;
+  bmimain_ss << "Output and clean up." << std::endl;
+  (Logger::GetInstance())->Log(bmimain_ss.str(), LogLevel::INFO); bmimain_ss.str("");
   model->Finalize();
 
   //destroy the mdoel
