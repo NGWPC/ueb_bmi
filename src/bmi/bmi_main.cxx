@@ -11,7 +11,7 @@
 #include "ForcingVariables.hxx"
 #include "OutControl.hxx"
 #include "bmi_ueb.hxx"
-#include "../utilities/Logger.hpp"
+#include "Logger.hpp"
 
 std::stringstream bmimain_ss("");
 

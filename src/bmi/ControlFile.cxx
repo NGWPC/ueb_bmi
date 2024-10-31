@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <ios>
 #include "ControlFile.hxx"
-#include "../utilities/Logger.hpp"
+#include "Logger.hpp"
 
 ueb::ControlFile::ControlFile() : _outtStride( 1 ),
                                   _outyStep( 1 ),

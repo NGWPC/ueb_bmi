@@ -22,7 +22,7 @@ else()
   add_library(bmiuebcxx SHARED ${bmi_ueb_lib_SRCS})
 endif()
 
-target_include_directories(bmiuebcxx PRIVATE ueb )
+target_include_directories(bmiuebcxx PRIVATE ueb utilities)
 #target_link_libraries(bmiuebcxx -lmpi -lmpicxx -lnetcdf -lhdf5_hl -lhdf5 -lz libcurl.a libpnetcdf.a)
 #target_link_libraries(bmiuebcxx -lnetcdf -lhdf5_hl -lhdf5 -lz -lcurl)
 target_link_libraries(bmiuebcxx -lnetcdf -lhdf5_hl -lhdf5 -lz -lcurl)
@@ -53,7 +53,7 @@ install(
 install(
   FILES bmi/ControlFile.hxx bmi/Watershed.hxx bmi/Parameters.hxx 
         bmi/SiteVariables.hxx bmi/ForcingVariables.hxx 
-	bmi/OutControl.hxx ueb/uebpgdecls.h bmi/bmi_ueb.hxx
+	bmi/OutControl.hxx ueb/uebpgdecls.h bmi/bmi_ueb.hxx utilities/Logger.hpp
   DESTINATION include
 )
 install(

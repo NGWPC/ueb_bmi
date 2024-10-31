@@ -1,7 +1,7 @@
 //copied from Canopy.f90
 //6.6.13
 #include "uebpgdecls.h"
-#include "../utilities/Logger.hpp"
+#include <Logger.hpp>
 
 std::stringstream canopy_ss("");
 
