@@ -68,7 +68,7 @@ struct inptimeseries {
 	};
 
 /* Handle errors by printing an error message and exiting with a * non-zero status. */
-#define  ERR(e) {cout<<"Error: "<< nc_strerror(e)<<endl; return 2; }
+#define  ERR(e) {ncfunc_ss<<"Error: "<< nc_strerror(e)<<endl; (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::ERROR); ncfunc_ss.str(""); return 2; }
 
 //creates 3D netcdf and stores dimension variables for a given UEB output; called once for a given output netcdf 
 //attributes are copied from the 2D (watershed) netCDF which the 3D netCDF spatial dimension follow

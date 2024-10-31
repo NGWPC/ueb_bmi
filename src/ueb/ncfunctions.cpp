@@ -1,5 +1,9 @@
 //#include"nctest.h"
 #include "uebpgdecls.h"
+#include "Logger.hpp"
+
+std::stringstream ncfunc_ss("");
+
 #ifdef MPI_PARALLEL
 #include <netcdf_par.h>
 #else
@@ -65,7 +69,8 @@ int WriteTSto3DNC(const char* FileName, const char* VarName, int dimOrd, int y_d
 			count[2] = 1;			 
 			 break;		
 		default:
-			cout<<"the dim order has to be between 0 and 2"<<endl;
+			ncfunc_ss <<"the dim order has to be between 0 and 2"<<endl;
+			(Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::WARN); ncfunc_ss.str("");
 			getchar();
 			break;
 	 }	 
@@ -151,7 +156,8 @@ int WriteTSto3DNC_Block(const char* FileName, const char* VarName, int dimOrd, i
 			count[2] = 1;
 			break;
 		default:
-			cout << "the dim order has to be between 0 and 2" << endl;
+			ncfunc_ss   << "the dim order has to be between 0 and 2" << endl;
+			(Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::WARN); ncfunc_ss.str("");
 			getchar();
 			break;
 		}		
@@ -181,7 +187,7 @@ int Write_uebaggTS_toNC(const char* FileName, const char* VarName, int dimOrd, i
 	int retncval = 0;
 
 	// Open netcdf file.  
-	if ((retncval = nc_open(FileName, NC_WRITE, &ncid)))           //|NC_MPIIO, MPI::COMM_WORLD, MPI::INFO_NULL, &ncid)))
+	if ((retncval = nc_open(FileName, NC_WRITE, &ncid)))           //|NC_MPIIO, MPI::COMM_WORLD, MPI::DEBUG_NULL, &ncid)))
 		ERR(retncval);
 	// get variable id
 	if ((retncval = nc_inq_varid(ncid, VarName, &v_varid)))
@@ -203,7 +209,8 @@ int Write_uebaggTS_toNC(const char* FileName, const char* VarName, int dimOrd, i
 		count[1] = Nt_dim;
 		break;	
 	default:
-		cout << "the dim order has to be 0 or 1" << endl;
+		ncfunc_ss << "the dim order has to be 0 or 1" << endl;
+		(Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::WARN); ncfunc_ss.str("");
 		getchar();
 		break;
 	}
@@ -238,10 +245,10 @@ int Write_uebaggTS_toNC_par(const char* FileName, const char* VarName, int dimOr
 	int retncval = 0;
 	// Open netcdf file.  
 #ifdef MPI_PARALLEL
-	if ((retncval = nc_open_par(FileName, NC_WRITE | NC_MPIIO, inpComm, inpInfo, &ncid)))           //|NC_MPIIO, MPI::COMM_WORLD, MPI::INFO_NULL, &ncid)))
+	if ((retncval = nc_open_par(FileName, NC_WRITE | NC_MPIIO, inpComm, inpInfo, &ncid)))           //|NC_MPIIO, MPI::COMM_WORLD, MPI::DEBUG_NULL, &ncid)))
 		ERR(retncval);
 #else
-	if ((retncval = nc_open(FileName, NC_WRITE, &ncid)))           //|NC_MPIIO, MPI::COMM_WORLD, MPI::INFO_NULL, &ncid)))
+	if ((retncval = nc_open(FileName, NC_WRITE, &ncid)))           //|NC_MPIIO, MPI::COMM_WORLD, MPI::DEBUG_NULL, &ncid)))
 #endif //MPI_PARALLEL
 	// get variable id
 	if (retncval = nc_inq_varid(ncid, VarName, &v_varid))
@@ -263,7 +270,8 @@ int Write_uebaggTS_toNC_par(const char* FileName, const char* VarName, int dimOr
 		count[1] = Nt_dim;
 		break;
 	default:
-		cout << "the dim order has to be 0 or 1" << endl;
+		ncfunc_ss   << "the dim order has to be 0 or 1" << endl;
+		(Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::WARN); ncfunc_ss.str("");
 		getchar();
 		break;
 	}
@@ -362,7 +370,8 @@ int create3DNC_uebAggregatedOutputs(const char* FileName, aggOutput *aggOut, int
 		dimids[1] = ptid_out;
 		break;
 	default:
-		cout << "the dim order has to be either 0 or 1" << endl;
+		ncfunc_ss   << "the dim order has to be either 0 or 1" << endl;
+		(Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::WARN); ncfunc_ss.str("");
 		getchar();
 		break;
 	}
@@ -443,7 +452,8 @@ int create3DNC_uebAggregatedOutputs(const char* FileName, aggOutput *aggOut, int
 		ERR(retncval);
 	if (retncval = nc_close(ncid_out))
 		ERR(retncval);
-	cout << "Sucess creating and storing dimension vars in: " << FileName << endl;
+	ncfunc_ss   << "Success creating and storing dimension vars in: " << FileName << endl;
+	(Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::INFO); ncfunc_ss.str("");
 	//fflush(stdout); 
 	return 0;
 }
@@ -579,7 +589,8 @@ int create3DNC_uebOutputs(const char* FileName, const char* VarName, const char 
 		dimids[2] = pyid_out;
 		break;
 	default:
-		cout << "the dim order has to be between 0 and 2" << endl;
+		ncfunc_ss   << "the dim order has to be between 0 and 2" << endl;
+		(Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::WARN); ncfunc_ss.str("");
 		getchar();
 		break;
 	}
@@ -595,7 +606,7 @@ int create3DNC_uebOutputs(const char* FileName, const char* VarName, const char 
 	//grid mapping
 	if (retncval = nc_get_att_text(ncid, pvarid, "grid_mapping",grid_mappingValue))
 		ERR(retncval);
-	//cout << grid_mappingValue << endl;
+	//ncfunc_ss   << grid_mappingValue << endl;
 	if (retncval = nc_copy_att(ncid, pvarid, "grid_mapping", ncid_out, v_varid))
 		ERR(retncval);
 	/*if (retncval = nc_put_att_text(ncid_out, v_varid, "grid_mapping", , (const char*)grid_mappingValue))
@@ -671,7 +682,8 @@ int create3DNC_uebOutputs(const char* FileName, const char* VarName, const char 
 	if (retncval = nc_close(ncid_out))
 		ERR(retncval);
 
-	cout << "Sucess creating and storing dimension vars in: " << FileName << endl;
+	ncfunc_ss   << "Success creating and storing dimension vars in: " << FileName << endl;
+	(Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::INFO); ncfunc_ss.str("");
 	//fflush(stdout); 
 	return 0;
 }
@@ -735,7 +747,8 @@ int Create3DNC(const char* FileName, const char* VarName, const char *varUnits, 
 			 dimids[2] = y_dimid; 			 
 			 break;		
 		default:
-			cout<<"the dim order has to be between 0 and 2"<<endl;
+			ncfunc_ss  <<"the dim order has to be between 0 and 2"<<endl;
+			(Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::WARN); ncfunc_ss.str("");
 			getchar();
 			break;
 	 }
@@ -794,7 +807,8 @@ int Create3DNC(const char* FileName, const char* VarName, const char *varUnits, 
 	if ((retncval = nc_close(ncid)))    
 		ERR(retncval);  
 	//delte 3D array	
-	cout<<"Sucess creating and storing dimension vars in: "<<FileName<<endl; 
+	ncfunc_ss  <<"Success creating and storing dimension vars in: "<<FileName<<endl; 
+	(Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::INFO); ncfunc_ss.str("");
 	//fflush(stdout); 
 	return 0;
 }
@@ -852,7 +866,8 @@ int Write3DNC(const char* FileName, const char* VarName, const char *varUnits,  
 			 dimids[2] = y_dimid; 			 
 			 break;		
 		default:
-			cout<<"the dim order has to be between 0 and 2"<<endl;
+			ncfunc_ss  <<"the dim order has to be between 0 and 2"<<endl;
+			(Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::WARN); ncfunc_ss.str("");
 			getchar();
 			break;
 	 }
@@ -915,7 +930,8 @@ int Write3DNC(const char* FileName, const char* VarName, const char *varUnits,  
 	if ((retncval = nc_close(ncid)))    
 		ERR(retncval);  
 	//delte 3D array
-	cout<<" SUCCESS writing file: "<< FileName<<endl; 
+	ncfunc_ss  <<" SUCCESS writing file: "<< FileName<<endl; 
+	(Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::INFO); ncfunc_ss.str("");
 	//fflush(stdout); 
 	return 0;
 }
@@ -1014,7 +1030,7 @@ int read3DNC_Contiguous(const char* FILE_NAME, const char* VAR_NAME, const char*
 	//close netcdf file			
 	if ((retncval = nc_close(ncid))) 
 		ERR(retncval); 
-    //cout<<"SUCCESS reading input file: "<< FILE_NAME<<endl;  
+    //ncfunc_ss  <<"SUCCESS reading input file: "<< FILE_NAME<<endl;  
 	return 0;
 }
 
@@ -1110,7 +1126,7 @@ int read3DNC(const char* FILE_NAME, const char* VAR_NAME, const char* xcor_NAME,
 		for(size_t i=0; i< Nydim; i++)
 			for(size_t j=0;j<Nxdim;j++)
 				pvar_in[kt][i][j] = pvar_inp[i][j];
-		//cout<<"step no %d\n",k);
+		//ncfunc_ss  <<"step no %d\n",k);
 	}	/* next record */ 
 	//free temporary matrix pvar_inp
 	for(size_t i=0; i< Nydim; i++)
@@ -1119,7 +1135,8 @@ int read3DNC(const char* FILE_NAME, const char* VAR_NAME, const char* xcor_NAME,
 	//close netcdf file			
 	if ((retncval = nc_close(ncid))) 
 		ERR(retncval); 
-    cout<<"SUCCESS reading input file: "<< FILE_NAME<<endl;  
+    ncfunc_ss  <<"SUCCESS reading input file: "<< FILE_NAME<<endl; 
+	(Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::INFO); ncfunc_ss.str(""); 
 	return 0;
 }
 //function to read multiple blocks of single column/rod along time dimension from 3D netcdf file, for given y , x coordinate arrays
@@ -1345,7 +1362,7 @@ int read2DNC(const char* FILE_NAME, const char* VAR_NAME, float** &pvar_in, MPI:
 			ERR(retncval); 
 		for(int ix=0; ix< Nxdim; ix++)			
 				pvar_in[nj][ix] = ta_inp[ix];
-		//cout<<"step no %d\n",nj);
+		//ncfunc_ss  <<"step no %d\n",nj);
 	}	/* next record */ 
 	/*ycorvar = new float[Nydim];
 	xcorvar = new float[Nxdim];
@@ -1416,7 +1433,7 @@ int read2DNC(const char* FILE_NAME, const char* VAR_NAME, float**& pvar_in)
 			ERR(retncval);
 		for (int ix = 0; ix < Nxdim; ix++)
 			pvar_in[nj][ix] = ta_inp[ix];
-		//cout<<"step no %d\n",nj);
+		//ncfunc_ss  <<"step no %d\n",nj);
 	}	/* next record */
 	/*ycorvar = new float[Nydim];
 	xcorvar = new float[Nxdim];
@@ -1487,7 +1504,7 @@ int read2DNC(const char* FILE_NAME, const char* VAR_NAME, float**& pvar_in,
 			ERR(retncval);
 		for (int ix = 0; ix < Nxdim; ix++)
 			pvar_in[nj][ix] = ta_inp[ix];
-		//cout<<"step no %d\n",nj);
+		//ncfunc_ss  <<"step no %d\n",nj);
 	}	/* next record */
 	/*ycorvar = new float[Nydim];
 	xcorvar = new float[Nxdim];
@@ -1538,12 +1555,12 @@ int readwsncFile(const char* FILE_NAME, const char* VAR_NAME, const char* ycor_N
 	//CF Convension use _FillValue
 	if ((retncval = nc_get_att(ncid,pvarid,"_FillValue",&fillVal)))    
 		ERR(retncval); 	
-	//cout<<"_FillValue: "<<fillVal<<endl;
+	//ncfunc_ss  <<"_FillValue: "<<fillVal<<endl;
 	/*int iMiss;
 	 if ((retncval = nc_inq_var_fill(ncid,pvarid, &fillSet,&iMiss)))     
 		 	ERR(retncval); 		
-	cout<<" Fill value: "<<iMiss<<endl;
-	cout<<" Fill set? "<<fillSet<<endl;*/
+	ncfunc_ss  <<" Fill value: "<<iMiss<<endl;
+	ncfunc_ss  <<" Fill set? "<<fillSet<<endl;*/
 	
 	//check dimension sizes
 	if ((retncval = nc_inq_dim(ncid,pdimids[0],NULL,&Nydim))) 
@@ -1588,9 +1605,9 @@ int readwsncFile(const char* FILE_NAME, const char* VAR_NAME, const char* ycor_N
 			ERR(retncval); 
 		for(int ix=0; ix< Nxdim; ix++)			
 				pvar_in[nj][ix] = ta_inp[ix];
-		//cout<<"step no %d\n",nj);
+		//ncfunc_ss  <<"step no %d\n",nj);
 	}	/* next record */ 
-    //cout<<endl;	
+    //ncfunc_ss  <<endl;	
 	/*if ((retncval = nc_get_vara_int(ncid, pvarid,start,count, &pvar_in[0][0])))      
 			ERR(retncval); 	*/
 	//close netcdf file	
@@ -1632,12 +1649,12 @@ int readwsncFile(const char* FILE_NAME, const char* VAR_NAME, const char* ycor_N
 	//CF Convension use _FillValue
 	if ((retncval = nc_get_att(ncid, pvarid, "_FillValue", &fillVal)))
 		ERR(retncval);
-	//cout<<"_FillValue: "<<fillVal<<endl;
+	//ncfunc_ss  <<"_FillValue: "<<fillVal<<endl;
 	/*int iMiss;
 	 if ((retncval = nc_inq_var_fill(ncid,pvarid, &fillSet,&iMiss)))
 			ERR(retncval);
-	cout<<" Fill value: "<<iMiss<<endl;
-	cout<<" Fill set? "<<fillSet<<endl;*/
+	ncfunc_ss  <<" Fill value: "<<iMiss<<endl;
+	ncfunc_ss  <<" Fill set? "<<fillSet<<endl;*/
 
 	//check dimension sizes
 	if ((retncval = nc_inq_dim(ncid, pdimids[0], NULL, &Nydim)))
@@ -1679,9 +1696,9 @@ int readwsncFile(const char* FILE_NAME, const char* VAR_NAME, const char* ycor_N
 			ERR(retncval);
 		for (int ix = 0; ix < Nxdim; ix++)
 			pvar_in[nj][ix] = ta_inp[ix];
-		//cout<<"step no %d\n",nj);
+		//ncfunc_ss  <<"step no %d\n",nj);
 	}	/* next record */
-	//cout<<endl;
+	//ncfunc_ss  <<endl;
 	/*if ((retncval = nc_get_vara_int(ncid, pvarid,start,count, &pvar_in[0][0])))
 			ERR(retncval); 	*/
 			//close netcdf file	
@@ -1798,7 +1815,7 @@ int Write3DNC(const char* FILE_NAME, const char* VAR_NAME, const char* xcor_NAME
 		start[0] = kt;
 		if ((retncval = nc_put_vara_float(ncid, pvarid,start,count, &pvar_outp[0][0])))      
 			ERR(retncval); 		
-		//cout<<"step no %d\n",k);
+		//ncfunc_ss  <<"step no %d\n",k);
 	}	/* next record */ 
 	//free temporary matrix pvar_outp
 	for(size_t i=0; i< Nydim; i++)
@@ -1807,6 +1824,8 @@ int Write3DNC(const char* FILE_NAME, const char* VAR_NAME, const char* xcor_NAME
 	//close netcdf file			
 	if ((retncval = nc_close(ncid))) 
 		ERR(retncval); 
-	cout<<"SUCCESS writing output file: "<< FILE_NAME<<endl;
+	ncfunc_ss  <<"SUCCESS writing output file: "<< FILE_NAME<<endl;
+	(Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::INFO); ncfunc_ss.str("");
+
 	return 0;	
 }

@@ -3,6 +3,7 @@
 #include <string>
 #include <chrono>
 #include <thread>
+#include <cassert>
 
 std::shared_ptr<Logger> Logger::loggerInstance;
 
@@ -34,13 +35,12 @@ std::string module_name[static_cast<int>(LoggingModule::MODULE_COUNT)]
 * @return void
 */
 void Logger::SetLogPreferences(LogLevel level = LogLevel::ERROR) {
-	std::stringstream ss;
+	std::stringstream ss("");
 
 	// set the logging level
  	logLevel = level;
     
 	// get the log file path
-	ss.str("");
 	ss << getenv("NGEN_LOG_FILE_PATH");
 	logFilePath = ss.str();
 	ss.str("");
@@ -91,14 +91,12 @@ std::shared_ptr<Logger> Logger::GetInstance() {
 
 /**
 * Log given message with defined parameters and generate message to pass on Console or File
-* @param codeFile: __FILE__
-* @param codeLine: __LINE__
 * @param message: Log Message
 * @param messageLevel: Log Level, LogLevel::DEBUG by default
 */
 void Logger::Log(std::string message, LogLevel messageLevel = LogLevel::DEBUG) {
 	LoggingModule module=LoggingModule::UEB;
-	
+
 	// don't log if messageLevel < logLevel 
 	if (messageLevel >= logLevel) {
 		std::string logType;
@@ -132,6 +130,7 @@ void Logger::Log(std::string message, LogLevel messageLevel = LogLevel::DEBUG) {
 		final_message = createTimestamp() + separator + mod_name + separator + logType + message;
 		if (!logFile.bad()) {
 			logFile << final_message;
+			std::cout << final_message;
 			logFile.flush();
 		}
 
@@ -186,39 +185,35 @@ std::string Logger::createTimestamp() {
 }
 
 void Logger::setup_logger(void) {
-	std::stringstream ss;
+	std::stringstream std_ss;
 
-	// get the log file path
-	ss.str("");
-	ss << getenv("NGEN_LOG_FILE_PATH");
-	logFilePath = ss.str();
-	ss.str("");
+	std_ss.str("");
 
     // One time log preferences
-    (Logger::GetInstance())->SetLogPreferences(LogLevel::NONE);
+    (Logger::GetInstance())->SetLogPreferences(LogLevel::INFO);
 
     // sample logging for different log levels
-    ss << "Sample Log for LogLevel::ERROR" << std::endl;
-    (Logger::GetInstance())->Log(ss.str(), LogLevel::ERROR); ss.str("");
+    std_ss << "Sample Log for LogLevel::ERROR" << std::endl;
+    (Logger::GetInstance())->Log(std_ss.str(), LogLevel::ERROR); std_ss.str("");
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    ss << "Sample Log for LogLevel::FATAL" << std::endl;
-    (Logger::GetInstance())->Log(ss.str(), LogLevel::FATAL); ss.str("");
+    std_ss << "Sample Log for LogLevel::FATAL" << std::endl;
+    (Logger::GetInstance())->Log(std_ss.str(), LogLevel::FATAL); std_ss.str("");
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    ss << "Sample Log for LogLevel::WARN" << std::endl;
-    (Logger::GetInstance())->Log(ss.str(), LogLevel::WARN); ss.str("");
+    std_ss << "Sample Log for LogLevel::WARN" << std::endl;
+    (Logger::GetInstance())->Log(std_ss.str(), LogLevel::WARN); std_ss.str("");
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    ss << "Sample Log for LogLevel::INFO" << std::endl;
-    (Logger::GetInstance())->Log(ss.str(), LogLevel::INFO); ss.str("");
+    std_ss << "Sample Log for LogLevel::INFO" << std::endl;
+    (Logger::GetInstance())->Log(std_ss.str(), LogLevel::INFO); std_ss.str("");
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    ss << "Sample Log for LogLevel::DEBUG" << std::endl;
-    (Logger::GetInstance())->Log(ss.str(), LogLevel::DEBUG); ss.str("");
+    std_ss << "Sample Log for LogLevel::DEBUG" << std::endl;
+    (Logger::GetInstance())->Log(std_ss.str(), LogLevel::DEBUG); std_ss.str("");
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
     // multiline logging
-    ss << "First line of multiline log:" << std::endl
-       << "   Indented second line of multiline log" << std::endl
-       << "         Indented third line of multiline log" << std::endl
-       << "                Indented fourth line of multiline log" << std::endl;
-    (Logger::GetInstance())->Log(ss.str(), LogLevel::INFO); ss.str("");
+    std_ss << "First line of multiline log:" << std::endl;
+    std_ss << "   Indented second line of multiline log" << std::endl;
+    std_ss << "         Indented third line of multiline log" << std::endl;
+    std_ss << "                Indented fourth line of multiline log" << std::endl;
+    (Logger::GetInstance())->Log(std_ss.str(), LogLevel::INFO); std_ss.str("");
 }
 
 std::string Logger::getLogFilePath() {
