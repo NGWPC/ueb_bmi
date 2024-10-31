@@ -19,13 +19,12 @@ ueb::ControlFile::ControlFile( std::string const& contrl_file ) :
                                   _outDimord( 0 ),
                                   _aggoutDimord( 1 )
 {
-    _conFilename = contrl_file;
-    loadControlFile( );
+    loadControlFile(contrl_file);
 }
 
 ueb::ControlFile::~ControlFile(){}
 
-void ueb::ControlFile::loadControlFile()
+void ueb::ControlFile::loadControlFile(std::string const& contrl_file)
 {
     std::cout << "Control File is " << _conFilename << std::endl;
     char headerLine[256];
@@ -34,10 +33,10 @@ void ueb::ControlFile::loadControlFile()
 	 aggoutputFile1[256];
     char wsvarName1[256], wsycorName1[256], wsxcorName1[256];
 
-    FILE* pconFile = fopen(_conFilename.c_str(), "rt");
+    FILE* pconFile = fopen(contrl_file.c_str(), "rt");
     if ( pconFile == NULL )
     {
-       throw std::ios_base::failure( "Couldn't open control file: " + _conFilename );
+       throw std::ios_base::failure( "Couldn't open control file: " + contrl_file );
     } // pconFile
 
     fgets(headerLine, 256, pconFile);
@@ -232,6 +231,29 @@ void ueb::ControlFile::setModelUTCOffset( double const& offset )
      _ModelUTCOffset = offset;
 }
 
+int ueb::ControlFile::getModelTotalTimeSteps() const
+{
+   int Year = _ModelStartDate[0];
+   int Month = _ModelStartDate[1];
+   int Day = _ModelStartDate[2];          
+   double sHour = _ModelStartHour;
+   double  currentModelDateTime = julian(Year, Month, Day, sHour);
+
+   double modelDT = _ModelDt;
+
+   // calculating model end date-time in julian date
+   double dHour = _ModelEndHour;
+   double EJD = julian( _ModelEndDate[0], 
+		        _ModelEndDate[1], 
+			_ModelEndDate[2], dHour);     
+
+   double modelSpan = EJD - currentModelDateTime;		  
+		  //model time steps
+   int numTotalTs = (int)ceil(modelSpan*(24 / modelDT));
+
+   return numTotalTs;
+}
+
 int ueb::ControlFile::getInpDailyorSubdaily()
 {
      return _inpDailyorSubdaily;
@@ -282,6 +304,15 @@ void ueb::ControlFile::setOutDimord( int const& od )
 void ueb::ControlFile::setAggoutDimord( int const& aod )
 {
      _aggoutDimord = aod;
+}
+
+int ueb::ControlFile::getStepsInADay() const
+{
+      double modelDT = _ModelDt;
+      int stepinaDay= (int) (24.0/modelDT +0.5);  // closest rounding
+      modelDT = 24.0/stepinaDay;
+      int nstepinaDay = stepinaDay; 	  
+      return nstepinaDay; 
 }
 
 std::ostream& operator<< ( std::ostream &os, ueb::ControlFile f)
