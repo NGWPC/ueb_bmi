@@ -37,8 +37,15 @@ std::string module_name[static_cast<int>(LoggingModule::MODULE_COUNT)]
 void Logger::SetLogPreferences(LogLevel level = LogLevel::ERROR) {
 	std::stringstream ss("");
 
-	// set the logging level
- 	logLevel = level;
+	// get the log level for ueb_bmi module
+	ss << getenv("ueb_bmi_ll");
+ 	LogLevel logLevel;
+	if (ss.str() != "")
+		logLevel = Logger::GetLogLevel(ss.str());
+	else
+		logLevel = LogLevel::INFO;
+
+	std::cout << "UEB-BMI Log Level is set at: " << Logger::getLogLevelString(logLevel) << std::endl;
     
 	// get the log file path
 	ss << getenv("NGEN_LOG_FILE_PATH");
@@ -47,7 +54,7 @@ void Logger::SetLogPreferences(LogLevel level = LogLevel::ERROR) {
 
 	logFile.open(logFilePath, std::ios::app);
 	if (!logFile.good()) {
-		std::cerr << "Warning: Can't Open shared Log File referenced from NGEN_LOG_FILE_PATH env. variable" << std::endl;
+		std::cerr << "Warning: Can't Open shared Log File referenced from NGEN_LOG_FILE_PATH env. variable for UEB-BMI module" << std::endl;
     	// create a local log file for UEB module instead
 		std::string fwd_slash = "/";
     	std::string logFileName = "ueb_log.txt";
@@ -57,24 +64,55 @@ void Logger::SetLogPreferences(LogLevel level = LogLevel::ERROR) {
 		const char *cstr = mkdir_cmd.c_str();
    		status = system(cstr);
    		if (status == -1)
-   		   std::cerr << "Error(" << (errno) << ") creating log file directory: " << logFileDir << std::endl;
+   		   std::cerr << "Error(" << (errno) << ") creating log file directory for UEB-BMI module: " << logFileDir << std::endl;
    		else
-   		   std::cout << "Log directory: " << logFileDir <<std::endl;
+   		   std::cout << "Log directory for UEB-BMI module: " << logFileDir <<std::endl;
 		// create a local log file for UEB module
 		logFilePath = logFileDir+logFileName;
 		logFile.open(logFilePath, ios::out | ios::app);
 		if (!logFile.good()) {
-			std::cerr << "Can't Open local directory Log File:" << logFilePath <<std::endl;			
+			std::cerr << "Can't Open local directory Log File for UEB-BMI module:" << logFilePath <<std::endl;			
 		}
 		else {
-			std::cout << "Logging instead into: " << logFilePath << std::endl;
+			std::cout << "UEB-BMI module is logging instead into: " << logFilePath << std::endl;
 		}
 			
 	}
 	else {
-		std::cout << "Log File Path:" << logFilePath << std::endl;
+		std::cout << "Log File Path for UEB-BMI module:" << logFilePath << std::endl;
 	}
 
+}
+
+/**
+* Convert LogLevel to String Representation of Log Level 
+* @param logLevel : LogLevel
+* @return String log level
+*/
+std::string Logger::getLogLevelString(LogLevel level) {
+	std::string logType;
+	//Set Log Level Name
+	switch (level) {
+		case LogLevel::FATAL:
+			logType = "FATAL ";
+			break;
+		case LogLevel::DEBUG:
+			logType = "DEBUG ";
+			break;
+		case LogLevel::INFO:
+			logType = "INFO  ";
+			break;
+		case LogLevel::WARN:
+			logType = "WARN  ";
+			break;
+		case LogLevel::ERROR:
+			logType = "ERROR ";
+			break;
+		default:
+			logType = "NONE  ";
+			break;
+	}
+	return logType;
 }
 
 /**
@@ -100,27 +138,7 @@ void Logger::Log(std::string message, LogLevel messageLevel = LogLevel::DEBUG) {
 	// don't log if messageLevel < logLevel 
 	if (messageLevel >= logLevel) {
 		std::string logType;
-		//Set Log Level Name
-		switch (messageLevel) {
-		case LogLevel::FATAL:
-			logType = "FATAL ";
-			break;
-		case LogLevel::DEBUG:
-			logType = "DEBUG ";
-			break;
-		case LogLevel::INFO:
-			logType = "INFO  ";
-			break;
-		case LogLevel::WARN:
-			logType = "WARN  ";
-			break;
-		case LogLevel::ERROR:
-			logType = "ERROR ";
-			break;
-		default:
-			logType = "NONE  ";
-			break;
-		}
+		logType = Logger::getLogLevelString(messageLevel);
 
 		std::string final_message;
 		std::string mod_name;
