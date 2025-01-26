@@ -1,6 +1,10 @@
 //copied from Canopy.f90
 //6.6.13
 #include "uebpgdecls.h"
+#include <Logger.hpp>
+
+std::stringstream canopy_ss("");
+
 //*******************************************************************************************************************
 //*		               CANOPY RADIATION TRANSMISSION PROCESSES
 //*******************************************************************************************************************
@@ -201,9 +205,10 @@ void NETLONGRAD(float RH,float Ta,float Tss,float Tc,float Tk,float Fs,float EmC
                   + (1-Taud)*(1-EmS)*1*Qlcu - Qlcu - Qlcd;  
 	  if(snowdgtvariteflag2 == 1)
 	  {
-		   cout<<"Outputs from NetLongRad"<<endl;
-		 cout<<setprecision(15)<<Taud<<" "<< Taudh<<" "<<Betad<<" "<<Qlcd<<" "<<Qlcu<<" ";
-	     cout<<setprecision(15)<<Qli<<" "<<Qle<<" "<<Qlns<<" "<<Qlnc<<endl;
+		   canopy_ss <<"Outputs from NetLongRad"<<endl;
+		 canopy_ss <<setprecision(15)<<Taud<<" "<< Taudh<<" "<<Betad<<" "<<Qlcd<<" "<<Qlcu<<" ";
+	     canopy_ss <<setprecision(15)<<Qli<<" "<<Qle<<" "<<Qlns<<" "<<Qlnc<<endl;
+		 (Logger::GetInstance())->Log(canopy_ss.str(), LogLevel::INFO); canopy_ss.str("");
 	  }
 	  
 
@@ -309,8 +314,9 @@ void AeroRes(float P, float Wc, float V, float Ta, float Tss, float Tc, float Fs
 		} 
 		if(snowdgtvariteflag2 == 1)
 	  {
-		 cout<<"In aeroRes"<<endl;
-		 cout<<std::setprecision(15)<<ndecay<<" "<<Kh<<" "<<Ra<<" "<<Rc<<" "<<Rs<<" "<<Rbc<<" "<<Lbmean<<" "<< Rl<<" "<< RKINc<<" "<< RKINa<<" "<< RKINbc<<" "<< RKINl<<endl;
+		 canopy_ss <<"In aeroRes"<<endl;
+		 canopy_ss <<std::setprecision(15)<<ndecay<<" "<<Kh<<" "<<Ra<<" "<<Rc<<" "<<Rs<<" "<<Rbc<<" "<<Lbmean<<" "<< Rl<<" "<< RKINc<<" "<< RKINa<<" "<< RKINbc<<" "<< RKINl<<endl;
+		 (Logger::GetInstance())->Log(canopy_ss.str(), LogLevel::INFO); canopy_ss.str("");
 	}
 
 	}           
@@ -379,7 +385,8 @@ void TURBFLUX (float Ws, float Wc, float A, float Tk,float Tc,float Ta,float Tss
 	Ea     = svpw(Ta) * RH;          // Actual vapor pressure sorrounding canopy
 	if(snowdgtvariteflag2 == 1)
 	{
-		  cout<<std::setprecision(15)<<Ea<<endl;
+		  canopy_ss <<std::setprecision(15)<<Ea<<endl;
+		  (Logger::GetInstance())->Log(canopy_ss.str(), LogLevel::INFO); canopy_ss.str("");
 	}
 
 //     Wind less coefficient:
@@ -392,14 +399,16 @@ void TURBFLUX (float Ws, float Wc, float A, float Tk,float Tc,float Ta,float Tss
 
    AeroRes (P, Wc,V, Ta, Tss, Tc, Fs, param, sitev,Tk, 
             d, Z0c, Vz, Rc, Ra, Rbc, Rl, Rkinc, Rkina, Rkinbc, Rkinl);         // Output variables
-    if(snowdgtvariteflag2 == 1)
-	  {
-		 cout<<"Outputs from aeroRes"<<endl;
-		 cout<<std::setprecision(15)<<d<<" "<< Z0c<<" "<< Vz<<" "<< Rc<<" "<< Ra<<" "<< Rbc<<" "<< Rl<<" "<< Rkinc<<" "<< Rkina<<" "<< Rkinbc<<" "<< Rkinl<<endl;
+    if(snowdgtvariteflag2 == 1) {
+		 canopy_ss <<"Outputs from aeroRes"<<endl;
+		 canopy_ss <<std::setprecision(15)<<d<<" "<< Z0c<<" "<< Vz<<" "<< Rc<<" "<< Ra<<" "<< Rbc<<" "<< Rl<<" "<< Rkinc<<" "<< Rkina<<" "<< Rkinbc<<" "<< Rkinl<<endl;
+		 (Logger::GetInstance())->Log(canopy_ss.str(), LogLevel::INFO); canopy_ss.str("");
 	}
 
-	if(snowdgtvariteflag2 == 1)
-		cout<<"LAI: "<<LAI<<endl;
+	if(snowdgtvariteflag2 == 1) {
+		canopy_ss <<"LAI: "<<LAI<<endl;
+		(Logger::GetInstance())->Log(canopy_ss.str(), LogLevel::INFO); canopy_ss.str("");
+	}
    
   if (V <= 0) 
   {
@@ -423,8 +432,10 @@ void TURBFLUX (float Ws, float Wc, float A, float Tk,float Tc,float Ta,float Tss
 			QEc = 0.0;
 			Ec  = 0.0;
 
-			if(snowdgtvariteflag2 == 1)
-				cout<<std::setprecision(15)<<"QHs,QEs,Es,QHc,QEc,Ec"<<" "<<QHs<<" "<<QEs<<" "<<Es<<" "<<QHc<<" "<<QEc<<" "<<Ec<<endl;
+			if(snowdgtvariteflag2 == 1) {
+				canopy_ss <<std::setprecision(15)<<"QHs,QEs,Es,QHc,QEc,Ec"<<" "<<QHs<<" "<<QEs<<" "<<Es<<" "<<QHc<<" "<<QEc<<" "<<Ec<<endl;
+				(Logger::GetInstance())->Log(canopy_ss.str(), LogLevel::INFO); canopy_ss.str("");
+			}
 
 		}
 		else
@@ -437,8 +448,9 @@ void TURBFLUX (float Ws, float Wc, float A, float Tk,float Tc,float Ta,float Tss
 			if (radFracdenom == 0)
 			{
 				radFracdenom += 0.01;
-				cout<<"Warning! a zero denominator! the sum of turbulent conductances Rkina + 1*Rkinl + 1*Rkinc evaluates to zero"<<endl; 
-				cout<<"added 0.01 to avoid numerical error; Need checking results"<<endl;
+				canopy_ss <<"Warning! a zero denominator! the sum of turbulent conductances Rkina + 1*Rkinl + 1*Rkinc evaluates to zero"<<endl; 
+				canopy_ss <<"added 0.01 to avoid numerical error; Need checking results"<<endl;
+				(Logger::GetInstance())->Log(canopy_ss.str(), LogLevel::WARN); canopy_ss.str("");
 				//getchar();				
 			}
 			Tac = (Tc*Rkinl + Tss*Rkinc + Ta*Rkina) / radFracdenom; //(1*Rkina + 1*Rkinl + 1*Rkinc);
@@ -450,8 +462,9 @@ void TURBFLUX (float Ws, float Wc, float A, float Tk,float Tc,float Ta,float Tss
 			if (Tack == 0)
 			{
 				Tack += 1.0;
-				cout<<"Error! Surface temp in function Turbflux() Tack = 0"<<endl; 
-				cout<<"added 1 to avoid numerical error; Need checking results"<<endl;
+				canopy_ss <<"Error! Surface temp in function Turbflux() Tack = 0"<<endl; 
+				canopy_ss <<"added 1 to avoid numerical error; Need checking results"<<endl;
+				(Logger::GetInstance())->Log(canopy_ss.str(), LogLevel::ERROR); canopy_ss.str("");
 				//getchar();				
 			}
 
@@ -459,8 +472,10 @@ void TURBFLUX (float Ws, float Wc, float A, float Tk,float Tc,float Ta,float Tss
 			//	 Flux from canopy
 			QHc  = (RHOAc* C_p *Rkinl + EHoC)*(Tac - Tc); 	
 
-			if(snowdgtvariteflag2 == 1)
-				cout<<std::setprecision(15)<<"Tc, Tac,Eac,Tack: "<<Tc<<" "<<Tac<<" "<<Eac<<" "<<Tack<<endl;
+			if(snowdgtvariteflag2 == 1) {
+				canopy_ss <<std::setprecision(15)<<"Tc, Tac,Eac,Tack: "<<Tc<<" "<<Tac<<" "<<Eac<<" "<<Tack<<endl;
+				(Logger::GetInstance())->Log(canopy_ss.str(), LogLevel::INFO); canopy_ss.str("");
+			}
 	       
 			if ((Wc == 0) && (P == 0))
 			{
@@ -476,8 +491,10 @@ void TURBFLUX (float Ws, float Wc, float A, float Tk,float Tc,float Ta,float Tss
 		    QHs  =(RHOAc*C_p*Rkinc + EHoS)* (Tac-Tss);                  //	EHoS added for zero wind condition [Jordan et al.(1999); Koivusalo (2002); Herrero et al.(2009) ] 
 			QEs  =(0.622*Hne_u/(Ra_g*Tack)*Rkinc+ EEoS)*(Eac-Ess); 
 			Es   = -QEs/(Rho_w*Hne_u);
-			if(snowdgtvariteflag2 == 1)
-				cout<<std::setprecision(15)<<"QHs,QEs,Es,QHc,QEc,Ec"<<" "<<QHs<<" "<<QEs<<" "<<Es<<" "<<QHc<<" "<<QEc<<" "<<Ec<<endl;
+			if(snowdgtvariteflag2 == 1) {
+				canopy_ss <<std::setprecision(15)<<"QHs,QEs,Es,QHc,QEc,Ec"<<" "<<QHs<<" "<<QEs<<" "<<Es<<" "<<QHc<<" "<<QEc<<" "<<Ec<<endl;
+				(Logger::GetInstance())->Log(canopy_ss.str(), LogLevel::INFO); canopy_ss.str("");
+			}
 			
 		}
 	//	Total flux *** moved back 6.25.13
