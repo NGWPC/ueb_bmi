@@ -1,6 +1,9 @@
 //copied from snowdgtv.f90
 //_# 6.6.13
-# include "uebpgdecls.h"
+#include "uebpgdecls.h"
+#include "Logger.hpp"
+
+std::stringstream snowdgtv_ss("");
 //**********************************************************************************************
 //
 //  Copyright (C) 2012  David Tarboton, Utah State University, dtarb@usu.edu.  http://hydrology.usu.edu/dtarb
@@ -278,26 +281,35 @@ void SNOWUEB2(float dt, float *input, float *sitev, float *statev, float *tsprev
 //   ifany of these variables are out of range due to any problem set them back to freezing
 	  if(Tssk_old < 0)
 	  {
-	    if(snowdgtvariteflag == 1)		
-	        cout<<"Invalid previous time step surface temperature set to 273 K"<<Tssk_old<<endl;
+	    if(snowdgtvariteflag == 1) {
+	        snowdgtv_ss<<"Invalid previous time step surface temperature set to 273 K"<<Tssk_old<<endl;
+			(Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::ERROR); snowdgtv_ss.str("");
+		}		
 		Tssk_old = T_k;  
 	  }
 	  if(Tsavek_old  < 0)
 	  {
-	    if(snowdgtvariteflag == 1)		
-	        cout<<"Invalid previous time step average temperature  set to 273 K"<<Tsavek_old<<endl;
+	    if(snowdgtvariteflag == 1)	{
+	        snowdgtv_ss <<"Invalid previous time step average temperature  set to 273 K"<<Tsavek_old<<endl;
+			(Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::ERROR); snowdgtv_ss.str("");
+		}	
+			
 		Tsavek_old  = T_k;  
 	  }
 	  if(Tssk_ave  < 0)
 	  {
-	    if(snowdgtvariteflag == 1)		
-	        cout<<"Invalid last 24 hr average surface temperature  set to 273 K"<<Tssk_ave<<endl;
+	    if(snowdgtvariteflag == 1) {
+	        snowdgtv_ss <<"Invalid last 24 hr average surface temperature  set to 273 K"<<Tssk_ave<<endl;
+			(Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::ERROR); snowdgtv_ss.str("");
+		}		
 		Tssk_ave  = T_k;  
 	  }
 	  if(Tsavek_ave  < 0)
 	  {
-	    if(snowdgtvariteflag == 1)		
-	        cout<<"Invalid last 24 hr average temperature set to 273 K"<<Tsavek_ave<<endl;
+	    if(snowdgtvariteflag == 1)	{	
+	        snowdgtv_ss <<"Invalid last 24 hr average temperature set to 273 K"<<Tsavek_ave<<endl;
+			(Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::ERROR); snowdgtv_ss.str("");
+		}
 		Tsavek_ave  = T_k;  
 	  }	 
 //  Separate rain and snow      
@@ -640,8 +652,9 @@ void PREDICORRc ( float &Us, float &Ws, float &Wc, float Alb, float dt, float ri
 
 	if(snowdgtvariteflag3 == 1)
 	{
-		cout<<"\n Predictor: Us1, Ws1, Ts1, Q1, FM1 "<<endl;
-		cout<<"   "<< Us1<<" "<< Ws1<<" "<<TSURFs1<<" "<<Q1<<" "<<FM1<<endl<<endl;
+		snowdgtv_ss <<"\n Predictor: Us1, Ws1, Ts1, Q1, FM1 "<<endl;
+		snowdgtv_ss <<"   "<< Us1<<" "<< Ws1<<" "<<TSURFs1<<" "<<Q1<<" "<<FM1<<endl<<endl;
+		(Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO); snowdgtv_ss.str("");
 	}
 
     QFMc(Us1,Ws1,Wc1,Alb,dt,rid,P,Pr,Ps,Ta,V,RH,Qsi,atff,Qli, cosZen,EmC,Ems,param,sitev,iradfl,Qnetob,iTsMethod,mtime, 
@@ -678,8 +691,9 @@ void PREDICORRc ( float &Us, float &Ws, float &Wc, float Alb, float dt, float ri
 
 	if(snowdgtvariteflag3 == 1)
 	{
-		cout<<"\n Corrector: Us2, Ws2, Ts, Q, FM "<<endl;
-		cout<<"   "<< Us2<<" "<< Ws2<<" "<<TSURFs<<" "<<Q<<" "<<FM<<endl<<endl;
+		snowdgtv_ss <<"\n Corrector: Us2, Ws2, Ts, Q, FM "<<endl;
+		snowdgtv_ss <<"   "<< Us2<<" "<< Ws2<<" "<<TSURFs<<" "<<Q<<" "<<FM<<endl<<endl;
+		(Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO); snowdgtv_ss.str("");
 	}
 	//   iterate to convergence to enhance stability
     int niter = 1, imax = 5;
@@ -769,12 +783,14 @@ void PREDICORRc ( float &Us, float &Ws, float &Wc, float Alb, float dt, float ri
 //    Check that nothing went wrong
                 if(MR < 0)
 				{
-	               cout<<"Error - negative melt rate in snow"<<endl;
+	               snowdgtv_ss <<"Error - negative melt rate in snow"<<endl;
+				   (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::ERROR); snowdgtv_ss.str("");
 				   getchar();
 				}
 	            if(Ws2 <  0)
 				{
-	               cout<<"Error - negative w2 in snow"<<endl;	
+	               snowdgtv_ss <<"Error - negative w2 in snow"<<endl;	
+				   (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::ERROR); snowdgtv_ss.str("");
 				   getchar();
 				}
 			    Q = Ae/dt-QMs;
@@ -788,8 +804,9 @@ void PREDICORRc ( float &Us, float &Ws, float &Wc, float Alb, float dt, float ri
 		 if(snowdgtvariteflag3 == 1)
 		 {
 			//if( niter == 1)
-			cout<<endl<<"Iteration in pred-cor: niter, Us2, Ws2, Ts, Q, FM: "<<endl;
-			cout<<"  "<<(niter-1)<<" "<<Us2<<" "<<Ws2<<" "<<TSURFs<<" "<<Q<<" "<< FM<<endl;
+			snowdgtv_ss <<endl<<"Iteration in pred-cor: niter, Us2, Ws2, Ts, Q, FM: "<<endl;
+			snowdgtv_ss <<"  "<<(niter-1)<<" "<<Us2<<" "<<Ws2<<" "<<TSURFs<<" "<<Q<<" "<< FM<<endl;
+			(Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO); snowdgtv_ss.str("");
 		 }
               
      }   //while ((abs(Ws2-Ws1) > wtol || abs(Us2-Us1) > utol) && (niter < imax))   //go to 1       
@@ -1092,13 +1109,15 @@ float      rhog = param[7],	   //  Soil Density [nominally 1700 kg/m^3],
 				{
 					if (niter == 1)
 					{
-						cout<<"Iteration solving non-linear eqn. in 2D"<<endl;
-						cout<<"F1, F2, F1ts,  F2ts, F1tc, F2tc"<<endl;      //, J11, J12, J21, J22 "<<endl;
-						cout<<"S1, S2, Tssk1, Tck1"<<endl;					
+						snowdgtv_ss <<"Iteration solving non-linear eqn. in 2D"<<endl;
+						snowdgtv_ss <<"F1, F2, F1ts,  F2ts, F1tc, F2tc"<<endl;      //, J11, J12, J21, J22 "<<endl;
+						snowdgtv_ss <<"S1, S2, Tssk1, Tck1"<<endl;	
+						(Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO); snowdgtv_ss.str("");				
 						//cout<<"S1num, S2num, S1denom, S2denom"<<endl;
 					}
-					cout<<F1<<" "<<F2<<" "<<F1ts<<" "<<F2ts<<" "<<F1tc<<" "<<F2tc<<endl; //		cout " "<<J11<<" "<<J12<<" "<<J21<<" "<<J22<<endl;
-					cout<< S1<<" "<< S2<<" "<< Tssk1<<" "<< Tck1<<endl;
+					snowdgtv_ss <<F1<<" "<<F2<<" "<<F1ts<<" "<<F2ts<<" "<<F1tc<<" "<<F2tc<<endl; //		cout " "<<J11<<" "<<J12<<" "<<J21<<" "<<J22<<endl;
+					snowdgtv_ss << S1<<" "<< S2<<" "<< Tssk1<<" "<< Tck1<<endl;
+					(Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO); snowdgtv_ss.str("");
 					//cout<<S1num<<" "<< S2num<<" "<< S1denom<<" "<< S2denom<<endl;
 				}
 				 //(J12*J21 == 0) && (J22*J11 == 0)  gives NAN or infinity value for S1 and S2,  occues when Ws is zero	
@@ -1195,9 +1214,10 @@ labl18:
 				if(snowdgtvariteflag == 1)
 				{					
 					//F1 += (0.01*F2); 
-					cout<<"  Warning! F1 and F2 have the same value, can lead to v. large surface temp Tssk"<<endl;					
-					cout<<"F1, F2, Tssk, Tslast "<<endl;
-					cout<<"  "<<F1<<" "<<F2<<" "<<Tssk<<" "<<Tslast<<endl;
+					snowdgtv_ss <<"  Warning! F1 and F2 have the same value, can lead to v. large surface temp Tssk"<<endl;					
+					snowdgtv_ss <<"F1, F2, Tssk, Tslast "<<endl;
+					snowdgtv_ss <<"  "<<F1<<" "<<F2<<" "<<Tssk<<" "<<Tslast<<endl;
+					(Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::WARN); snowdgtv_ss.str("");
 					getchar();
 			    }				
 				goto labl11;                                     //10.30.13 go to bisection if F1 ==F2 as div by zero results in #IND for Tssk				
@@ -1205,9 +1225,12 @@ labl18:
 			Tssk = Tssk - ((1.0 -fff) * Tssk * F1) / (F1 - F2);
 			if(snowdgtvariteflag == 1)
 			{
-				if (niter == 0)
-						cout<<"Surface temp iteration for soln in 1D: F1, F2, Tssk, Tslast "<<endl;
-				cout<<"  "<<F1<<" "<<F2<<" "<<Tssk<<" "<<Tslast<<endl;
+				if (niter == 0) {
+					snowdgtv_ss <<"Surface temp iteration for soln in 1D: F1, F2, Tssk, Tslast "<<endl;
+					(Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO); snowdgtv_ss.str("");
+				}
+				snowdgtv_ss <<"  "<<F1<<" "<<F2<<" "<<Tssk<<" "<<Tslast<<endl;
+				(Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO); snowdgtv_ss.str("");
 			}
 			if(Tssk < Tak - 50) 
 				goto labl11;                      //ifit looks like it is getting unstable go straight to bisection
@@ -1240,9 +1263,10 @@ labl11:
 				{
 					//if(snowdgtvariteflag == 1)
 					{
-						cout<<"Bisection surface temperature solution failed with large range"<<endl;
-						cout<<"datetime, model element:"<< mtime[0]<<mtime[1]<<mtime[2]<<mtime[3]<<"  "<<uebCellY<<" "<<uebCellX<<endl;   //mtime[4]<<endl;					
-						cout<<" A canopy temperature of 273 K assumed"<<endl;
+						snowdgtv_ss <<"Bisection surface temperature solution failed with large range"<<endl;
+						snowdgtv_ss <<"datetime, model element:"<< mtime[0]<<mtime[1]<<mtime[2]<<mtime[3]<<"  "<<uebCellY<<" "<<uebCellX<<endl;   //mtime[4]<<endl;					
+						snowdgtv_ss <<" A canopy temperature of 273 K assumed"<<endl;
+						(Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::ERROR); snowdgtv_ss.str("");
 					}
 					Tssk=Tk;
 					goto labl10;
@@ -1251,10 +1275,11 @@ labl11:
 				{
 					if(snowdgtvariteflag == 1)
 					{
-						cout<<"Bisection surface temperature solution with large range"<<endl;
-						cout<<"datetime, model element:"<< mtime[0]<<mtime[1]<<mtime[2]<<mtime[3]<<"  "<<uebCellY<<" "<<uebCellX<<endl;   //mtime[4]<<endl;					
-						cout<<" This is not a critical problem unless it happens frequently"<<endl;
-						cout<<" and solution below appears incorrect"<<endl;
+						snowdgtv_ss <<"Bisection surface temperature solution with large range"<<endl;
+						snowdgtv_ss <<"datetime, model element:"<< mtime[0]<<mtime[1]<<mtime[2]<<mtime[3]<<"  "<<uebCellY<<" "<<uebCellX<<endl;   //mtime[4]<<endl;					
+						snowdgtv_ss <<" This is not a critical problem unless it happens frequently"<<endl;
+						snowdgtv_ss <<" and solution below appears incorrect"<<endl;
+						(Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO); snowdgtv_ss.str("");
 					}
 				}	
 			}                        //else      endif
@@ -1275,9 +1300,10 @@ labl11:
 			if(ibtowrite == 1)
 				if(snowdgtvariteflag == 1)
 				{
-					cout<<"Surface temperature: "<<Tssk<<endl;
-				    cout<<"Energy closure: "<<F1<<endl;
-				    cout<<"Iterations:"<<niter<<endl;
+					snowdgtv_ss <<"Surface temperature: "<<Tssk<<endl;
+				    snowdgtv_ss <<"Energy closure: "<<F1<<endl;
+				    snowdgtv_ss <<"Iterations:"<<niter<<endl;
+					(Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO); snowdgtv_ss.str("");
 				}	
 		}
 
@@ -1308,9 +1334,11 @@ labl10:
 		Tck  = Tc+Tk;
 		ERc  = abs(Tck -  Tclast);
 		iterC++;
-		if(snowdgtvariteflag == 1)
-			cout<<" iterC: "<<iterC<<" ERc: "<<ERc<<endl;
-		//go to 13                  // To estimate the new TC for the estimated Tss. loop back
+		if(snowdgtvariteflag == 1) {
+			snowdgtv_ss <<" iterC: "<<iterC<<" ERc: "<<ERc<<endl;
+			(Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO); snowdgtv_ss.str("");
+		}
+		//go to 13                 // To estimate the new TC for the estimated Tss. loop back
 
 	}// while ((ERc > tol_l) &&  (iterC < 10))
 
@@ -1372,17 +1400,21 @@ float cg =param[3],    //  Ground heat capacity [nominally 2.09 KJ/kg/C],
 			  if(snowdgtvariteflag == 1)
 			  {
 				  f1minf2 = F1 - F2;
-				  cout<<"  Warning! F1 and F2 have the same value, can lead to v. large canopy temp Tck"<<endl;
-				  cout<<" F1 - F2: " <<f1minf2<<endl;
+				  snowdgtv_ss <<"  Warning! F1 and F2 have the same value, can lead to v. large canopy temp Tck"<<endl;
+				  snowdgtv_ss <<" F1 - F2: " <<f1minf2<<endl;
+				  (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::WARN); snowdgtv_ss.str("");
 			  }
 			  goto labl11;                                     //10.30.13 go to bisection if F1 == F2 as div by zero results in #IND for Tssk	
 		  }
 		  Tck = Tck - ((1.0 - fff) * Tck * F1) / (F1 - F2);
 		  if(snowdgtvariteflag == 1)
 		  {   
-			  if (niter == 0)
-						cout<<"Canopy temp iteration for soln in 1D: F1, F2, Tck, Tclast "<<endl;
-			  cout<<"  "<<F1<<" "<<F2<<" "<<Tck<<" "<<Tclast<<endl;
+			  if (niter == 0) {
+					snowdgtv_ss <<"Canopy temp iteration for soln in 1D: F1, F2, Tck, Tclast "<<endl;
+					(Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO); snowdgtv_ss.str("");
+			  }
+			  snowdgtv_ss <<"  "<<F1<<" "<<F2<<" "<<Tck<<" "<<Tclast<<endl;
+			  (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO); snowdgtv_ss.str("");
 		  }
 
 		  if(Tck < Tak - 20) 
@@ -1417,9 +1449,10 @@ labl11:
 				  {
 					  //if(snowdgtvariteflag == 1)
 					  {
-						  cout<<"Bisection canopy temperature solution failed with large range"<<endl;
-						  cout<<"datetime, model element:"<< mtime[0]<<mtime[1]<<mtime[2]<<mtime[3]<<"  "<<uebCellY<<" "<<uebCellX<<endl;   //mtime[4]<<endl;				
-						  cout<<" A canopy temperature of 273 K assumed"<<endl;
+						  snowdgtv_ss <<"Bisection canopy temperature solution failed with large range"<<endl;
+						  snowdgtv_ss <<"datetime, model element:"<< mtime[0]<<mtime[1]<<mtime[2]<<mtime[3]<<"  "<<uebCellY<<" "<<uebCellX<<endl;   //mtime[4]<<endl;				
+						  snowdgtv_ss <<" A canopy temperature of 273 K assumed"<<endl;
+						  (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::ERROR); snowdgtv_ss.str("");
 					  }
 					  Tck=Tk;
 					  goto labl10;
@@ -1428,10 +1461,11 @@ labl11:
 				  {
 					   if(snowdgtvariteflag == 1)
 					  {
-						  cout<<"Bisection canopy temperature solution with large range"<<endl;
-						  cout<<"datetime, model element:"<< mtime[0]<<mtime[1]<<mtime[2]<<mtime[3]<<"  "<<uebCellY<<" "<<uebCellX<<endl;   //mtime[4]<<endl;			
-						  cout<<" This is not a critical problem unless it happens frequently"<<endl;
-						  cout<<" and solution below appears incorrect"<<endl;
+						  snowdgtv_ss <<"Bisection canopy temperature solution with large range"<<endl;
+						  snowdgtv_ss <<"datetime, model element:"<< mtime[0]<<mtime[1]<<mtime[2]<<mtime[3]<<"  "<<uebCellY<<" "<<uebCellX<<endl;   //mtime[4]<<endl;			
+						  snowdgtv_ss <<" This is not a critical problem unless it happens frequently"<<endl;
+						  snowdgtv_ss <<" and solution below appears incorrect"<<endl;
+						  (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO); snowdgtv_ss.str("");
 					  }
 				  }	
 			  }       // else        endif
@@ -1451,9 +1485,10 @@ labl11:
 		   if(ibtowrite == 1)
 			  if(snowdgtvariteflag == 1)
 			  {
-				  cout<<"Canopy temperature: "<<Tck<<endl;
-				  cout<<"Energy closure: "<<F1<<endl;
-				  cout<<"Iterations:"<<niter<<endl;
+				  snowdgtv_ss <<"Canopy temperature: "<<Tck<<endl;
+				  snowdgtv_ss <<"Energy closure: "<<F1<<endl;
+				  snowdgtv_ss <<"Iterations:"<<niter<<endl;
+				  (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO); snowdgtv_ss.str("");
 			  }		   
 
 		 }
@@ -1515,9 +1550,10 @@ float SURFEBSC(float Tssk, float Us,float Ws,float Wc,float A,float dt,float P,f
 
 	 if(snowdgtvariteflag2 == 1)
 	  {
-		  cout<<"Inputs to surfebsc"<<endl;
-		  cout<<setprecision(15)<<Tssk<<" "<<Us<<" "<< Ws<<" "<< Wc<<" "<< A<<" "<< dt<<" "<< P<<" "<< Pr<<" "<< Ps<<" "<< Ta<<" "<< V<<" "<< RH<<" "<< Fs<<" "<< Cf<<" "<< Qli<<" "<< Qsi<<" ";
-          cout<<setprecision(15)<<atff<<" "<< cosZen<<" "<< EmC<<" "<< Ems<<" "<< iradfl<<" "<< Qnetob<<" "<<iTsMethod<<endl;
+		  snowdgtv_ss <<"Inputs to surfebsc"<<endl;
+		  snowdgtv_ss <<setprecision(15)<<Tssk<<" "<<Us<<" "<< Ws<<" "<< Wc<<" "<< A<<" "<< dt<<" "<< P<<" "<< Pr<<" "<< Ps<<" "<< Ta<<" "<< V<<" "<< RH<<" "<< Fs<<" "<< Cf<<" "<< Qli<<" "<< Qsi<<" ";
+          snowdgtv_ss <<setprecision(15)<<atff<<" "<< cosZen<<" "<< EmC<<" "<< Ems<<" "<< iradfl<<" "<< Qnetob<<" "<<iTsMethod<<endl;
+		  (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO); snowdgtv_ss.str("");
 	  }
 //     07/25/02   at Boise.  To make the UEB2 work under Unix/linux system the fancy stuff like "Select case" shall not be used
 	   //select case(iTsMethod)				//Four choice of the surface temperature modeling
@@ -1588,8 +1624,10 @@ float SURFEBSC(float Tssk, float Us,float Ws,float Wc,float A,float dt,float P,f
 	Ess    = svp(Tssk-Tk);
 	Esc    = svp(Tck-Tk);
 
-	if(snowdgtvariteflag2 == 1)
-		cout<<setprecision(15)<<"qcs,Ess,Esc:"<<qcs<<" "<<Ess<<" "<<Esc<<endl;
+	if(snowdgtvariteflag2 == 1) {
+		snowdgtv_ss <<setprecision(15)<<"qcs,Ess,Esc:"<<qcs<<" "<<Ess<<" "<<Esc<<endl;
+		(Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO); snowdgtv_ss.str("");
+	}
 
 	TURBFLUX(Ws,Wc,A,Tk,Tck-Tk,Ta,Tssk-Tk,RH,V,EA,P,param,sitev, d,Z0c,Vz,Rkinc,Rkinsc,Tac, Fs,Ess,Esc, QHc,QEc,Ec,QHs,QEs,Es,QH,QE,E);        
 	SURFEBSC_v = Qp + QHs + QEs- qcs;
@@ -1607,10 +1645,11 @@ float SURFEBSC(float Tssk, float Us,float Ws,float Wc,float A,float dt,float P,f
 
 	  if(snowdgtvariteflag2 == 1)
 	  {
-		 cout<<"Outputs from surfebsc"<<endl;
-		 cout<<setprecision(15)<<Qpc<<" "<< Qps<<" "<< Inmax<<" "<<Rkinc<<" "<< Rkinsc<<" "<< Vz<<" "<< Tck<<" "<< Tk<<" ";
-	     cout<<setprecision(15)<<Tak<<" "<<EA<<" "<<RHOA<<" "<< fkappaS<<" "<< RHO<<" "<< TherC<<" "<< TSURFs<<" ";
-		 std::cout<<std::setprecision(15)<<Tave<<" "<<refDepth<<" "<<Qp<<" "<<QHs<<" "<<QEs<<" "<< qcs<<" "<<Qnetob<<" "<<Qsns<<" "<<Qlns<<" "<<Qsnc<<" "<<Qlnc<<" "<<Qlis<<" "<<SURFEBSC_v<<endl;
+		 snowdgtv_ss <<"Outputs from surfebsc"<<endl;
+		 snowdgtv_ss <<setprecision(15)<<Qpc<<" "<< Qps<<" "<< Inmax<<" "<<Rkinc<<" "<< Rkinsc<<" "<< Vz<<" "<< Tck<<" "<< Tk<<" ";
+	     snowdgtv_ss <<setprecision(15)<<Tak<<" "<<EA<<" "<<RHOA<<" "<< fkappaS<<" "<< RHO<<" "<< TherC<<" "<< TSURFs<<" ";
+		 snowdgtv_ss <<std::setprecision(15)<<Tave<<" "<<refDepth<<" "<<Qp<<" "<<QHs<<" "<<QEs<<" "<< qcs<<" "<<Qnetob<<" "<<Qsns<<" "<<Qlns<<" "<<Qsnc<<" "<<Qlnc<<" "<<Qlis<<" "<<SURFEBSC_v<<endl;
+		 (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO); snowdgtv_ss.str("");
 	  }
 	return SURFEBSC_v;
 }
@@ -1740,7 +1779,8 @@ float FMELT(float UB,float Rho_w,float W,float HF,float LC,float RID,float KS,fl
 
       if(FMELT_v < 0)
 	  {
-          cout<<"FMELT is NEGATIVE"<<endl;
+          snowdgtv_ss <<"FMELT is NEGATIVE"<<endl;
+		  (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO); snowdgtv_ss.str("");
 	      getchar();
 	  }    
       return FMELT_v;

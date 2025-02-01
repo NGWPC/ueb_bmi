@@ -12,7 +12,7 @@
 #include "OutControl.hxx"
 #include "SiteVariables.hxx"
 #include "ForcingVariables.hxx"
-#include "../utilities/Logger.hpp"
+#include "Logger.hpp"
 
 namespace ueb { class Parameters; class NotImplemented; }
 

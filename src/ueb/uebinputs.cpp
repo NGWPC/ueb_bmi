@@ -1,5 +1,9 @@
 //#include "uebpg.h"
 #include "uebpgdecls.h"
+#include "Logger.hpp"
+
+std::stringstream uebinputs_ss("");
+
 #pragma warning(disable : 4996)
 
 //overload functions to read params
@@ -122,8 +126,9 @@ void readSiteVars(const char* inpFile, sitevar *svArr)
 		        sscanf(headerLine,"%s %s ",svArr[i].svFile, svArr[i].svVarName);
 				break;			
 			default:
-				cout<<"Wrong site variable type; has to be -1 (Use default values), 0 (single value) or 1 (2D netcdf)"<<endl;
-				cout<<"Using default value..."<<endl;
+				uebinputs_ss <<"Wrong site variable type; has to be -1 (Use default values), 0 (single value) or 1 (2D netcdf)"<<endl;
+				uebinputs_ss <<"Using default value..."<<endl;
+				(Logger::GetInstance())->Log(uebinputs_ss.str(), LogLevel::WARN); uebinputs_ss.str("");
 				svArr[i].svdefValue = vardefaults[i]; 
 			}
 			//i++;
@@ -167,8 +172,9 @@ void readSiteVars(const char* inpFile, float svSValue[], char* svFile[], char* s
 				sscanf(headerLine,"%s %s",svFile[i],svVarName[i]);
 				break;			
 			default:
-				cout<<"Wrong site variable type; has to be -1 (Use default values), 0 (single value) or 1 (2D netcdf)"<<endl;
-				cout<<"Using default value..."<<endl;
+				uebinputs_ss <<"Wrong site variable type; has to be -1 (Use default values), 0 (single value) or 1 (2D netcdf)"<<endl;
+				uebinputs_ss <<"Using default value..."<<endl;
+				(Logger::GetInstance())->Log(uebinputs_ss.str(), LogLevel::WARN); uebinputs_ss.str("");
 				break;       //exit 
 			}
 			i++; //increment i
@@ -214,8 +220,9 @@ void readSiteVars(const char* inpFile, sitevar svArr[], int indx)
 				sscanf(headerLine,"%s %s",&svArr[i].svFile,&svArr[i].svVarName);
 				break;			
 			default:
-				cout<<"Wrong site variable type; has to be -1 (Use default values), 0 (single value) or 1 (2D netcdf)\n"<<endl;
-				cout<<"Using default value..."<<endl;
+				uebinputs_ss <<"Wrong site variable type; has to be -1 (Use default values), 0 (single value) or 1 (2D netcdf)\n"<<endl;
+				uebinputs_ss <<"Using default value..."<<endl;
+				(Logger::GetInstance())->Log(uebinputs_ss.str(), LogLevel::WARN); uebinputs_ss.str("");
 				svArr[i].svdefValue = vardefaults[i]; 
 				//exit;
 			}
@@ -273,8 +280,9 @@ void readInputForcVars(const char* inputconFile, inpforcvar *frArr)
 		        sscanf(headerLine,"%f ",&frArr[i].infdefValue);
 				break;
 			default:
-				cout<<"Wrong input/forcing type; has to be -1 (compute by the model), 2 (single value) , 0 (time-series text file) or 1 (3D netcdf)"<<endl;
-				cout<<"Using default value..."<<endl;
+				uebinputs_ss <<"Wrong input/forcing type; has to be -1 (compute by the model), 2 (single value) , 0 (time-series text file) or 1 (3D netcdf)"<<endl;
+				uebinputs_ss <<"Using default value..."<<endl;
+				(Logger::GetInstance())->Log(uebinputs_ss.str(), LogLevel::WARN); uebinputs_ss.str("");
 				break; //exit(1); 
 			}
 			//i++;
@@ -370,7 +378,8 @@ void readTextData(const char* inforcFile, float *&tvar_in, int &nrecords)
 	char commentLine[256];                    //string to read header line
 	if(!inputFile)
 	{
-		cout<<"Error opening file: "<<inforcFile<<endl;
+		uebinputs_ss <<"Error opening file: "<<inforcFile<<endl;
+		(Logger::GetInstance())->Log(uebinputs_ss.str(), LogLevel::ERROR); uebinputs_ss.str("");
 		return;
 	}
 	inputFile.getline(commentLine,256,'\n');  //skip first header line 
