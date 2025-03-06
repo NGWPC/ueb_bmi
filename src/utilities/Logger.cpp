@@ -34,7 +34,7 @@ std::string module_name[static_cast<int>(LoggingModule::MODULE_COUNT)]
 * @param output: LogOutput::CONSOLE by Default
 * @return void
 */
-void Logger::SetLogPreferences(LogLevel level = LogLevel::ERROR) {
+void Logger::SetLogPreferences(LogLevel level) {
 	std::stringstream ss("");
 
 	// get the log level for ueb_bmi module
@@ -43,11 +43,12 @@ void Logger::SetLogPreferences(LogLevel level = LogLevel::ERROR) {
 	if (ss.str() != "")
 		logLevel = Logger::GetLogLevel(ss.str());
 	else
-		logLevel = LogLevel::INFO;
+		logLevel = level;
 
 	std::cout << "UEB-BMI Log Level is set at: " << Logger::getLogLevelString(logLevel) << std::endl;
     
 	// get the log file path
+	ss.str("");
 	ss << getenv("NGEN_LOG_FILE_PATH");
 	logFilePath = ss.str();
 	ss.str("");
@@ -130,9 +131,9 @@ std::shared_ptr<Logger> Logger::GetInstance() {
 /**
 * Log given message with defined parameters and generate message to pass on Console or File
 * @param message: Log Message
-* @param messageLevel: Log Level, LogLevel::DEBUG by default
+* @param messageLevel: Log Level, LogLevel::INFO by default
 */
-void Logger::Log(std::string message, LogLevel messageLevel = LogLevel::DEBUG) {
+void Logger::Log(std::string message, LogLevel messageLevel) {
 	LoggingModule module=LoggingModule::UEB;
 
 	// don't log if messageLevel < logLevel 
@@ -209,29 +210,6 @@ void Logger::setup_logger(void) {
 
     // One time log preferences
     (Logger::GetInstance())->SetLogPreferences(LogLevel::INFO);
-
-    // sample logging for different log levels
-    std_ss << "Sample Log for LogLevel::ERROR" << std::endl;
-    (Logger::GetInstance())->Log(std_ss.str(), LogLevel::ERROR); std_ss.str("");
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    std_ss << "Sample Log for LogLevel::FATAL" << std::endl;
-    (Logger::GetInstance())->Log(std_ss.str(), LogLevel::FATAL); std_ss.str("");
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    std_ss << "Sample Log for LogLevel::WARN" << std::endl;
-    (Logger::GetInstance())->Log(std_ss.str(), LogLevel::WARN); std_ss.str("");
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    std_ss << "Sample Log for LogLevel::INFO" << std::endl;
-    (Logger::GetInstance())->Log(std_ss.str(), LogLevel::INFO); std_ss.str("");
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    std_ss << "Sample Log for LogLevel::DEBUG" << std::endl;
-    (Logger::GetInstance())->Log(std_ss.str(), LogLevel::DEBUG); std_ss.str("");
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    // multiline logging
-    std_ss << "First line of multiline log:" << std::endl;
-    std_ss << "   Indented second line of multiline log" << std::endl;
-    std_ss << "         Indented third line of multiline log" << std::endl;
-    std_ss << "                Indented fourth line of multiline log" << std::endl;
-    (Logger::GetInstance())->Log(std_ss.str(), LogLevel::INFO); std_ss.str("");
 }
 
 std::string Logger::getLogFilePath() {
