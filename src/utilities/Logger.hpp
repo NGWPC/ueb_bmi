@@ -43,7 +43,7 @@ class Logger {
   public:
 	static std::shared_ptr<Logger> GetInstance();
 	static std::string getLogLevelString(LogLevel level);
-	void SetLogPreferences(LogLevel level=LogLevel::ERROR);
+	void SetLogPreferences(LogLevel level=LogLevel::INFO);
 	void Log(std::string message, LogLevel messageLevel=LogLevel::INFO);
 	static LogLevel GetLogLevel(const std::string& logLevel);
 	std::string createTimestamp();
