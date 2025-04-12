@@ -4,6 +4,8 @@
 #include "Logger.hpp"
 
 std::stringstream snowdgtv_ss("");
+unsigned int bstWarnFlag = 0;
+
 //**********************************************************************************************
 //
 //  Copyright (C) 2012  David Tarboton, Utah State University, dtarb@usu.edu.  http://hydrology.usu.edu/dtarb
@@ -113,6 +115,7 @@ std::stringstream snowdgtv_ss("");
 void SNOWUEB2(float dt, float *input, float *sitev, float *statev, float *tsprevday, float *taveprevday, int &nstepday, float *param, int *iflag,
 			            float &cump, float &cumes, float &cumEc, float &cumMr, float &cumGM, float &cumEg,float *outv, float *mtime ,float atff, float cf, float *OutArr)
 {
+
     const int niv = 8;
     int pflag, iradfl;
 	//FILE *outUnit;
@@ -1006,7 +1009,7 @@ float SRFTMPSC (float &Tssk,float Us,float Ws,float Wc,float A,float dt,float P,
 				   float EmC,float Ems,float *param,float *sitev,int iradfl,float Qnetob,int iTsMethod,float *mtime,float Qpcin,float Qpsin,float Inmax,float Rkinc,float Rkinsc,float Vz,
 				     float &Tc,float Tk,float &Tak,float &EA,float &RHOA,float &fkappaS,float &RHO,float &TherC,float &Fs,float &Tave,float &refDepth,float &smelt,float &smeltC
 			    ) 
-{ 		
+{
 	float  F1, F2, F1ts,F1tc,F2ts,F2tc,J11, J12, J21, J22, delTs, delTc, SRFTMPSC_v;
 	float S1num, S2num, S1denom, S2denom;         //
 	float Tssk1 , Tck1 , Tss, Tck , S1, S2, Tclast, Tslast, ERc, ER;
@@ -1263,10 +1266,14 @@ labl11:
 				{
 					//if(snowdgtvariteflag == 1)
 					{
-						snowdgtv_ss <<"Bisection surface temperature solution failed with large range"<<endl;
-						snowdgtv_ss <<"datetime, model element:"<< mtime[0]<<mtime[1]<<mtime[2]<<mtime[3]<<"  "<<uebCellY<<" "<<uebCellX<<endl;   //mtime[4]<<endl;					
-						snowdgtv_ss <<" A canopy temperature of 273 K assumed"<<endl;
-						(Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::ERROR); snowdgtv_ss.str("");
+                        if (bstWarnFlag < 3) {
+                            bstWarnFlag++;
+                            snowdgtv_ss <<"Bisection surface temperature solution failed with large range at";
+                            snowdgtv_ss <<" datetime, model element: "<< mtime[0]<<mtime[1]<<mtime[2]<<mtime[3]<<"  "<<uebCellY<<" "<<uebCellX<<".";   //mtime[4]<<endl;					
+                            snowdgtv_ss <<" A canopy temperature of 273 K assumed.";
+                            snowdgtv_ss <<" Limiting log to 3 error messages."<<endl;
+                            (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::WARN); snowdgtv_ss.str("");
+                        }
 					}
 					Tssk=Tk;
 					goto labl10;
@@ -1341,7 +1348,6 @@ labl10:
 		//go to 13                 // To estimate the new TC for the estimated Tss. loop back
 
 	}// while ((ERc > tol_l) &&  (iterC < 10))
-
 labl21:
 	return SRFTMPSC_v;
 }

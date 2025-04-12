@@ -18,44 +18,38 @@ enum class LogLevel {
 	FATAL = 5,
 };
 
-enum class LoggingModule {
-	NGEN = 0,
-	NOAHOWP, 
-	SNOW17, 
-	UEB, 
-	CFE, 
-	SACSMA, 
-	LASAM, 
-	SMP, 
-	SFT, 
-	TROUTE, 
-	SCHISM, 
-	SFINCS, 
-	GC2D, 
-	TOPOFLOW,
-	MODULE_COUNT
-};
-
 /**
 * Logger Class Used to Output Details of Current Application Flow
 */
 class Logger {
   public:
 	static std::shared_ptr<Logger> GetInstance();
-	static std::string getLogLevelString(LogLevel level);
-	void SetLogPreferences(LogLevel level=LogLevel::INFO);
-	void Log(std::string message, LogLevel messageLevel=LogLevel::INFO);
-	static LogLevel GetLogLevel(const std::string& logLevel);
-	std::string createTimestamp();
-	void setup_logger(void);
-	std::string getLogFilePath();
+
+	void        setup_logger(void);
+    bool        CheckLogLevelEv(void);
+    std::string CreateDateString(void);
+	std::string CreateTimestamp(bool appendMS=true);
+    bool        CreateDirectory(const std::string& path);
+    std::string ConvertLogLevelToString(LogLevel level);
+ 	LogLevel    ConvertStringToLogLevel(const std::string& logLevel);
+    bool        DirectoryExists(const std::string& path);
+    std::string GetLogFilePath(void);
+    LogLevel    GetLogLevel(void);
+	void        Log(std::string message, LogLevel messageLevel=LogLevel::INFO);
+    bool        LogFileReady(void);
+	void        SetLogPreferences(LogLevel level=LogLevel::INFO);
+    std::string TrimString(const std::string& str);
 
   private:
-	LogLevel logLevel;
-	std::fstream logFile;
-	static std::shared_ptr<Logger> loggerInstance;
-	std::string logFilePath;
-#if 0
+    std::fstream logFile;
+    std::string  envVarLogFilePath = "";
+    std::string  logFilePath = "";
+    LogLevel     logLevel = LogLevel::ERROR;
+    std::string  moduleName;
+
+    static std::shared_ptr<Logger> loggerInstance;
+    
+  #if 0
     std::fstream& _out_stream;
 
     //Constructor: User provides custom output stream, or uses default (std::cout).
