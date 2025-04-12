@@ -243,6 +243,7 @@ extern int snowdgtvariteflag2 ;  // more detailed print in Surfebsc
 extern int snowdgtvariteflag3 ;  // print in predictor corrector function
 extern int snowdgt_outflag ;        //output print
 extern int radwarnflag;
+extern unsigned int bstWarnFlag;
 extern int inpDailyorSubdaily;       // 0: values given at each (sub-daily time steps); 1: daily values
 //track current grid cell
 extern int uebCellX;

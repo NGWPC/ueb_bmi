@@ -112,8 +112,8 @@ Initialize (std::string config_file)
      }
   }
     std::stringstream ss("");
-    ss << "In ueb::BmiUEB::Initialize:" << __FILE__<<":"<<__LINE__<< std::endl;
-    (Logger::GetInstance())->Log(ss.str(), LogLevel::INFO); ss.str("");
+    ss << "BmiUEB Initialized" << std::endl;
+    (Logger::GetInstance())->Log(ss.str(), LogLevel::DEBUG); ss.str("");
 }
 
 
@@ -1462,13 +1462,14 @@ void  ueb::BmiUEB::runPointUEB(
 		     {
 		       if (radwarnflag < 3)   //leave this warning only three times--enough to alert to non- -ve night time solar rad
 		       {
-			   bmi_ueb_ss <<"Warning: you have nonzero nightime incident radiation of "<<Qsiobs<<endl;
-			   bmi_ueb_ss <<"at date "<<Year<<"   "<< Month<<"   "<< Day<<"     "<<dHour<<endl;
-         (Logger::GetInstance())->Log(bmi_ueb_ss.str(), LogLevel::WARN); bmi_ueb_ss.str("");
-			   ++radwarnflag;
-			}
-		      }
-	          }//else
+                    bmi_ueb_ss << "Nonzero nightime incident radiation of " << Qsiobs;
+                    bmi_ueb_ss << " at date "<<Year<<"-"<< Month<<"-"<< Day<<"T" << dHour;
+                    bmi_ueb_ss << ". Limiting log to 3 error messages." << endl;
+                    (Logger::GetInstance())->Log(bmi_ueb_ss.str(), LogLevel::WARN); bmi_ueb_ss.str("");
+                    ++radwarnflag;
+    			}
+            }
+        }//else
   		  cloud(as,bs,atff,cf);   // For cloudiness fraction  This is more theoretically correct
 	      } //else        
 	      if(irad < 2)
