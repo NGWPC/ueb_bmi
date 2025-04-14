@@ -16,11 +16,11 @@
 #include <cassert>
 
 
-const std::string MODULE_NAME      = "UEB_BMI ";          // Must be 8 characters for log entry alignment puroses.
-const std::string LOG_PATH_DEFAULT = "./run-logs/ngen_";  // Default log directory string. Date to be appeneded if used
-const std::string LOG_FILE_NAME    = "ueb_bmi";           // Log file name
-const std::string LOG_FILE_EXT     = ".log";              // Log file name extension
-const std::string DS               = "/";                 // Directory separator
+const std::string MODULE_NAME      = "ueb_bmi";
+const std::string LOG_DIR_NGENCERF = "/ngencerf/data";  // ngenCERF log directory string if environement var empty.
+const std::string LOG_DIR_DEFAULT  = "run-logs";        // Default parent log directory string if env var empty  & ngencerf dosn't exist
+const std::string LOG_FILE_EXT     = "log";             // Log file name extension
+const std::string DS               = "/";               // Directory separator
 
 std::shared_ptr<Logger> Logger::loggerInstance;
 
@@ -141,30 +141,8 @@ bool Logger::LogFileReady(void) {
         return true;
     }
     else {
-        // Attempt to open shared file identified in the environment variable
-        if (!envVarLogFilePath.empty()) {
-            logFile.open(envVarLogFilePath, ios::out | ios::app); // This will silently fail if already open.
-            if (logFile.good()) {
-                logFilePath = envVarLogFilePath;
-                return true;
-            }
-        }
-
-        // Unable to upen shared file so attempt to open alternate log file
-
-        // Determine if an alternate file directory exists with today's timestamp
-        std::string todaysDate = CreateDateString();
-        if (!logFilePath.empty() && (logFilePath.find(todaysDate) != std::string::npos)) {
-            logFile.open(logFilePath, ios::out | ios::app); // This will silently fail if already open.
-            if (logFile.good()) {
-                return true;
-            }
-        }
-
-        // Alternate log file doesn't exist
-        std::string altDir = "./run-logs/ngen_" + todaysDate;
-        if (CreateDirectory(altDir)) {
-            logFilePath = altDir + "/ueb_bmi" + "_" + Logger::CreateTimestamp(false) + ".log";
+        // Attempt to open
+        if (!logFilePath.empty()) {
             logFile.open(logFilePath, ios::out | ios::app); // This will silently fail if already open.
             if (logFile.good()) {
                 return true;
@@ -173,7 +151,6 @@ bool Logger::LogFileReady(void) {
     }
     return false;
 }
-
 
 /**
  * Check the log level envinroment variable and update it if it changed.
@@ -186,11 +163,12 @@ bool Logger::CheckLogLevelEv(void) {
         LogLevel envll = ConvertStringToLogLevel(envLogLevel);
         if (envll != logLevel) {
             logLevel = envll;
-            std::string llMsg = "INFO: UEB_BMI log level set to UEB_BMI_LOGLEVEL (" + TrimString(ConvertLogLevelToString(logLevel)) + ")\n";
+            std::string llMsg = "INFO: " + MODULE_NAME + " log level set to found UEB_BMI_LOGLEVEL (" + TrimString(ConvertLogLevelToString(logLevel)) + ")\n";
             // This is an INFO message that always should be in the log but the
             // logLevel could be different than INFO. herefore use logLevel to 
             // ensure the message is recorded in the log
             Log(llMsg, logLevel);
+            envLogLevelLogged = true;
         }
         return true;
     }
@@ -205,7 +183,7 @@ bool Logger::CheckLogLevelEv(void) {
 */
 void Logger::SetLogPreferences(LogLevel level) {
 
-    // Make sure the module name used for logging is all uppercase and 8 characters wide.
+    // Make sure the module name used for logging entries is all uppercase and 8 characters wide.
     moduleName = MODULE_NAME;
     std::string upperName = moduleName.substr(0, 8);  // Truncate to 8 chars max
     std::transform(upperName.begin(), upperName.end(), upperName.begin(), ::toupper);
@@ -215,33 +193,79 @@ void Logger::SetLogPreferences(LogLevel level) {
     moduleName = oss.str();
     
     // get the log file path from environment (written by ngen Logger)
-    const char* envVar = std::getenv("NGEN_LOG_FILE_PATH");
+    // if set, otherwise use a default
+    logFilePath = "";
+    const char* envVar = std::getenv("NGEN_LOG_FILE_PATH");  // Currently set by ngen-cal but envision set for WCOSS at some point
     if (envVar != nullptr && envVar[0] != '\0') {
-        envVarLogFilePath = envVar;
+        logFilePath = envVar;
+    }
+    else { 
+        // Get parent log directory
+        std::string logFileDir;
+        if (DirectoryExists(LOG_DIR_NGENCERF)) {
+            logFileDir = LOG_DIR_NGENCERF + DS + LOG_DIR_DEFAULT;
+        }
+        else {
+            logFileDir = "~" + DS + LOG_DIR_DEFAULT;
+        }
+
+        // Ensure parent log direcotry exists
+        if (CreateDirectory(logFileDir)) {
+            // Get full log directory path
+            const char* envUsername = std::getenv("USER");
+            if (envUsername) { 
+                std::string username = envUsername;
+                logFileDir = logFileDir +  DS + username;
+            }
+            else {
+                logFileDir = logFileDir + DS + CreateDateString();
+            }
+            // Set the full path if log directory exists/created
+            if (CreateDirectory(logFileDir)) 
+                logFilePath = logFileDir + DS + MODULE_NAME + "_" + CreateTimestamp(false,false) + "." + LOG_FILE_EXT;
+        }
     }
 
     // Open log file. If path not found, it will try an alternate file. If neither
     // works false returned and logs will be written to stdout.
     if (LogFileReady()) {
-        std::string msg = "INFO: UEB_BMI Logging started. Log File Path: " + logFilePath + "\n";
+        std::cout << "Module " << MODULE_NAME << " Log File: " << logFilePath << std::endl;
         // This is an INFO message that always should be in the log but the
         // logLevel could be different than INFO. Therefore use logLevel to 
         // ensure the message is recorded in the log
+        std::string msg = "INFO: " + MODULE_NAME + " Logging started. Log File Path: " + logFilePath + "\n";
         Log(msg, logLevel);
     }
     else {
-        std::cerr << "Unable to open primary or altnerante log File." << std::endl;			
-        std::cerr << "Log entries will be written to stdout." << std::endl;
+        std::cout << "Unable to open log file ";
+        if (!logFilePath.empty()) {
+            std::cout << logFilePath;
+            std::cout << " (Perhaps check permissions)" << std::endl;
+        }		
+        std::cout << "Log entries will be writen to stdout" << std::endl;
     }
 
-    std::string llMsg = "INFO: UEB_BMI default log level is " + TrimString(ConvertLogLevelToString(logLevel)) + "\n";
+    std::string llMsg = "INFO: " + MODULE_NAME + " default log level is " + TrimString(ConvertLogLevelToString(logLevel)) + "\n";
     // This is an INFO message that always should be in the log but the
     // logLevel could be different than INFO. Therefore use logLevel to 
     // ensure the message is recorded in the log
     Log(llMsg, logLevel);
 
-    // Set to environment log level variable if found
-    if (!CheckLogLevelEv()) logLevel = level;
+   // Set the logger log level if environment var not found
+   envLogLevelLogged = false; // Ensure this is false before calling LogFileReady
+   if (!CheckLogLevelEv()) logLevel = level;
+
+   // Ensure the initial log level is logged. This flag is only checked here during startup in 
+   // case the environment log level is the same as the default log level. If so it wouldn't
+   // get logged in CheckLogLevelEv
+   if (!envLogLevelLogged) {
+       std::string llMsg = "INFO: log level set to " + ConvertLogLevelToString(logLevel) + "\n";
+       // This is an INFO message that always should be in the log but the
+       // logLevel could be different than INFO. Therefore use logLevel to 
+       // ensure the message is recorded in the log
+       Log(llMsg, logLevel);
+       envLogLevelLogged = true;
+   }
 }
 
 /**
@@ -302,7 +326,7 @@ std::string Logger::CreateDateString(void) {
     return ss.str();
 }
 
-std::string Logger::CreateTimestamp(bool appendMS) {
+std::string Logger::CreateTimestamp(bool appendMS, bool iso) {
     using namespace std::chrono;
 
     // Get current time point
@@ -316,21 +340,21 @@ std::string Logger::CreateTimestamp(bool appendMS) {
     std::tm utc_tm;
     gmtime_r(&now_time_t, &utc_tm);
 
-    if (appendMS) {
-        // Format date/time with strftime
-        char buffer[32];
+    // Format date/time with strftime
+    char buffer[32];
+    if (iso) {
         std::strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%S", &utc_tm);
+    }
+    else {
+        std::strftime(buffer, sizeof(buffer), "%Y%m%dT%H%M%S", &utc_tm);
+    }
 
+    if (appendMS) {
         // Combine with milliseconds
         std::ostringstream oss;
         oss << buffer << '.' << std::setw(3) << std::setfill('0') << ms.count();
-
         return oss.str();
     }
-    // Format ts for alt logfile name 
-    char buffer[32];
-    std::strftime(buffer, sizeof(buffer), "%Y%m%dT%H%M%S", &utc_tm);
-    
     return std::string(buffer);
 }
 
