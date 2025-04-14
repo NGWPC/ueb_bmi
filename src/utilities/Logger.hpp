@@ -28,7 +28,7 @@ class Logger {
 	void        setup_logger(void);
     bool        CheckLogLevelEv(void);
     std::string CreateDateString(void);
-	std::string CreateTimestamp(bool appendMS=true);
+	std::string CreateTimestamp(bool appendMS=true, bool iso=true);
     bool        CreateDirectory(const std::string& path);
     std::string ConvertLogLevelToString(LogLevel level);
  	LogLevel    ConvertStringToLogLevel(const std::string& logLevel);
@@ -41,8 +41,8 @@ class Logger {
     std::string TrimString(const std::string& str);
 
   private:
+    bool         envLogLevelLogged = false;
     std::fstream logFile;
-    std::string  envVarLogFilePath = "";
     std::string  logFilePath = "";
     LogLevel     logLevel = LogLevel::ERROR;
     std::string  moduleName;
