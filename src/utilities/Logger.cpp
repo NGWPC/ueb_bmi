@@ -140,7 +140,7 @@ bool Logger::CreateDirectory(const std::string& path) {
  *
  * return bool true if open and good, false otherwise
  */
-bool Logger::LogFileReady(void) {
+bool Logger::LogFileReady(bool appendMode) {
 
     if (logFile.is_open() && logFile.good()) {
         logFile.seekp(0, std::ios::end); // Ensure write pointer is at the actual file end
@@ -150,7 +150,7 @@ bool Logger::LogFileReady(void) {
         if (!logFilePath.empty()) {
             logFile.open(
                 logFilePath,
-                ios::out | ios::app
+                ios::out | ((appendMode) ? ios::app : ios::trunc)
             ); // This will silently fail if already open.
             if (logFile.good()) {
                 return true;
@@ -184,7 +184,97 @@ bool Logger::CheckLogLevelEv(void) {
     }
     return false;
 }
+/**
+ * Set the log file path name using the following pattern
+ *  - Use the module log file if available (unset when first run by ngen), otherwise 
+ *  - Use ngen log file if available, otherwise
+ *  - Use /ngencerf/data/run-logs/<username>/<module>_<YYMMDDTHHMMSS> if available, othrewise
+ *  - Use ~/run-logs/<YYYYMMDD>/<module>_<YYMMDDTHHMMSS>
+ *  - Onced opened, save the full log path to the modules log environment variable so
+ *    it is only opened once for each ngen run (vs for each catchment)
+ */
+void Logger::SetLogFilePath(void) {
+    // Use module logfile path environment variable if it exists
+    logFilePath = "";
+    bool appendEntries = true;
+    bool mdduleLogEnvExists = false;
+    const char* envVar = std::getenv("UEB_BMI_LOGFILEPATH"); // Set once module has successfully opened a log file
+    if (envVar != nullptr && envVar[0] != '\0') {
+        logFilePath = envVar;
+        mdduleLogEnvExists = true;
+    } else {
+        envVar = std::getenv("NGEN_LOG_FILE_PATH"); // Currently set by ngen-cal but envision set for WCOSS at some point
+        if (envVar != nullptr && envVar[0] != '\0') {
+            logFilePath = envVar;
+        } else {
+            appendEntries = false;
+            // Get parent log directory
+            std::string logFileDir;
+            if (DirectoryExists(LOG_DIR_NGENCERF)) {
+                logFileDir = LOG_DIR_NGENCERF + DS + LOG_DIR_DEFAULT;
+            } else {
+                logFileDir = "~" + DS + LOG_DIR_DEFAULT;
+            }
 
+            // Ensure parent log direcotry exists
+            if (CreateDirectory(logFileDir)) {
+                // Get full log directory path
+                const char* envUsername = std::getenv("USER");
+                if (envUsername) {
+                    std::string username = envUsername;
+                    logFileDir           = logFileDir + DS + username;
+                } else {
+                    logFileDir = logFileDir + DS + CreateDateString();
+                }
+                // Set the full path if log directory exists/created
+                if (CreateDirectory(logFileDir))
+                    logFilePath = logFileDir + DS + MODULE_NAME + "_" + CreateTimestamp(false, false) +
+                                "." + LOG_FILE_EXT;
+            }
+        }
+    }
+
+    // Open log file. If path not found, it will try an alternate file. If neither
+    // works false returned and logs will be written to stdout.
+    if (LogFileReady(appendEntries)) {
+        if (!mdduleLogEnvExists) { 
+            setenv("UEB_BMI_LOGFILEPATH", (char *)logFilePath.c_str(), 1);
+            std::cout << "Module " << MODULE_NAME << " Log File: " << logFilePath << std::endl;
+            // This is an INFO message that always should be in the log but the
+            // logLevel could be different than INFO. Therefore use logLevel to
+            // ensure the message is recorded in the log
+            std::string msg =
+                "INFO: " + MODULE_NAME + " Logging started. Log File Path: " + logFilePath + "\n";
+            Log(msg, logLevel);
+        }
+    } else {
+        std::cout << "Unable to open log file ";
+        if (!logFilePath.empty()) {
+            std::cout << logFilePath;
+            std::cout << " (Perhaps check permissions)" << std::endl;
+        }
+        std::cout << "Log entries will be writen to stdout" << std::endl;
+    }
+}
+
+void Logger::SetLogLevel(LogLevel level) {
+    // Set the logger log level if environment var not found
+    envLogLevelLogged = false;
+    if (!CheckLogLevelEv())
+        logLevel = level;
+
+    // Ensure the initial log level is logged. This flag is only checked here during startup in
+    // case the environment log level is the same as the default log level. If so it wouldn't
+    // get logged in CheckLogLevelEv
+    if (!envLogLevelLogged) {
+        std::string llMsg = "INFO: log level set to " + ConvertLogLevelToString(logLevel) + "\n";
+        // This is an INFO message that always should be in the log but the
+        // logLevel could be different than INFO. Therefore use logLevel to
+        // ensure the message is recorded in the log
+        Log(llMsg, logLevel);
+        envLogLevelLogged = true;
+    }
+}
 /**
  * Configure Logger Preferences
  * @param logFile
@@ -202,82 +292,8 @@ void Logger::SetLogPreferences(LogLevel level) {
     oss << std::left << std::setw(8) << std::setfill(' ') << upperName;
     moduleName = oss.str();
 
-    // get the log file path from environment (written by ngen Logger)
-    // if set, otherwise use a default
-    logFilePath        = "";
-    const char* envVar = std::getenv(
-        "NGEN_LOG_FILE_PATH"
-    ); // Currently set by ngen-cal but envision set for WCOSS at some point
-    if (envVar != nullptr && envVar[0] != '\0') {
-        logFilePath = envVar;
-    } else {
-        // Get parent log directory
-        std::string logFileDir;
-        if (DirectoryExists(LOG_DIR_NGENCERF)) {
-            logFileDir = LOG_DIR_NGENCERF + DS + LOG_DIR_DEFAULT;
-        } else {
-            logFileDir = "~" + DS + LOG_DIR_DEFAULT;
-        }
-
-        // Ensure parent log direcotry exists
-        if (CreateDirectory(logFileDir)) {
-            // Get full log directory path
-            const char* envUsername = std::getenv("USER");
-            if (envUsername) {
-                std::string username = envUsername;
-                logFileDir           = logFileDir + DS + username;
-            } else {
-                logFileDir = logFileDir + DS + CreateDateString();
-            }
-            // Set the full path if log directory exists/created
-            if (CreateDirectory(logFileDir))
-                logFilePath = logFileDir + DS + MODULE_NAME + "_" + CreateTimestamp(false, false) +
-                              "." + LOG_FILE_EXT;
-        }
-    }
-
-    // Open log file. If path not found, it will try an alternate file. If neither
-    // works false returned and logs will be written to stdout.
-    if (LogFileReady()) {
-        std::cout << "Module " << MODULE_NAME << " Log File: " << logFilePath << std::endl;
-        // This is an INFO message that always should be in the log but the
-        // logLevel could be different than INFO. Therefore use logLevel to
-        // ensure the message is recorded in the log
-        std::string msg =
-            "INFO: " + MODULE_NAME + " Logging started. Log File Path: " + logFilePath + "\n";
-        Log(msg, logLevel);
-    } else {
-        std::cout << "Unable to open log file ";
-        if (!logFilePath.empty()) {
-            std::cout << logFilePath;
-            std::cout << " (Perhaps check permissions)" << std::endl;
-        }
-        std::cout << "Log entries will be writen to stdout" << std::endl;
-    }
-
-    std::string llMsg = "INFO: " + MODULE_NAME + " default log level is " +
-                        TrimString(ConvertLogLevelToString(logLevel)) + "\n";
-    // This is an INFO message that always should be in the log but the
-    // logLevel could be different than INFO. Therefore use logLevel to
-    // ensure the message is recorded in the log
-    Log(llMsg, logLevel);
-
-    // Set the logger log level if environment var not found
-    envLogLevelLogged = false; // Ensure this is false before calling LogFileReady
-    if (!CheckLogLevelEv())
-        logLevel = level;
-
-    // Ensure the initial log level is logged. This flag is only checked here during startup in
-    // case the environment log level is the same as the default log level. If so it wouldn't
-    // get logged in CheckLogLevelEv
-    if (!envLogLevelLogged) {
-        std::string llMsg = "INFO: log level set to " + ConvertLogLevelToString(logLevel) + "\n";
-        // This is an INFO message that always should be in the log but the
-        // logLevel could be different than INFO. Therefore use logLevel to
-        // ensure the message is recorded in the log
-        Log(llMsg, logLevel);
-        envLogLevelLogged = true;
-    }
+    SetLogFilePath();
+    SetLogLevel(level);
 }
 
 /**

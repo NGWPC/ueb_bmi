@@ -36,7 +36,9 @@ class Logger {
     std::string GetLogFilePath(void);
     LogLevel GetLogLevel(void);
     void Log(std::string message, LogLevel messageLevel = LogLevel::INFO);
-    bool LogFileReady(void);
+    bool LogFileReady(bool appendMode=true);
+    void SetLogFilePath(void);
+    void SetLogLevel(LogLevel level);
     void SetLogPreferences(LogLevel level = LogLevel::INFO);
     std::string TrimString(const std::string& str);
 
