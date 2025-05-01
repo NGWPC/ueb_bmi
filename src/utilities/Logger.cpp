@@ -246,26 +246,43 @@ void Logger::SetLogFilePath(void) {
     }
 }
 
-void Logger::SetLogLevel(LogLevel level) {
+void Logger::SetLogLevel(void) {
     // Set the logger log level if environment var not found
     const char* envLogLevel = std::getenv(EV_MODULE_LOGLEVEL.c_str());
     if (envLogLevel != nullptr && envLogLevel[0] != '\0') {
         logLevel = ConvertStringToLogLevel(envLogLevel);
-        std::string llMsg = "Log level set to " + ConvertLogLevelToString(logLevel) + "\n";
-        LogLevel saveLevel = logLevel;
-        logLevel = LogLevel::INFO; // Ensure this INFO message is always logged
-        Log(llMsg, logLevel);
-        logLevel = saveLevel;
     }
+    std::string llMsg = "Log level set to " + ConvertLogLevelToString(logLevel) + "\n";
+    cout << MODULE_NAME << " " << llMsg;
+    LogLevel saveLevel = logLevel;
+    logLevel = LogLevel::INFO; // Ensure this INFO message is always logged
+    Log(llMsg, logLevel);
+    logLevel = saveLevel;
+
 }
 
-bool Logger::IsLoggingEnabled(void) {
+void Logger::SetLoggingFlag(void) {
     const char* envVar = std::getenv(EV_EWTS_LOGGING.c_str()); // Set once module has successfully opened a log file
     if (envVar != nullptr && envVar[0] != '\0') {
         std::string logState = ToUpper(TrimString(envVar));
         loggingEnabled = (logState == "ENABLED")?true:false;
     }
+    std::cout << MODULE_NAME << " Logging " << ((loggingEnabled)?"ENABLED":"DISABLED") << std::endl;
+}
+
+bool Logger::IsLoggingEnabled(void) {
     return loggingEnabled;
+}
+
+void Logger::SetLogModuleName(void) {
+    // Make sure the module name used for logging entries is all uppercase and 8 characters wide.
+    moduleName            = MODULE_NAME;
+    std::string upperName = moduleName.substr(0, LOG_MODULE_NAME_LEN); // Truncate to LOG_MODULE_NAME_LEN chars max
+    std::transform(upperName.begin(), upperName.end(), upperName.begin(), ::toupper);
+
+    std::ostringstream oss;
+    oss << std::left << std::setw(8) << std::setfill(' ') << upperName;
+    moduleName = oss.str();
 }
 
 /**
@@ -274,23 +291,16 @@ bool Logger::IsLoggingEnabled(void) {
  * @param level: LogLevel::INFO by Default
  * @return void
  */
-void Logger::SetLogPreferences(LogLevel level) {
+void Logger::SetLogPreferences(void) {
 
     if (!loggerInitialized) {
         loggerInitialized = true; // Only call this once
 
-    // Make sure the module name used for logging entries is all uppercase and 8 characters wide.
-        moduleName            = MODULE_NAME;
-        std::string upperName = moduleName.substr(0, LOG_MODULE_NAME_LEN); // Truncate to LOG_MODULE_NAME_LEN chars max
-        std::transform(upperName.begin(), upperName.end(), upperName.begin(), ::toupper);
-
-        std::ostringstream oss;
-        oss << std::left << std::setw(8) << std::setfill(' ') << upperName;
-        moduleName = oss.str();
-
-        if (IsLoggingEnabled()) {
+        SetLoggingFlag();
+        if (loggingEnabled) {
+            SetLogModuleName();
             SetLogFilePath();
-            SetLogLevel(level);
+            SetLogLevel();
         }
     }
 }
@@ -384,7 +394,7 @@ std::string Logger::CreateTimestamp(bool appendMS, bool iso) {
 
 void Logger::setup_logger(void) {
     // One time log preferences
-    (Logger::GetInstance())->SetLogPreferences(LogLevel::INFO);
+    (Logger::GetInstance())->SetLogPreferences();
 }
 
 std::string Logger::GetLogFilePath() {

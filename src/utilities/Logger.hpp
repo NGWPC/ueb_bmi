@@ -43,8 +43,10 @@ class Logger {
     std::string GetLogFilePath(void);
     bool LogFileReady(bool appendMode=true);
     void SetLogFilePath(void);
-    void SetLogLevel(LogLevel level);
-    void SetLogPreferences(LogLevel level = LogLevel::INFO);
+    void SetLoggingFlag(void);
+    void SetLogLevel(void);
+    void SetLogModuleName(void);
+    void SetLogPreferences(void);
     std::string ToUpper(const std::string& input);
     std::string TrimString(const std::string& str);
 
