@@ -599,7 +599,7 @@ void TURBFLUX(
                              "+ 1*Rkinl + 1*Rkinc evaluates to zero"
                           << endl;
                 canopy_ss << "added 0.01 to avoid numerical error; Need checking results" << endl;
-                (Logger::GetInstance())->Log(canopy_ss.str(), LogLevel::WARN);
+                (Logger::GetInstance())->Log(canopy_ss.str(), LogLevel::SEVERE);
                 canopy_ss.str("");
                 // getchar();
             }
@@ -615,7 +615,7 @@ void TURBFLUX(
                 Tack += 1.0;
                 canopy_ss << "Error! Surface temp in function Turbflux() Tack = 0" << endl;
                 canopy_ss << "added 1 to avoid numerical error; Need checking results" << endl;
-                (Logger::GetInstance())->Log(canopy_ss.str(), LogLevel::ERROR);
+                (Logger::GetInstance())->Log(canopy_ss.str(), LogLevel::WARNING);
                 canopy_ss.str("");
                 // getchar();
             }

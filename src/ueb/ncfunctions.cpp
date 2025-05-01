@@ -87,7 +87,7 @@ int WriteTSto3DNC(
         break;
     default:
         ncfunc_ss << "the dim order has to be between 0 and 2" << endl;
-        (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::WARN);
+        (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::SEVERE);
         ncfunc_ss.str("");
         getchar();
         break;
@@ -193,7 +193,7 @@ int WriteTSto3DNC_Block(
             break;
         default:
             ncfunc_ss << "the dim order has to be between 0 and 2" << endl;
-            (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::WARN);
+            (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::SEVERE);
             ncfunc_ss.str("");
             getchar();
             break;
@@ -254,7 +254,7 @@ int Write_uebaggTS_toNC(
         break;
     default:
         ncfunc_ss << "the dim order has to be 0 or 1" << endl;
-        (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::WARN);
+        (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::SEVERE);
         ncfunc_ss.str("");
         getchar();
         break;
@@ -334,7 +334,7 @@ int Write_uebaggTS_toNC_par(
         break;
     default:
         ncfunc_ss << "the dim order has to be 0 or 1" << endl;
-        (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::WARN);
+        (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::SEVERE);
         ncfunc_ss.str("");
         getchar();
         break;
@@ -481,7 +481,7 @@ int create3DNC_uebAggregatedOutputs(
         break;
     default:
         ncfunc_ss << "the dim order has to be either 0 or 1" << endl;
-        (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::WARN);
+        (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::SEVERE);
         ncfunc_ss.str("");
         getchar();
         break;
@@ -749,7 +749,7 @@ int create3DNC_uebOutputs(
         break;
     default:
         ncfunc_ss << "the dim order has to be between 0 and 2" << endl;
-        (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::WARN);
+        (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::SEVERE);
         ncfunc_ss.str("");
         getchar();
         break;
@@ -943,7 +943,7 @@ int Create3DNC(
         break;
     default:
         ncfunc_ss << "the dim order has to be between 0 and 2" << endl;
-        (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::WARN);
+        (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::SEVERE);
         ncfunc_ss.str("");
         getchar();
         break;
@@ -1100,7 +1100,7 @@ int Write3DNC(
         break;
     default:
         ncfunc_ss << "the dim order has to be between 0 and 2" << endl;
-        (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::WARN);
+        (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::SEVERE);
         ncfunc_ss.str("");
         getchar();
         break;

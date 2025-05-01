@@ -1027,7 +1027,7 @@ void ueb::BmiUEB::prepareInputForPoint(
                 bmi_ueb_ss << "Diurnal temperature range is assumed as 8 degree celsius on "
                            << endl;
                 bmi_ueb_ss << Year << " " << Month << " " << Day << endl;
-                (Logger::GetInstance())->Log(bmi_ueb_ss.str(), LogLevel::WARN);
+                (Logger::GetInstance())->Log(bmi_ueb_ss.str(), LogLevel::SEVERE);
                 bmi_ueb_ss.str("");
             }
             Trange = 8.0;
@@ -1068,7 +1068,7 @@ void ueb::BmiUEB::prepareInputForPoint(
         default:
             bmi_ueb_ss << " The radiation flag is not the right number; must be between 0 and 3"
                        << endl;
-            (Logger::GetInstance())->Log(bmi_ueb_ss.str(), LogLevel::ERROR);
+            (Logger::GetInstance())->Log(bmi_ueb_ss.str(), LogLevel::WARNING);
             bmi_ueb_ss.str("");
             getchar();
             break;
@@ -1145,7 +1145,7 @@ void ueb::BmiUEB::prepareInputForPoint(
                 bmi_ueb_ss << "Diurnal temperature range is assumed as 8 degree celsius on "
                            << endl;
                 bmi_ueb_ss << Year << " " << Month << " " << Day << endl;
-                (Logger::GetInstance())->Log(bmi_ueb_ss.str(), LogLevel::ERROR);
+                (Logger::GetInstance())->Log(bmi_ueb_ss.str(), LogLevel::WARNING);
                 bmi_ueb_ss.str("");
             }
             Trange = 8.0;
@@ -1181,7 +1181,7 @@ void ueb::BmiUEB::prepareInputForPoint(
         default:
             bmi_ueb_ss << " The radiation flag is not the right number; must be between 0 and 3"
                        << endl;
-            (Logger::GetInstance())->Log(bmi_ueb_ss.str(), LogLevel::ERROR);
+            (Logger::GetInstance())->Log(bmi_ueb_ss.str(), LogLevel::WARNING);
             bmi_ueb_ss.str("");
             getchar();
             break;
@@ -1331,7 +1331,7 @@ void ueb::BmiUEB::runPointUEB(
                         bmi_ueb_ss << " at date " << Year << "-" << Month << "-" << Day << "T"
                                    << dHour;
                         bmi_ueb_ss << ". Limiting log to 3 error messages." << endl;
-                        (Logger::GetInstance())->Log(bmi_ueb_ss.str(), LogLevel::WARN);
+                        (Logger::GetInstance())->Log(bmi_ueb_ss.str(), LogLevel::SEVERE);
                         bmi_ueb_ss.str("");
                         ++radwarnflag;
                     }

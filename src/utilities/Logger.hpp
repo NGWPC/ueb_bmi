@@ -10,12 +10,12 @@
 #include <string>
 
 enum class LogLevel {
-    NONE  = 0,
-    DEBUG = 1,
-    INFO  = 2,
-    ERROR = 3,
-    WARN  = 4,
-    FATAL = 5,
+    NONE    = 0,
+    DEBUG   = 1,
+    INFO    = 2,
+    WARNING = 3,
+    SEVERE  = 4,
+    FATAL   = 5,
 };
 
 /**
@@ -23,10 +23,17 @@ enum class LogLevel {
  */
 class Logger {
   public:
+    // Methods
+    void setup_logger(void);
+    void Log(std::string message, LogLevel messageLevel = LogLevel::INFO);
+    bool IsLoggingEnabled(void);
+    LogLevel GetLogLevel(void);
+
+    // Variables
     static std::shared_ptr<Logger> GetInstance();
 
-    void setup_logger(void);
-    bool CheckLogLevelEv(void);
+  private:
+    // Methods
     std::string CreateDateString(void);
     std::string CreateTimestamp(bool appendMS = true, bool iso = true);
     bool CreateDirectory(const std::string& path);
@@ -34,20 +41,20 @@ class Logger {
     LogLevel ConvertStringToLogLevel(const std::string& logLevel);
     bool DirectoryExists(const std::string& path);
     std::string GetLogFilePath(void);
-    LogLevel GetLogLevel(void);
-    void Log(std::string message, LogLevel messageLevel = LogLevel::INFO);
     bool LogFileReady(bool appendMode=true);
     void SetLogFilePath(void);
     void SetLogLevel(LogLevel level);
     void SetLogPreferences(LogLevel level = LogLevel::INFO);
+    std::string ToUpper(const std::string& input);
     std::string TrimString(const std::string& str);
 
-  private:
-    bool envLogLevelLogged = false;
+    // Variables
+    bool         loggerInitialized = false;
+    bool         loggingEnabled = true;
     std::fstream logFile;
-    std::string logFilePath = "";
-    LogLevel logLevel       = LogLevel::ERROR;
-    std::string moduleName;
+    std::string  logFilePath = "";
+    LogLevel     logLevel = LogLevel::INFO;
+    std::string  moduleName;
 
     static std::shared_ptr<Logger> loggerInstance;
 };

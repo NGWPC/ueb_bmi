@@ -14,13 +14,17 @@
 #include <thread>
 #include <unordered_map>
 
-const std::string MODULE_NAME = "ueb_bmi";
-const std::string LOG_DIR_NGENCERF =
-    "/ngencerf/data"; // ngenCERF log directory string if environement var empty.
-const std::string LOG_DIR_DEFAULT =
-    "run-logs"; // Default parent log directory string if env var empty  & ngencerf dosn't exist
-const std::string LOG_FILE_EXT = "log"; // Log file name extension
-const std::string DS           = "/"; // Directory separator
+const std::string  MODULE_NAME           = "ueb_bmi";
+const std::string  LOG_DIR_NGENCERF      = "/ngencerf/data";      // ngenCERF log directory string if environement var empty.
+const std::string  LOG_DIR_DEFAULT       = "run-logs";            // Default parent log directory string if env var empty  & ngencerf dosn't exist
+const std::string  LOG_FILE_EXT          = "log";                 // Log file name extension
+const std::string  DS                    = "/";                   // Directory separator
+const unsigned int LOG_MODULE_NAME_LEN   = 8;                     // Width of module name for log entries
+
+const std::string  EV_EWTS_LOGGING       = "NGEN_EWTS_LOGGING";   // Enable/disable of Error Warning and Trapping System  
+const std::string  EV_NGEN_LOGFILEPATH   = "NGEN_LOG_FILE_PATH";  // ngen log file 
+const std::string  EV_MODULE_LOGLEVEL    = "UEB_BMI_LOGLEVEL";    // This modules log level
+const std::string  EV_MODULE_LOGFILEPATH = "UEB_BMI_LOGFILEPATH"; // This modules log full log filename
 
 std::shared_ptr<Logger> Logger::loggerInstance;
 
@@ -28,29 +32,36 @@ using namespace std;
 
 // String to LogLevel map
 static const std::unordered_map<std::string, LogLevel> logLevelMap = {
-    {"NONE",  LogLevel::NONE },
-    {"0",     LogLevel::NONE },
-    {"DEBUG", LogLevel::DEBUG},
-    {"1",     LogLevel::DEBUG},
-    {"INFO",  LogLevel::INFO },
-    {"2",     LogLevel::INFO },
-    {"ERROR", LogLevel::ERROR},
-    {"3",     LogLevel::ERROR},
-    {"WARN",  LogLevel::WARN },
-    {"4",     LogLevel::WARN },
-    {"FATAL", LogLevel::FATAL},
-    {"5",     LogLevel::FATAL},
+    {"NONE",    LogLevel::NONE },
+    {"0",       LogLevel::NONE },
+    {"DEBUG",   LogLevel::DEBUG},
+    {"1",       LogLevel::DEBUG},
+    {"INFO",    LogLevel::INFO },
+    {"2",       LogLevel::INFO },
+    {"WARNING", LogLevel::WARNING},
+    {"3",       LogLevel::WARNING},
+    {"SEVERE",  LogLevel::SEVERE },
+    {"4",       LogLevel::SEVERE },
+    {"FATAL",   LogLevel::FATAL},
+    {"5",       LogLevel::FATAL},
 };
 
 // Reverse map: LogLevel to String
 static const std::unordered_map<LogLevel, std::string> logLevelToStringMap = {
-    {LogLevel::NONE,  "NONE "},
-    {LogLevel::DEBUG, "DEBUG"},
-    {LogLevel::INFO,  "INFO "},
-    {LogLevel::ERROR, "ERROR"},
-    {LogLevel::WARN,  "WARN "},
-    {LogLevel::FATAL, "FATAL"},
+    {LogLevel::NONE,    "NONE   "},
+    {LogLevel::DEBUG,   "DEBUG  "},
+    {LogLevel::INFO,    "INFO   "},
+    {LogLevel::WARNING, "WARNING"},
+    {LogLevel::SEVERE,  "SEVERE "},
+    {LogLevel::FATAL,   "FATAL  "},
 };
+
+std::string Logger::ToUpper(const std::string& input) {
+    std::string result = input;
+    std::transform(result.begin(), result.end(), result.begin(),
+                   [](unsigned char c){ return std::toupper(c); });
+    return result;
+}
 
 // Function to trim leading and trailing spaces
 std::string Logger::TrimString(const std::string& str) {
@@ -67,21 +78,24 @@ std::string Logger::TrimString(const std::string& str) {
     return str.substr(first, last - first + 1);
 }
 
-LogLevel Logger::ConvertStringToLogLevel(const std::string& logLevel) {
-    // Convert string to LogLevel (supports both names and numbers)
-    auto it = logLevelMap.find(logLevel);
-    if (it != logLevelMap.end()) {
-        return it->second; // Found valid named or numeric log level
-    }
-
-    // Try parsing as an integer (for cases where an invalid numeric value is given)
-    try {
-        int levelNum = std::stoi(logLevel);
-        if (levelNum >= 0 && levelNum <= 5) {
-            return static_cast<LogLevel>(levelNum);
+LogLevel Logger::ConvertStringToLogLevel(const std::string& levelStr) {
+    std::string level = TrimString(levelStr);
+    if (!level.empty()) {
+        // Convert string to LogLevel (supports both names and numbers)
+        auto it = logLevelMap.find(level);
+        if (it != logLevelMap.end()) {
+            return it->second; // Found valid named or numeric log level
         }
-    } catch (...) {
-        // Ignore errors (e.g., if std::stoi fails for non-numeric input)
+
+        // Try parsing as an integer (for cases where an invalid numeric value is given)
+        try {
+            int levelNum = std::stoi(level);
+            if (levelNum >= 0 && levelNum <= 5) {
+                return static_cast<LogLevel>(levelNum);
+            }
+        } catch (...) {
+            // Ignore errors (e.g., if std::stoi fails for non-numeric input)
+        }
     }
     return LogLevel::NONE;
 }
@@ -161,34 +175,10 @@ bool Logger::LogFileReady(bool appendMode) {
 }
 
 /**
- * Check the log level envinroment variable and update it if it changed.
- * @return true if environment variable exists otherwise false.
- *
- */
-bool Logger::CheckLogLevelEv(void) {
-    const char* envLogLevel = std::getenv("UEB_BMI_LOGLEVEL");
-    if (envLogLevel != nullptr && envLogLevel[0] != '\0') {
-        LogLevel envll = ConvertStringToLogLevel(envLogLevel);
-        if (envll != logLevel) {
-            logLevel          = envll;
-            std::string llMsg = "INFO: " + MODULE_NAME +
-                                " log level set to found UEB_BMI_LOGLEVEL (" +
-                                TrimString(ConvertLogLevelToString(logLevel)) + ")\n";
-            // This is an INFO message that always should be in the log but the
-            // logLevel could be different than INFO. herefore use logLevel to
-            // ensure the message is recorded in the log
-            Log(llMsg, logLevel);
-            envLogLevelLogged = true;
-        }
-        return true;
-    }
-    return false;
-}
-/**
  * Set the log file path name using the following pattern
  *  - Use the module log file if available (unset when first run by ngen), otherwise 
  *  - Use ngen log file if available, otherwise
- *  - Use /ngencerf/data/run-logs/<username>/<module>_<YYMMDDTHHMMSS> if available, othrewise
+ *  - Use /ngencerf/data/run-logs/<username>/<module>_<YYMMDDTHHMMSS> if available, otherwise
  *  - Use ~/run-logs/<YYYYMMDD>/<module>_<YYMMDDTHHMMSS>
  *  - Onced opened, save the full log path to the modules log environment variable so
  *    it is only opened once for each ngen run (vs for each catchment)
@@ -198,12 +188,12 @@ void Logger::SetLogFilePath(void) {
     logFilePath = "";
     bool appendEntries = true;
     bool mdduleLogEnvExists = false;
-    const char* envVar = std::getenv("UEB_BMI_LOGFILEPATH"); // Set once module has successfully opened a log file
+    const char* envVar = std::getenv(EV_MODULE_LOGFILEPATH.c_str()); // Set once module has successfully opened a log file
     if (envVar != nullptr && envVar[0] != '\0') {
         logFilePath = envVar;
         mdduleLogEnvExists = true;
     } else {
-        envVar = std::getenv("NGEN_LOG_FILE_PATH"); // Currently set by ngen-cal but envision set for WCOSS at some point
+        envVar = std::getenv(EV_NGEN_LOGFILEPATH.c_str()); // Currently set by ngen-cal but envision set for WCOSS at some point
         if (envVar != nullptr && envVar[0] != '\0') {
             logFilePath = envVar;
         } else {
@@ -238,14 +228,13 @@ void Logger::SetLogFilePath(void) {
     // works false returned and logs will be written to stdout.
     if (LogFileReady(appendEntries)) {
         if (!mdduleLogEnvExists) { 
-            setenv("UEB_BMI_LOGFILEPATH", (char *)logFilePath.c_str(), 1);
+            setenv(EV_MODULE_LOGFILEPATH.c_str(), logFilePath.c_str(), 1);
             std::cout << "Module " << MODULE_NAME << " Log File: " << logFilePath << std::endl;
-            // This is an INFO message that always should be in the log but the
-            // logLevel could be different than INFO. Therefore use logLevel to
-            // ensure the message is recorded in the log
-            std::string msg =
-                "INFO: " + MODULE_NAME + " Logging started. Log File Path: " + logFilePath + "\n";
+            std::string msg = "Logging started. Log File Path: " + logFilePath + "\n";
+            LogLevel saveLevel = logLevel;
+            logLevel = LogLevel::INFO; // Ensure this INFO message is always logged
             Log(msg, logLevel);
+            logLevel = saveLevel;
         }
     } else {
         std::cout << "Unable to open log file ";
@@ -259,22 +248,26 @@ void Logger::SetLogFilePath(void) {
 
 void Logger::SetLogLevel(LogLevel level) {
     // Set the logger log level if environment var not found
-    envLogLevelLogged = false;
-    if (!CheckLogLevelEv())
-        logLevel = level;
-
-    // Ensure the initial log level is logged. This flag is only checked here during startup in
-    // case the environment log level is the same as the default log level. If so it wouldn't
-    // get logged in CheckLogLevelEv
-    if (!envLogLevelLogged) {
-        std::string llMsg = "INFO: log level set to " + ConvertLogLevelToString(logLevel) + "\n";
-        // This is an INFO message that always should be in the log but the
-        // logLevel could be different than INFO. Therefore use logLevel to
-        // ensure the message is recorded in the log
+    const char* envLogLevel = std::getenv(EV_MODULE_LOGLEVEL.c_str());
+    if (envLogLevel != nullptr && envLogLevel[0] != '\0') {
+        logLevel = ConvertStringToLogLevel(envLogLevel);
+        std::string llMsg = "Log level set to " + ConvertLogLevelToString(logLevel) + "\n";
+        LogLevel saveLevel = logLevel;
+        logLevel = LogLevel::INFO; // Ensure this INFO message is always logged
         Log(llMsg, logLevel);
-        envLogLevelLogged = true;
+        logLevel = saveLevel;
     }
 }
+
+bool Logger::IsLoggingEnabled(void) {
+    const char* envVar = std::getenv(EV_EWTS_LOGGING.c_str()); // Set once module has successfully opened a log file
+    if (envVar != nullptr && envVar[0] != '\0') {
+        std::string logState = ToUpper(TrimString(envVar));
+        loggingEnabled = (logState == "ENABLED")?true:false;
+    }
+    return loggingEnabled;
+}
+
 /**
  * Configure Logger Preferences
  * @param logFile
@@ -283,17 +276,23 @@ void Logger::SetLogLevel(LogLevel level) {
  */
 void Logger::SetLogPreferences(LogLevel level) {
 
+    if (!loggerInitialized) {
+        loggerInitialized = true; // Only call this once
+
     // Make sure the module name used for logging entries is all uppercase and 8 characters wide.
-    moduleName            = MODULE_NAME;
-    std::string upperName = moduleName.substr(0, 8); // Truncate to 8 chars max
-    std::transform(upperName.begin(), upperName.end(), upperName.begin(), ::toupper);
+        moduleName            = MODULE_NAME;
+        std::string upperName = moduleName.substr(0, LOG_MODULE_NAME_LEN); // Truncate to LOG_MODULE_NAME_LEN chars max
+        std::transform(upperName.begin(), upperName.end(), upperName.begin(), ::toupper);
 
-    std::ostringstream oss;
-    oss << std::left << std::setw(8) << std::setfill(' ') << upperName;
-    moduleName = oss.str();
+        std::ostringstream oss;
+        oss << std::left << std::setw(8) << std::setfill(' ') << upperName;
+        moduleName = oss.str();
 
-    SetLogFilePath();
-    SetLogLevel(level);
+        if (IsLoggingEnabled()) {
+            SetLogFilePath();
+            SetLogLevel(level);
+        }
+    }
 }
 
 /**
@@ -304,7 +303,6 @@ std::shared_ptr<Logger> Logger::GetInstance() {
     if (loggerInstance == nullptr) {
         loggerInstance = std::shared_ptr<Logger>(new Logger());
     }
-
     return loggerInstance;
 }
 
@@ -314,11 +312,11 @@ std::shared_ptr<Logger> Logger::GetInstance() {
  * @param messageLevel: Log Level, LogLevel::INFO by default
  */
 void Logger::Log(std::string message, LogLevel messageLevel) {
-    // Check for change in log level environment variable
-    (void)CheckLogLevelEv();
+
+    if (!loggerInitialized) SetLogPreferences(); // Cover case where Log is called before setup done
 
     // don't log if messageLevel < logLevel
-    if (messageLevel >= logLevel) {
+    if (loggingEnabled && (messageLevel >= logLevel)) {
         std::string logType   = ConvertLogLevelToString(messageLevel);
         std::string logPrefix = CreateTimestamp() + " " + moduleName + " " + logType;
 

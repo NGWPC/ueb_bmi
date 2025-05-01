@@ -41,7 +41,7 @@ void ueb::ControlFile::loadControlFile(std::string const& contrl_file) {
     FILE* pconFile = fopen(contrl_file.c_str(), "rt");
     if (pconFile == NULL) {
         std_ss << "Couldn't open control file: " << contrl_file << std::endl;
-        (Logger::GetInstance())->Log(std_ss.str(), LogLevel::ERROR);
+        (Logger::GetInstance())->Log(std_ss.str(), LogLevel::WARNING);
         std_ss.str("");
         throw std::ios_base::failure("Couldn't open control file: " + contrl_file);
     } // pconFile

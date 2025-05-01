@@ -313,7 +313,7 @@ void SNOWUEB2(
         if (snowdgtvariteflag == 1) {
             snowdgtv_ss << "Invalid previous time step surface temperature set to 273 K" << Tssk_old
                         << endl;
-            (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::ERROR);
+            (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::WARNING);
             snowdgtv_ss.str("");
         }
         Tssk_old = T_k;
@@ -322,7 +322,7 @@ void SNOWUEB2(
         if (snowdgtvariteflag == 1) {
             snowdgtv_ss << "Invalid previous time step average temperature  set to 273 K"
                         << Tsavek_old << endl;
-            (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::ERROR);
+            (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::WARNING);
             snowdgtv_ss.str("");
         }
 
@@ -332,7 +332,7 @@ void SNOWUEB2(
         if (snowdgtvariteflag == 1) {
             snowdgtv_ss << "Invalid last 24 hr average surface temperature  set to 273 K"
                         << Tssk_ave << endl;
-            (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::ERROR);
+            (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::WARNING);
             snowdgtv_ss.str("");
         }
         Tssk_ave = T_k;
@@ -341,7 +341,7 @@ void SNOWUEB2(
         if (snowdgtvariteflag == 1) {
             snowdgtv_ss << "Invalid last 24 hr average temperature set to 273 K" << Tsavek_ave
                         << endl;
-            (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::ERROR);
+            (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::WARNING);
             snowdgtv_ss.str("");
         }
         Tsavek_ave = T_k;
@@ -1161,13 +1161,13 @@ void PREDICORRc(
                 //    Check that nothing went wrong
                 if (MR < 0) {
                     snowdgtv_ss << "Error - negative melt rate in snow" << endl;
-                    (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::ERROR);
+                    (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::WARNING);
                     snowdgtv_ss.str("");
                     getchar();
                 }
                 if (Ws2 < 0) {
                     snowdgtv_ss << "Error - negative w2 in snow" << endl;
-                    (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::ERROR);
+                    (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::WARNING);
                     snowdgtv_ss.str("");
                     getchar();
                 }
@@ -2273,7 +2273,7 @@ labl17:
                                 << endl;
                     snowdgtv_ss << "F1, F2, Tssk, Tslast " << endl;
                     snowdgtv_ss << "  " << F1 << " " << F2 << " " << Tssk << " " << Tslast << endl;
-                    (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::WARN);
+                    (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::SEVERE);
                     snowdgtv_ss.str("");
                     getchar();
                 }
@@ -2506,7 +2506,7 @@ labl17:
                                         << uebCellX << "."; // mtime[4]<<endl;
                             snowdgtv_ss << " A canopy temperature of 273 K assumed.";
                             snowdgtv_ss << " Limiting log to 3 error messages." << endl;
-                            (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::WARN);
+                            (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::SEVERE);
                             snowdgtv_ss.str("");
                         }
                     }
@@ -2858,7 +2858,7 @@ float CanTemp(
                                "canopy temp Tck"
                             << endl;
                 snowdgtv_ss << " F1 - F2: " << f1minf2 << endl;
-                (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::WARN);
+                (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::SEVERE);
                 snowdgtv_ss.str("");
             }
             goto labl11; // 10.30.13 go to bisection if F1 == F2 as div by zero results in #IND for
@@ -3088,7 +3088,7 @@ labl11:
                                 << mtime[3] << "  " << uebCellY << " " << uebCellX
                                 << endl; // mtime[4]<<endl;
                     snowdgtv_ss << " A canopy temperature of 273 K assumed" << endl;
-                    (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::ERROR);
+                    (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::WARNING);
                     snowdgtv_ss.str("");
                 }
                 Tck = Tk;
