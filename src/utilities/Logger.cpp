@@ -13,6 +13,9 @@
 #include <sys/wait.h>
 #include <thread>
 #include <unordered_map>
+#include <cstdarg>
+#include <cstdio>
+#include <vector>
 
 const std::string  MODULE_NAME           = "ueb_bmi";
 const std::string  LOG_DIR_NGENCERF      = "/ngencerf/data";      // ngenCERF log directory string if environement var empty.
@@ -25,6 +28,13 @@ const std::string  EV_EWTS_LOGGING       = "NGEN_EWTS_LOGGING";   // Enable/disa
 const std::string  EV_NGEN_LOGFILEPATH   = "NGEN_LOG_FILE_PATH";  // ngen log file 
 const std::string  EV_MODULE_LOGLEVEL    = "UEB_BMI_LOGLEVEL";    // This modules log level
 const std::string  EV_MODULE_LOGFILEPATH = "UEB_BMI_LOGFILEPATH"; // This modules log full log filename
+
+bool         Logger::loggerInitialized = false;
+std::string  Logger::logFilePath = "";
+bool         Logger::loggingEnabled = true;
+std::fstream Logger::logFile;
+LogLevel     Logger::logLevel = LogLevel::INFO; // Default Log Level
+std::string  Logger::moduleName = "";
 
 std::shared_ptr<Logger> Logger::loggerInstance;
 
@@ -230,10 +240,9 @@ void Logger::SetLogFilePath(void) {
         if (!mdduleLogEnvExists) { 
             setenv(EV_MODULE_LOGFILEPATH.c_str(), logFilePath.c_str(), 1);
             std::cout << "Module " << MODULE_NAME << " Log File: " << logFilePath << std::endl;
-            std::string msg = "Logging started. Log File Path: " + logFilePath + "\n";
             LogLevel saveLevel = logLevel;
             logLevel = LogLevel::INFO; // Ensure this INFO message is always logged
-            Log(msg, logLevel);
+            Log(logLevel, "Logging started. Log File Path: %s\n", logFilePath.c_str());
             logLevel = saveLevel;
         }
     } else {
@@ -256,7 +265,7 @@ void Logger::SetLogLevel(void) {
     cout << MODULE_NAME << " " << llMsg;
     LogLevel saveLevel = logLevel;
     logLevel = LogLevel::INFO; // Ensure this INFO message is always logged
-    Log(llMsg, logLevel);
+    Log(logLevel, llMsg);
     logLevel = saveLevel;
 
 }
@@ -305,15 +314,26 @@ void Logger::SetLogPreferences(void) {
     }
 }
 
-/**
- * Get Single Logger Instance or Create new Object if Not Created
- * @return std::shared_ptr<Logger>
- */
-std::shared_ptr<Logger> Logger::GetInstance() {
-    if (loggerInstance == nullptr) {
-        loggerInstance = std::shared_ptr<Logger>(new Logger());
+void Logger::Log(LogLevel messageLevel, const char* message, ...) {
+    va_list args;
+    va_start(args, message);
+
+    // Make a copy to calculate required size
+    va_list args_copy;
+    va_copy(args_copy, args);
+    int requiredLen = vsnprintf(nullptr, 0, message, args_copy);
+    va_end(args_copy);
+
+    if (requiredLen > 0) {
+        std::vector<char> buffer(requiredLen + 1);  // +1 for null terminator
+        vsnprintf(buffer.data(), buffer.size(), message, args);
+
+        va_end(args);
+
+        Log(std::string(buffer.data()), messageLevel);
+    } else {
+        va_end(args);  // still need to clean up
     }
-    return loggerInstance;
 }
 
 /**
@@ -321,6 +341,9 @@ std::shared_ptr<Logger> Logger::GetInstance() {
  * @param message: Log Message
  * @param messageLevel: Log Level, LogLevel::INFO by default
  */
+void Logger::Log(LogLevel messageLevel, std::string message) {
+    Log(message, messageLevel);
+}
 void Logger::Log(std::string message, LogLevel messageLevel) {
 
     if (!loggerInitialized) SetLogPreferences(); // Cover case where Log is called before setup done
@@ -390,11 +413,6 @@ std::string Logger::CreateTimestamp(bool appendMS, bool iso) {
         return oss.str();
     }
     return std::string(buffer);
-}
-
-void Logger::setup_logger(void) {
-    // One time log preferences
-    (Logger::GetInstance())->SetLogPreferences();
 }
 
 std::string Logger::GetLogFilePath() {

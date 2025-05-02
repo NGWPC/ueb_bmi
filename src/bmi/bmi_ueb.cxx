@@ -11,9 +11,6 @@
 std::stringstream bmi_ueb_ss("");
 
 void ueb::BmiUEB::Initialize(std::string config_file) {
-    // Setup the logger
-    (Logger::GetInstance())->setup_logger();
-
     if (config_file.compare("") != 0) {
         _confile = ControlFile(config_file);
         _ws      = Watershed(
