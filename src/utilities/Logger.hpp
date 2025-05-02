@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <string>
 
+#define LOG (Logger::GetInstance())->Log
+
 enum class LogLevel {
     NONE    = 0,
     DEBUG   = 1,

@@ -264,7 +264,7 @@ void NETLONGRAD(
                       << " " << Qlcu << " ";
             canopy_ss << setprecision(15) << Qli << " " << Qle << " " << Qlns << " " << Qlnc
                       << endl;
-            (Logger::GetInstance())->Log(canopy_ss.str(), LogLevel::INFO);
+            LOG(canopy_ss.str(), LogLevel::INFO);
             canopy_ss.str("");
         }
     }
@@ -398,7 +398,7 @@ void AeroRes(
             canopy_ss << std::setprecision(15) << ndecay << " " << Kh << " " << Ra << " " << Rc
                       << " " << Rs << " " << Rbc << " " << Lbmean << " " << Rl << " " << RKINc
                       << " " << RKINa << " " << RKINbc << " " << RKINl << endl;
-            (Logger::GetInstance())->Log(canopy_ss.str(), LogLevel::INFO);
+            LOG(canopy_ss.str(), LogLevel::INFO);
             canopy_ss.str("");
         }
     }
@@ -514,7 +514,7 @@ void TURBFLUX(
     Ea   = svpw(Ta) * RH; // Actual vapor pressure sorrounding canopy
     if (snowdgtvariteflag2 == 1) {
         canopy_ss << std::setprecision(15) << Ea << endl;
-        (Logger::GetInstance())->Log(canopy_ss.str(), LogLevel::INFO);
+        LOG(canopy_ss.str(), LogLevel::INFO);
         canopy_ss.str("");
     }
 
@@ -552,13 +552,13 @@ void TURBFLUX(
         canopy_ss << std::setprecision(15) << d << " " << Z0c << " " << Vz << " " << Rc << " " << Ra
                   << " " << Rbc << " " << Rl << " " << Rkinc << " " << Rkina << " " << Rkinbc << " "
                   << Rkinl << endl;
-        (Logger::GetInstance())->Log(canopy_ss.str(), LogLevel::INFO);
+        LOG(canopy_ss.str(), LogLevel::INFO);
         canopy_ss.str("");
     }
 
     if (snowdgtvariteflag2 == 1) {
         canopy_ss << "LAI: " << LAI << endl;
-        (Logger::GetInstance())->Log(canopy_ss.str(), LogLevel::INFO);
+        LOG(canopy_ss.str(), LogLevel::INFO);
         canopy_ss.str("");
     }
 
@@ -583,7 +583,7 @@ void TURBFLUX(
             if (snowdgtvariteflag2 == 1) {
                 canopy_ss << std::setprecision(15) << "QHs,QEs,Es,QHc,QEc,Ec" << " " << QHs << " "
                           << QEs << " " << Es << " " << QHc << " " << QEc << " " << Ec << endl;
-                (Logger::GetInstance())->Log(canopy_ss.str(), LogLevel::INFO);
+                LOG(canopy_ss.str(), LogLevel::INFO);
                 canopy_ss.str("");
             }
 
@@ -599,7 +599,7 @@ void TURBFLUX(
                              "+ 1*Rkinl + 1*Rkinc evaluates to zero"
                           << endl;
                 canopy_ss << "added 0.01 to avoid numerical error; Need checking results" << endl;
-                (Logger::GetInstance())->Log(canopy_ss.str(), LogLevel::SEVERE);
+                LOG(canopy_ss.str(), LogLevel::SEVERE);
                 canopy_ss.str("");
                 // getchar();
             }
@@ -615,7 +615,7 @@ void TURBFLUX(
                 Tack += 1.0;
                 canopy_ss << "Error! Surface temp in function Turbflux() Tack = 0" << endl;
                 canopy_ss << "added 1 to avoid numerical error; Need checking results" << endl;
-                (Logger::GetInstance())->Log(canopy_ss.str(), LogLevel::WARNING);
+                LOG(canopy_ss.str(), LogLevel::WARNING);
                 canopy_ss.str("");
                 // getchar();
             }
@@ -627,7 +627,7 @@ void TURBFLUX(
             if (snowdgtvariteflag2 == 1) {
                 canopy_ss << std::setprecision(15) << "Tc, Tac,Eac,Tack: " << Tc << " " << Tac
                           << " " << Eac << " " << Tack << endl;
-                (Logger::GetInstance())->Log(canopy_ss.str(), LogLevel::INFO);
+                LOG(canopy_ss.str(), LogLevel::INFO);
                 canopy_ss.str("");
             }
 
@@ -647,7 +647,7 @@ void TURBFLUX(
             if (snowdgtvariteflag2 == 1) {
                 canopy_ss << std::setprecision(15) << "QHs,QEs,Es,QHc,QEc,Ec" << " " << QHs << " "
                           << QEs << " " << Es << " " << QHc << " " << QEc << " " << Ec << endl;
-                (Logger::GetInstance())->Log(canopy_ss.str(), LogLevel::INFO);
+                LOG(canopy_ss.str(), LogLevel::INFO);
                 canopy_ss.str("");
             }
         }

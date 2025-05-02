@@ -110,7 +110,7 @@ void ueb::BmiUEB::Initialize(std::string config_file) {
     }
     std::stringstream ss("");
     ss << "BmiUEB Initialized" << std::endl;
-    (Logger::GetInstance())->Log(ss.str(), LogLevel::DEBUG);
+    LOG(ss.str(), LogLevel::DEBUG);
     ss.str("");
 }
 
@@ -1027,7 +1027,7 @@ void ueb::BmiUEB::prepareInputForPoint(
                 bmi_ueb_ss << "Diurnal temperature range is assumed as 8 degree celsius on "
                            << endl;
                 bmi_ueb_ss << Year << " " << Month << " " << Day << endl;
-                (Logger::GetInstance())->Log(bmi_ueb_ss.str(), LogLevel::SEVERE);
+                LOG(bmi_ueb_ss.str(), LogLevel::SEVERE);
                 bmi_ueb_ss.str("");
             }
             Trange = 8.0;
@@ -1068,7 +1068,7 @@ void ueb::BmiUEB::prepareInputForPoint(
         default:
             bmi_ueb_ss << " The radiation flag is not the right number; must be between 0 and 3"
                        << endl;
-            (Logger::GetInstance())->Log(bmi_ueb_ss.str(), LogLevel::WARNING);
+            LOG(bmi_ueb_ss.str(), LogLevel::WARNING);
             bmi_ueb_ss.str("");
             getchar();
             break;
@@ -1145,7 +1145,7 @@ void ueb::BmiUEB::prepareInputForPoint(
                 bmi_ueb_ss << "Diurnal temperature range is assumed as 8 degree celsius on "
                            << endl;
                 bmi_ueb_ss << Year << " " << Month << " " << Day << endl;
-                (Logger::GetInstance())->Log(bmi_ueb_ss.str(), LogLevel::WARNING);
+                LOG(bmi_ueb_ss.str(), LogLevel::WARNING);
                 bmi_ueb_ss.str("");
             }
             Trange = 8.0;
@@ -1181,7 +1181,7 @@ void ueb::BmiUEB::prepareInputForPoint(
         default:
             bmi_ueb_ss << " The radiation flag is not the right number; must be between 0 and 3"
                        << endl;
-            (Logger::GetInstance())->Log(bmi_ueb_ss.str(), LogLevel::WARNING);
+            LOG(bmi_ueb_ss.str(), LogLevel::WARNING);
             bmi_ueb_ss.str("");
             getchar();
             break;
@@ -1331,7 +1331,7 @@ void ueb::BmiUEB::runPointUEB(
                         bmi_ueb_ss << " at date " << Year << "-" << Month << "-" << Day << "T"
                                    << dHour;
                         bmi_ueb_ss << ". Limiting log to 3 error messages." << endl;
-                        (Logger::GetInstance())->Log(bmi_ueb_ss.str(), LogLevel::SEVERE);
+                        LOG(bmi_ueb_ss.str(), LogLevel::SEVERE);
                         bmi_ueb_ss.str("");
                         ++radwarnflag;
                     }
@@ -1456,7 +1456,7 @@ void ueb::BmiUEB::updatOutVars(
         for (int uit = 0; uit < 70; uit++) bmi_ueb_ss << _outvarArray[cell][uit][istep] << " ";
         bmi_ueb_ss << endl;
         bmi_ueb_ss << endl;
-        (Logger::GetInstance())->Log(bmi_ueb_ss.str(), LogLevel::DEBUG);
+        LOG(bmi_ueb_ss.str(), LogLevel::DEBUG);
         bmi_ueb_ss.str("");
     }
 }

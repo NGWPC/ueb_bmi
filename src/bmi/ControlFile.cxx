@@ -31,7 +31,7 @@ void ueb::ControlFile::loadControlFile(std::string const& contrl_file) {
     std::stringstream std_ss("");
 
     std_ss << "Control File is " << contrl_file << std::endl;
-    (Logger::GetInstance())->Log(std_ss.str(), LogLevel::INFO);
+    LOG(std_ss.str(), LogLevel::INFO);
     std_ss.str("");
     char headerLine[256];
     char paramFile1[256], sitevarFile1[256], inputconFile1[256], outputconFile1[256],
@@ -41,7 +41,7 @@ void ueb::ControlFile::loadControlFile(std::string const& contrl_file) {
     FILE* pconFile = fopen(contrl_file.c_str(), "rt");
     if (pconFile == NULL) {
         std_ss << "Couldn't open control file: " << contrl_file << std::endl;
-        (Logger::GetInstance())->Log(std_ss.str(), LogLevel::WARNING);
+        LOG(std_ss.str(), LogLevel::WARNING);
         std_ss.str("");
         throw std::ios_base::failure("Couldn't open control file: " + contrl_file);
     } // pconFile
