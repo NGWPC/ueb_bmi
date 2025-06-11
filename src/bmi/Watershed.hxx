@@ -1,89 +1,91 @@
 #ifndef UEB_WATERSHED
 #define UEB_WATERSHED
 
-#include <string>
 #include <array>
+#include <string>
 #include <vector>
 
 #include "uebpgdecls.h"
 
-namespace ueb { class Watershed; }
+namespace ueb {
+class Watershed;
+}
 
-std::ostream& operator<< ( std::ostream &os, ueb::Watershed w);
+std::ostream& operator<<(std::ostream& os, ueb::Watershed w);
 void swap(ueb::Watershed& obj1, ueb::Watershed& obj2);
 
 namespace ueb {
-  class Watershed {
-    private:
+class Watershed {
+  private:
+    std::string _wsncfile;
+    std::string _wsvarName;
+    std::string _wsycorName;
+    std::string _wsxcorName;
 
-      std::string _wsncfile;
-      std::string _wsvarName;
-      std::string _wsycorName;
-      std::string _wsxcorName;
+    float* _wsxcorArray = (float*)NULL;
+    float* _wsycorArray = (float*)NULL;
 
-      float *_wsxcorArray = (float *)NULL;
-      float *_wsycorArray = (float *)NULL;
+    int** _wsArray = (int**)NULL;
+    int _nydim     = 0;
+    int _nxdim     = 0;
+    int _wsfillVal = -9999;
 
-      int **_wsArray = (int **)NULL;
-      int _nydim = 0;
-      int _nxdim = 0;
-      int _wsfillVal = -9999;
+    void deepCopy(Watershed const& ws);
 
-      void deepCopy( Watershed const& ws );
+  public:
+    Watershed();
+    Watershed(
+        std::string const& wsncfile,
+        std::string const& wsvarName,
+        std::string const& wsycorName,
+        std::string const& wsxcorName
+    );
 
-    public:
+    // copy constructor
+    Watershed(Watershed const&);
 
-      Watershed();
-      Watershed( std::string const& wsncfile,
-	         std::string const& wsvarName,
-	         std::string const& wsycorName,
-	         std::string const& wsxcorName );
+    virtual ~Watershed();
 
-      //copy constructor
-      Watershed( Watershed const& );
+    std::string getWsncFile() const;
+    void setWsncFile(std::string const& fname);
 
-      virtual ~Watershed();
+    std::string getWsvarName() const;
+    void setWsvarName(std::string const& name);
 
-      std::string getWsncFile() const;
-      void setWsncFile( std::string const& fname );
+    std::string getWsycorName() const;
+    void setWsycorName(std::string const& name);
 
-      std::string getWsvarName() const;
-      void setWsvarName( std::string const& name );
+    std::string getWsxcorName() const;
+    void setWsxcorName(std::string const& name);
 
-      std::string getWsycorName() const;
-      void setWsycorName( std::string const& name );
+    int** getWatershedArray() const;
+    void setWatershedArray(int** wsArray);
 
-      std::string getWsxcorName() const;
-      void setWsxcorName( std::string const& name );
+    float* getWatershedXCors() const;
+    void setWatershedXCors(float* xcors);
 
-      int** getWatershedArray() const;
-      void setWatershedArray( int** wsArray );
+    float* getWatershedYCors() const;
+    void setWatershedYCors(float* ycors);
 
-      float* getWatershedXCors() const;
-      void setWatershedXCors( float* xcors );
+    int getNYDim() const;
+    void setNYDim(int const& dimlen);
 
-      float* getWatershedYCors() const;
-      void setWatershedYCors( float* ycors );
+    int getNXDim() const;
+    void setNXDim(int const& dimlen);
 
-      int  getNYDim() const;
-      void setNYDim( int const& dimlen );
+    int getFillValue() const;
+    void setFillValue(int const& v);
 
-      int  getNXDim() const;
-      void setNXDim( int const& dimlen );
+    int getNZones() const;
 
-      int  getFillValue() const;
-      void setFillValue( int const& v );
+    std::vector<std::pair<int, int>> getActiveCells(sitevar* const& strsvArray);
 
-      int getNZones() const;
+    Watershed& operator=(Watershed ws);
 
-      std::vector< std::pair<int,int> > getActiveCells( sitevar* const& strsvArray ); 
-
-      Watershed& operator=( Watershed ws );
-
-    friend std::ostream& ::operator<< ( std::ostream &os, Watershed w);
+    friend std::ostream& ::operator<<(std::ostream& os, Watershed w);
     friend void ::swap(ueb::Watershed& obj1, ueb::Watershed& obj2);
-  };
-
 };
 
-#endif //#ifndef UEB_WATERSHED
+}; // namespace ueb
+
+#endif // #ifndef UEB_WATERSHED
