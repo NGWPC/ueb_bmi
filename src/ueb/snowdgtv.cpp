@@ -313,7 +313,7 @@ void SNOWUEB2(
         if (snowdgtvariteflag == 1) {
             snowdgtv_ss << "Invalid previous time step surface temperature set to 273 K" << Tssk_old
                         << endl;
-            (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::ERROR);
+            LOG(snowdgtv_ss.str(), LogLevel::WARNING);
             snowdgtv_ss.str("");
         }
         Tssk_old = T_k;
@@ -322,7 +322,7 @@ void SNOWUEB2(
         if (snowdgtvariteflag == 1) {
             snowdgtv_ss << "Invalid previous time step average temperature  set to 273 K"
                         << Tsavek_old << endl;
-            (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::ERROR);
+            LOG(snowdgtv_ss.str(), LogLevel::WARNING);
             snowdgtv_ss.str("");
         }
 
@@ -332,7 +332,7 @@ void SNOWUEB2(
         if (snowdgtvariteflag == 1) {
             snowdgtv_ss << "Invalid last 24 hr average surface temperature  set to 273 K"
                         << Tssk_ave << endl;
-            (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::ERROR);
+            LOG(snowdgtv_ss.str(), LogLevel::WARNING);
             snowdgtv_ss.str("");
         }
         Tssk_ave = T_k;
@@ -341,7 +341,7 @@ void SNOWUEB2(
         if (snowdgtvariteflag == 1) {
             snowdgtv_ss << "Invalid last 24 hr average temperature set to 273 K" << Tsavek_ave
                         << endl;
-            (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::ERROR);
+            LOG(snowdgtv_ss.str(), LogLevel::WARNING);
             snowdgtv_ss.str("");
         }
         Tsavek_ave = T_k;
@@ -886,7 +886,7 @@ void PREDICORRc(
         snowdgtv_ss << "   " << Us1 << " " << Ws1 << " " << TSURFs1 << " " << Q1 << " " << FM1
                     << endl
                     << endl;
-        (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO);
+        LOG(snowdgtv_ss.str(), LogLevel::INFO);
         snowdgtv_ss.str("");
     }
 
@@ -989,7 +989,7 @@ void PREDICORRc(
         snowdgtv_ss << "\n Corrector: Us2, Ws2, Ts, Q, FM " << endl;
         snowdgtv_ss << "   " << Us2 << " " << Ws2 << " " << TSURFs << " " << Q << " " << FM << endl
                     << endl;
-        (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO);
+        LOG(snowdgtv_ss.str(), LogLevel::INFO);
         snowdgtv_ss.str("");
     }
     //   iterate to convergence to enhance stability
@@ -1161,13 +1161,13 @@ void PREDICORRc(
                 //    Check that nothing went wrong
                 if (MR < 0) {
                     snowdgtv_ss << "Error - negative melt rate in snow" << endl;
-                    (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::ERROR);
+                    LOG(snowdgtv_ss.str(), LogLevel::WARNING);
                     snowdgtv_ss.str("");
                     getchar();
                 }
                 if (Ws2 < 0) {
                     snowdgtv_ss << "Error - negative w2 in snow" << endl;
-                    (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::ERROR);
+                    LOG(snowdgtv_ss.str(), LogLevel::WARNING);
                     snowdgtv_ss.str("");
                     getchar();
                 }
@@ -1184,7 +1184,7 @@ void PREDICORRc(
             snowdgtv_ss << endl << "Iteration in pred-cor: niter, Us2, Ws2, Ts, Q, FM: " << endl;
             snowdgtv_ss << "  " << (niter - 1) << " " << Us2 << " " << Ws2 << " " << TSURFs << " "
                         << Q << " " << FM << endl;
-            (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO);
+            LOG(snowdgtv_ss.str(), LogLevel::INFO);
             snowdgtv_ss.str("");
         }
 
@@ -2037,7 +2037,7 @@ float SRFTMPSC(
                     snowdgtv_ss << "F1, F2, F1ts,  F2ts, F1tc, F2tc"
                                 << endl; //, J11, J12, J21, J22 "<<endl;
                     snowdgtv_ss << "S1, S2, Tssk1, Tck1" << endl;
-                    (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO);
+                    LOG(snowdgtv_ss.str(), LogLevel::INFO);
                     snowdgtv_ss.str("");
                     // cout<<"S1num, S2num, S1denom, S2denom"<<endl;
                 }
@@ -2045,7 +2045,7 @@ float SRFTMPSC(
                             << F2tc
                             << endl; //		cout " "<<J11<<" "<<J12<<" "<<J21<<" "<<J22<<endl;
                 snowdgtv_ss << S1 << " " << S2 << " " << Tssk1 << " " << Tck1 << endl;
-                (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO);
+                LOG(snowdgtv_ss.str(), LogLevel::INFO);
                 snowdgtv_ss.str("");
                 // cout<<S1num<<" "<< S2num<<" "<< S1denom<<" "<< S2denom<<endl;
             }
@@ -2273,7 +2273,7 @@ labl17:
                                 << endl;
                     snowdgtv_ss << "F1, F2, Tssk, Tslast " << endl;
                     snowdgtv_ss << "  " << F1 << " " << F2 << " " << Tssk << " " << Tslast << endl;
-                    (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::WARN);
+                    LOG(snowdgtv_ss.str(), LogLevel::SEVERE);
                     snowdgtv_ss.str("");
                     getchar();
                 }
@@ -2285,11 +2285,11 @@ labl17:
                 if (niter == 0) {
                     snowdgtv_ss << "Surface temp iteration for soln in 1D: F1, F2, Tssk, Tslast "
                                 << endl;
-                    (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO);
+                    LOG(snowdgtv_ss.str(), LogLevel::INFO);
                     snowdgtv_ss.str("");
                 }
                 snowdgtv_ss << "  " << F1 << " " << F2 << " " << Tssk << " " << Tslast << endl;
-                (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO);
+                LOG(snowdgtv_ss.str(), LogLevel::INFO);
                 snowdgtv_ss.str("");
             }
             if (Tssk < Tak - 50)
@@ -2506,7 +2506,7 @@ labl17:
                                         << uebCellX << "."; // mtime[4]<<endl;
                             snowdgtv_ss << " A canopy temperature of 273 K assumed.";
                             snowdgtv_ss << " Limiting log to 3 error messages." << endl;
-                            (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::WARN);
+                            LOG(snowdgtv_ss.str(), LogLevel::SEVERE);
                             snowdgtv_ss.str("");
                         }
                     }
@@ -2523,7 +2523,7 @@ labl17:
                             << " This is not a critical problem unless it happens frequently"
                             << endl;
                         snowdgtv_ss << " and solution below appears incorrect" << endl;
-                        (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO);
+                        LOG(snowdgtv_ss.str(), LogLevel::INFO);
                         snowdgtv_ss.str("");
                     }
                 }
@@ -2591,7 +2591,7 @@ labl17:
                     snowdgtv_ss << "Surface temperature: " << Tssk << endl;
                     snowdgtv_ss << "Energy closure: " << F1 << endl;
                     snowdgtv_ss << "Iterations:" << niter << endl;
-                    (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO);
+                    LOG(snowdgtv_ss.str(), LogLevel::INFO);
                     snowdgtv_ss.str("");
                 }
         }
@@ -2666,7 +2666,7 @@ labl17:
         iterC++;
         if (snowdgtvariteflag == 1) {
             snowdgtv_ss << " iterC: " << iterC << " ERc: " << ERc << endl;
-            (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO);
+            LOG(snowdgtv_ss.str(), LogLevel::INFO);
             snowdgtv_ss.str("");
         }
         // go to 13                 // To estimate the new TC for the estimated Tss. loop back
@@ -2858,7 +2858,7 @@ float CanTemp(
                                "canopy temp Tck"
                             << endl;
                 snowdgtv_ss << " F1 - F2: " << f1minf2 << endl;
-                (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::WARN);
+                LOG(snowdgtv_ss.str(), LogLevel::SEVERE);
                 snowdgtv_ss.str("");
             }
             goto labl11; // 10.30.13 go to bisection if F1 == F2 as div by zero results in #IND for
@@ -2868,11 +2868,11 @@ float CanTemp(
         if (snowdgtvariteflag == 1) {
             if (niter == 0) {
                 snowdgtv_ss << "Canopy temp iteration for soln in 1D: F1, F2, Tck, Tclast " << endl;
-                (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO);
+                LOG(snowdgtv_ss.str(), LogLevel::INFO);
                 snowdgtv_ss.str("");
             }
             snowdgtv_ss << "  " << F1 << " " << F2 << " " << Tck << " " << Tclast << endl;
-            (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO);
+            LOG(snowdgtv_ss.str(), LogLevel::INFO);
             snowdgtv_ss.str("");
         }
 
@@ -3088,7 +3088,7 @@ labl11:
                                 << mtime[3] << "  " << uebCellY << " " << uebCellX
                                 << endl; // mtime[4]<<endl;
                     snowdgtv_ss << " A canopy temperature of 273 K assumed" << endl;
-                    (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::ERROR);
+                    LOG(snowdgtv_ss.str(), LogLevel::WARNING);
                     snowdgtv_ss.str("");
                 }
                 Tck = Tk;
@@ -3102,7 +3102,7 @@ labl11:
                     snowdgtv_ss << " This is not a critical problem unless it happens frequently"
                                 << endl;
                     snowdgtv_ss << " and solution below appears incorrect" << endl;
-                    (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO);
+                    LOG(snowdgtv_ss.str(), LogLevel::INFO);
                     snowdgtv_ss.str("");
                 }
             }
@@ -3169,7 +3169,7 @@ labl11:
                 snowdgtv_ss << "Canopy temperature: " << Tck << endl;
                 snowdgtv_ss << "Energy closure: " << F1 << endl;
                 snowdgtv_ss << "Iterations:" << niter << endl;
-                (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO);
+                LOG(snowdgtv_ss.str(), LogLevel::INFO);
                 snowdgtv_ss.str("");
             }
     }
@@ -3321,7 +3321,7 @@ float SURFEBSC(
                     << " " << RH << " " << Fs << " " << Cf << " " << Qli << " " << Qsi << " ";
         snowdgtv_ss << setprecision(15) << atff << " " << cosZen << " " << EmC << " " << Ems << " "
                     << iradfl << " " << Qnetob << " " << iTsMethod << endl;
-        (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO);
+        LOG(snowdgtv_ss.str(), LogLevel::INFO);
         snowdgtv_ss.str("");
     }
     //     07/25/02   at Boise.  To make the UEB2 work under Unix/linux system the fancy stuff like
@@ -3412,7 +3412,7 @@ float SURFEBSC(
     if (snowdgtvariteflag2 == 1) {
         snowdgtv_ss << setprecision(15) << "qcs,Ess,Esc:" << qcs << " " << Ess << " " << Esc
                     << endl;
-        (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO);
+        LOG(snowdgtv_ss.str(), LogLevel::INFO);
         snowdgtv_ss.str("");
     }
 
@@ -3500,7 +3500,7 @@ float SURFEBSC(
         snowdgtv_ss << std::setprecision(15) << Tave << " " << refDepth << " " << Qp << " " << QHs
                     << " " << QEs << " " << qcs << " " << Qnetob << " " << Qsns << " " << Qlns
                     << " " << Qsnc << " " << Qlnc << " " << Qlis << " " << SURFEBSC_v << endl;
-        (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO);
+        LOG(snowdgtv_ss.str(), LogLevel::INFO);
         snowdgtv_ss.str("");
     }
     return SURFEBSC_v;
@@ -3825,7 +3825,7 @@ float FMELT(float UB, float Rho_w, float W, float HF, float LC, float RID, float
 
     if (FMELT_v < 0) {
         snowdgtv_ss << "FMELT is NEGATIVE" << endl;
-        (Logger::GetInstance())->Log(snowdgtv_ss.str(), LogLevel::INFO);
+        LOG(snowdgtv_ss.str(), LogLevel::INFO);
         snowdgtv_ss.str("");
         getchar();
     }

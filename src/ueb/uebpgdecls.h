@@ -71,7 +71,7 @@ struct inptimeseries {
 #define ERR(e)                                                          \
     {                                                                   \
         ncfunc_ss << "Error: " << nc_strerror(e) << endl;               \
-        (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::ERROR); \
+        LOG(ncfunc_ss.str(), LogLevel::WARNING); \
         ncfunc_ss.str("");                                              \
         return 2;                                                       \
     }
