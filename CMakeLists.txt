@@ -27,6 +27,14 @@ else()
 
 endif()
 
+# -----------------------------------------------------------------------------
+# Find the Boost library and configure usage
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+find_package(Boost 1.79.0 REQUIRED)
+
+link_libraries(Boost::serialization Boost::archive)
 
 add_subdirectory (src)
 #add_subdirectory (testing)

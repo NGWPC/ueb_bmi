@@ -304,6 +304,9 @@ void ueb::BmiUEB::Finalize() {
     // NetCDF outputs
     //
     this->outputNcFiles();
+
+    // clean serialization
+    this->clear_serialized();
 }
 
 int ueb::BmiUEB::GetVarGrid(std::string name) {
@@ -331,6 +334,13 @@ int ueb::BmiUEB::GetVarGrid(std::string name) {
 }
 
 std::string ueb::BmiUEB::GetVarType(std::string name) {
+    if (name.compare("serialization_create") == 0) {
+        return "uint64_t";
+    } else if (name.compare("serialization_state") == 0) {
+        return "char";
+    } else if (name.compare("serialization_free") == 0) {
+        return "int";
+    }
 
     auto it_site = std::find(
         ueb::SiteVariables::site_var_names.begin(),
@@ -382,6 +392,14 @@ std::string ueb::BmiUEB::GetVarType(std::string name) {
 }
 
 int ueb::BmiUEB::GetVarItemsize(std::string name) {
+    if (name.compare("serialization_create") == 0) {
+        return sizeof(uint64_t);
+    } else if (name.compare("serialization_state") == 0) {
+        return sizeof(char);
+    } else if (name.compare("serialization_free") == 0) {
+        return sizeof(int);
+    }
+
     auto it_site = std::find(
         ueb::SiteVariables::site_var_names.begin(),
         ueb::SiteVariables::site_var_names.end(),
@@ -453,6 +471,14 @@ std::string ueb::BmiUEB::GetVarUnits(std::string name) {
 }
 
 int ueb::BmiUEB::GetVarNbytes(std::string name) {
+    if (name.compare("serialization_create") == 0) {
+        return sizeof(uint64_t);
+    } else if (name.compare("serialization_state") == 0) {
+        return this->m_serialized_length;
+    } else if (name.compare("serialization_free") == 0) {
+        return sizeof(int);
+    }
+
     int itemsize;
     int gridsize;
 
@@ -607,13 +633,25 @@ void ueb::BmiUEB::GetValue(std::string name, void* dest) {
     void* src  = NULL;
     int nbytes = 0;
 
-    src    = this->GetValuePtr(name);
-    nbytes = this->GetVarNbytes(name);
+    src = this->GetValuePtr(name);
 
-    std::memcpy(dest, src, nbytes);
+    if (name.compare("serialiation_state") == 0) {
+        std::memcpy(dest, src, this->m_serialized_length);
+    } else {
+        nbytes = this->GetVarNbytes(name);
+        std::memcpy(dest, src, nbytes);
+    }
 }
 
 void* ueb::BmiUEB::GetValuePtr(std::string name) {
+    // special cases for serialization
+    if (name.compare("serialization_create") == 0) {
+        this->new_serialized();
+        return (void*)&this->m_serialized_length;
+    } else if (name.compare("serialization_state") == 0) {
+        return (void*)this->m_serialized.data();
+    }
+
     auto it_par = std::find(
         ueb::Parameters::parameter_names.begin(),
         ueb::Parameters::parameter_names.end(),
@@ -730,6 +768,18 @@ void ueb::BmiUEB::GetValueAtIndices(std::string name, void* dest, int* inds, int
 }
 
 void ueb::BmiUEB::SetValue(std::string name, void* src) {
+    // special cases for serialized state
+    if (name.compare("serialization_state") == 0) {
+        this->load_serialized((char*)src);
+        return;
+    } else if (name.compare("serialization_free") == 0) {
+        this->clear_serialized();
+        return;
+    } else if (name.compare("serialization_create") == 0) {
+        auto msg = "Cannot set value with \"serialization_create\".";
+        // Logger::Log(LogLevel::WARNING, msg);
+        throw std::invalid_argument(msg);
+    }
     void* dest = NULL;
 
     dest = this->GetValuePtr(name);
@@ -1767,6 +1817,58 @@ double ueb::BmiUEB::getUEBEndTime() {
     double dHour      = _confile.getModelEndHour();
     double EJD        = julian(ModelEndDate[0], ModelEndDate[1], ModelEndDate[2], dHour);
     return EJD;
+}
+
+template<class Archive>
+void ueb::BmiUEB::serialize(Archive& ar, const unsigned int version) {
+    ar & this->_currentModelDateTime;
+
+    //runPointUEB >> SNOWUEB2
+    for (int cell = 0; cell < this->_statev.size(); ++cell) {
+        ar & this->_statev[cell];
+        ar & this->_tsprevday[cell];
+        ar & this->_taveprevday[cell];
+        for (int i = 0; i < numOut; ++i) {
+            ar & this->_outvarArray[cell][i];
+        }
+    }
+    ar & this->_cumP;
+    ar & this->_cumEs;
+    ar & this->_cumEc;
+    ar & this->_cumMr;
+    ar & this->_cumGm;
+    ar & this->_cumEg;
+}
+
+void ueb::BmiUEB::load_serialized(const char* data) {
+    std::stringstream stream(data);
+    boost::archive::binary_iarchive archive(stream);
+    try {
+        archive >> (*this);
+    } catch (const std::exception &e) {
+        // Logger::Log(LogLevel::SEVERE, "Deserializing UEB encountered an error: %s", e.what());
+        throw;
+    }
+    this->clear_serialized();
+}
+
+void ueb::BmiUEB::clear_serialized() {
+    this->m_serialized.clear();
+    this->m_serialized.shrink_to_fit();
+    this->m_serialized_length = 0;
+}
+
+void ueb::BmiUEB::new_serialized() {
+    this->m_serialized.clear();
+    boost::archive::binary_oarchive archive(this->m_serialized);
+    try {
+        archive << (*this);
+        this->m_serialized_length = this->m_serialized.size();
+    } catch (const std::exception &e) {
+        // Logger::Log(LogLevel::SEVERE, "Serializing UEB encountered an error: %s", e.what());
+        this->m_serialized_length = 0;
+        throw;
+    }
 }
 
 extern "C" {
