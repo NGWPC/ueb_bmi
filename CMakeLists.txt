@@ -2,8 +2,15 @@ cmake_minimum_required(VERSION 3.0)
 
 project (bmi-ueb-cxx CXX)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC -fno-rtti")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+# -----------------------------------------------------------------------------
+# Find the Boost library and configure usage
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+find_package(Boost 1.79.0 REQUIRED COMPONENTS serialization)
 
 if(NOT BMICXX_INCLUDE_DIRS)
     message("--  BMICXX_INCLUDE_DIRS is not defined")
@@ -27,6 +34,7 @@ else()
 
 endif()
 
+link_libraries(Boost::serialization)
 
 add_subdirectory (src)
 #add_subdirectory (testing)

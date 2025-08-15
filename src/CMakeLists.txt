@@ -4,8 +4,15 @@ set (UEB_VERSION 0.1)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/uebcxx.pc.cmake
                 ${CMAKE_BINARY_DIR}/uebcxx.pc)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC -fno-rtti")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+# -----------------------------------------------------------------------------
+# Find the Boost library and configure usage
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+find_package(Boost 1.79.0 REQUIRED COMPONENTS serialization)
 
 set(bmi_ueb_lib_SRCS "bmi/ControlFile.cxx" "bmi/Watershed.cxx"
 	             "bmi/Parameters.cxx"  "bmi/SiteVariables.cxx"
@@ -41,6 +48,8 @@ target_include_directories(run_bmiuebcxx PRIVATE ueb utilities )
 #target_link_libraries(run_bmiuebcxx libnetcdf.a -lhdf5_hl -lhdf5 -lz libcurl.a libpnetcdf.a -lmpi -lmpicxx)
 #target_link_libraries(run_bmiuebcxx -lnetcdf -lhdf5_hl -lhdf5 -lz -lcurl)
 target_link_libraries(run_bmiuebcxx -lnetcdf)
+
+target_link_libraries(run_bmiuebcxx Boost::serialization)
 
 set_target_properties(bmiuebcxx PROPERTIES 
        PUBLIC_HEADER bmi/ControlFile.hxx 
