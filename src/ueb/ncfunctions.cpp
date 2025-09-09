@@ -87,7 +87,7 @@ int WriteTSto3DNC(
         break;
     default:
         ncfunc_ss << "the dim order has to be between 0 and 2" << endl;
-        (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::WARN);
+        LOG(ncfunc_ss.str(), LogLevel::SEVERE);
         ncfunc_ss.str("");
         getchar();
         break;
@@ -193,7 +193,7 @@ int WriteTSto3DNC_Block(
             break;
         default:
             ncfunc_ss << "the dim order has to be between 0 and 2" << endl;
-            (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::WARN);
+            LOG(ncfunc_ss.str(), LogLevel::SEVERE);
             ncfunc_ss.str("");
             getchar();
             break;
@@ -254,7 +254,7 @@ int Write_uebaggTS_toNC(
         break;
     default:
         ncfunc_ss << "the dim order has to be 0 or 1" << endl;
-        (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::WARN);
+        LOG(ncfunc_ss.str(), LogLevel::SEVERE);
         ncfunc_ss.str("");
         getchar();
         break;
@@ -334,7 +334,7 @@ int Write_uebaggTS_toNC_par(
         break;
     default:
         ncfunc_ss << "the dim order has to be 0 or 1" << endl;
-        (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::WARN);
+        LOG(ncfunc_ss.str(), LogLevel::SEVERE);
         ncfunc_ss.str("");
         getchar();
         break;
@@ -481,7 +481,7 @@ int create3DNC_uebAggregatedOutputs(
         break;
     default:
         ncfunc_ss << "the dim order has to be either 0 or 1" << endl;
-        (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::WARN);
+        LOG(ncfunc_ss.str(), LogLevel::SEVERE);
         ncfunc_ss.str("");
         getchar();
         break;
@@ -574,7 +574,7 @@ int create3DNC_uebAggregatedOutputs(
     if (retncval = nc_close(ncid_out))
         ERR(retncval);
     ncfunc_ss << "Success creating and storing dimension vars in: " << FileName << endl;
-    (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::INFO);
+    LOG(ncfunc_ss.str(), LogLevel::INFO);
     ncfunc_ss.str("");
     // fflush(stdout);
     return 0;
@@ -749,7 +749,7 @@ int create3DNC_uebOutputs(
         break;
     default:
         ncfunc_ss << "the dim order has to be between 0 and 2" << endl;
-        (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::WARN);
+        LOG(ncfunc_ss.str(), LogLevel::SEVERE);
         ncfunc_ss.str("");
         getchar();
         break;
@@ -841,7 +841,7 @@ int create3DNC_uebOutputs(
         ERR(retncval);
 
     ncfunc_ss << "Success creating and storing dimension vars in: " << FileName << endl;
-    (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::INFO);
+    LOG(ncfunc_ss.str(), LogLevel::INFO);
     ncfunc_ss.str("");
     // fflush(stdout);
     return 0;
@@ -943,7 +943,7 @@ int Create3DNC(
         break;
     default:
         ncfunc_ss << "the dim order has to be between 0 and 2" << endl;
-        (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::WARN);
+        LOG(ncfunc_ss.str(), LogLevel::SEVERE);
         ncfunc_ss.str("");
         getchar();
         break;
@@ -1004,7 +1004,7 @@ int Create3DNC(
         ERR(retncval);
     // delte 3D array
     ncfunc_ss << "Success creating and storing dimension vars in: " << FileName << endl;
-    (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::INFO);
+    LOG(ncfunc_ss.str(), LogLevel::INFO);
     ncfunc_ss.str("");
     // fflush(stdout);
     return 0;
@@ -1100,7 +1100,7 @@ int Write3DNC(
         break;
     default:
         ncfunc_ss << "the dim order has to be between 0 and 2" << endl;
-        (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::WARN);
+        LOG(ncfunc_ss.str(), LogLevel::SEVERE);
         ncfunc_ss.str("");
         getchar();
         break;
@@ -1157,7 +1157,7 @@ int Write3DNC(
         ERR(retncval);
     // delte 3D array
     ncfunc_ss << " SUCCESS writing file: " << FileName << endl;
-    (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::INFO);
+    LOG(ncfunc_ss.str(), LogLevel::INFO);
     ncfunc_ss.str("");
     // fflush(stdout);
     return 0;
@@ -1377,7 +1377,7 @@ int read3DNC(
     if ((retncval = nc_close(ncid)))
         ERR(retncval);
     ncfunc_ss << "SUCCESS reading input file: " << FILE_NAME << endl;
-    (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::INFO);
+    LOG(ncfunc_ss.str(), LogLevel::INFO);
     ncfunc_ss.str("");
     return 0;
 }
@@ -2139,7 +2139,7 @@ int Write3DNC(
     if ((retncval = nc_close(ncid)))
         ERR(retncval);
     ncfunc_ss << "SUCCESS writing output file: " << FILE_NAME << endl;
-    (Logger::GetInstance())->Log(ncfunc_ss.str(), LogLevel::INFO);
+    LOG(ncfunc_ss.str(), LogLevel::INFO);
     ncfunc_ss.str("");
 
     return 0;

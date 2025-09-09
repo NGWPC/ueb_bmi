@@ -126,7 +126,7 @@ void readSiteVars(const char *inpFile, sitevar *svArr) {
                             "(single value) or 1 (2D netcdf)"
                          << endl;
             uebinputs_ss << "Using default value..." << endl;
-            (Logger::GetInstance())->Log(uebinputs_ss.str(), LogLevel::WARN);
+            LOG(uebinputs_ss.str(), LogLevel::SEVERE);
             uebinputs_ss.str("");
             svArr[i].svdefValue = vardefaults[i];
         }
@@ -173,7 +173,7 @@ void readSiteVars(const char* inpFile, float svSValue[], char* svFile[], char* s
 			default:
 				uebinputs_ss <<"Wrong site variable type; has to be -1 (Use default values), 0 (single value) or 1 (2D netcdf)"<<endl;
 				uebinputs_ss <<"Using default value..."<<endl;
-				(Logger::GetInstance())->Log(uebinputs_ss.str(), LogLevel::WARN); uebinputs_ss.str("");
+				LOG(uebinputs_ss.str(), LogLevel::SEVERE); uebinputs_ss.str("");
 				break;       //exit 
 			}
 			i++; //increment i
@@ -221,7 +221,7 @@ void readSiteVars(const char* inpFile, sitevar svArr[], int indx)
 			default:
 				uebinputs_ss <<"Wrong site variable type; has to be -1 (Use default values), 0 (single value) or 1 (2D netcdf)\n"<<endl;
 				uebinputs_ss <<"Using default value..."<<endl;
-				(Logger::GetInstance())->Log(uebinputs_ss.str(), LogLevel::WARN); uebinputs_ss.str("");
+				LOG(uebinputs_ss.str(), LogLevel::SEVERE); uebinputs_ss.str("");
 				svArr[i].svdefValue = vardefaults[i]; 
 				//exit;
 			}
@@ -287,7 +287,7 @@ void readInputForcVars(const char *inputconFile, inpforcvar *frArr) {
                             "(single value) , 0 (time-series text file) or 1 (3D netcdf)"
                          << endl;
             uebinputs_ss << "Using default value..." << endl;
-            (Logger::GetInstance())->Log(uebinputs_ss.str(), LogLevel::WARN);
+            LOG(uebinputs_ss.str(), LogLevel::SEVERE);
             uebinputs_ss.str("");
             break; // exit(1);
         }
@@ -385,7 +385,7 @@ void readTextData(const char *inforcFile, float *&tvar_in, int &nrecords) {
     char commentLine[256]; // string to read header line
     if (!inputFile) {
         uebinputs_ss << "Error opening file: " << inforcFile << endl;
-        (Logger::GetInstance())->Log(uebinputs_ss.str(), LogLevel::ERROR);
+        LOG(uebinputs_ss.str(), LogLevel::WARNING);
         uebinputs_ss.str("");
         return;
     }

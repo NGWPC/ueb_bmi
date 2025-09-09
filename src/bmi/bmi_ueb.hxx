@@ -6,6 +6,8 @@
 
 #include <bmi.hxx>
 
+#include "vecbuf.hpp"
+
 #include "ControlFile.hxx"
 #include "ForcingVariables.hxx"
 #include "Logger.hpp"
@@ -13,6 +15,8 @@
 #include "Parameters.hxx"
 #include "SiteVariables.hxx"
 #include "Watershed.hxx"
+
+#include <boost/serialization/access.hpp>
 
 namespace ueb {
 class Parameters;
@@ -30,7 +34,7 @@ class NotImplemented : public std::logic_error {
 class BmiUEB : public bmi::Bmi {
 
   public:
-    BmiUEB() {};
+    BmiUEB() : m_serialized{} {};
     ~BmiUEB() {};
     void Initialize(std::string config_file);
     void Update();
@@ -95,6 +99,7 @@ class BmiUEB : public bmi::Bmi {
     static const int numOut = 70;
 
   private:
+    friend class boost::serialization::access;
     ControlFile _confile;
     Watershed _ws;
     Parameters _parms;
@@ -119,6 +124,14 @@ class BmiUEB : public bmi::Bmi {
     std::vector<std::vector<float>> _taveprevday;
 
     std::vector<std::vector<std::vector<float>>> _outvarArray;
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int version);
+    vecbuf<char> m_serialized;
+    uint64_t m_serialized_length; // needs stable location for GetValuePtr
+    void load_serialized(const char* data);
+    void clear_serialized();
+    void new_serialized();
 
     void setStatev();
 
