@@ -2506,7 +2506,7 @@ labl17:
                                         << uebCellX << "."; // mtime[4]<<endl;
                             snowdgtv_ss << " A canopy temperature of 273 K assumed.";
                             snowdgtv_ss << " Limiting log to 3 error messages." << endl;
-                            LOG(snowdgtv_ss.str(), LogLevel::SEVERE);
+                            LOG(snowdgtv_ss.str(), LogLevel::INFO);  // According to developer, this is harmless message.
                             snowdgtv_ss.str("");
                         }
                     }
