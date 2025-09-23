@@ -1382,8 +1382,8 @@ void ueb::BmiUEB::runPointUEB(
                         bmi_ueb_ss << "Nonzero nightime incident radiation of " << Qsiobs;
                         bmi_ueb_ss << " at date " << Year << "-" << Month << "-" << Day << "T"
                                    << dHour;
-                        bmi_ueb_ss << ". Limiting log to 3 error messages." << endl;
-                        LOG(bmi_ueb_ss.str(), LogLevel::SEVERE);
+                        bmi_ueb_ss << " Possible measurement problem (i.e. moonshine). Limiting log to 3 error messages." << endl;
+                        LOG(bmi_ueb_ss.str(), LogLevel::INFO); // According to developer, this is harmless message.
                         bmi_ueb_ss.str("");
                         ++radwarnflag;
                     }
