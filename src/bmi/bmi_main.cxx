@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
   //
   bmimain_ss << "Advance the model ten days and pause." << std::endl;
   LOG(bmimain_ss.str(), LogLevel::INFO); bmimain_ss.str("");
-  //model->UpdateUntil( tendaysafter );
+  model->UpdateUntil( tendaysafter );
   model->GetCurrentTimeInGregorianCalendar( year, month, day, hour );
   bmimain_ss << "Model current datetime is " << year << '/' << month << '/'
 	                                  << day << ' ' << hour << std::endl;
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
   //advance to the end
   bmimain_ss << "Advance the model to the end." << std::endl;
   LOG(bmimain_ss.str(), LogLevel::INFO); bmimain_ss.str("");
-  //model->UpdateUntil( endtime );
+  model->UpdateUntil( endtime );
 
   model->GetCurrentTimeInGregorianCalendar( year, month, day, hour );
   bmimain_ss << "Model current datetime is " << year << '/' << month << '/'
