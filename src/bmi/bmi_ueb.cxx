@@ -341,6 +341,8 @@ int ueb::BmiUEB::GetVarGrid(std::string name) {
 std::string ueb::BmiUEB::GetVarType(std::string name) {
     if (name.compare("serialization_create") == 0) {
         return "uint64_t";
+    } else if (name.compare("serialization_size") == 0) {
+        return "uint64_t";
     } else if (name.compare("serialization_state") == 0) {
         return "char";
     } else if (name.compare("serialization_free") == 0) {
@@ -398,6 +400,8 @@ std::string ueb::BmiUEB::GetVarType(std::string name) {
 
 int ueb::BmiUEB::GetVarItemsize(std::string name) {
     if (name.compare("serialization_create") == 0) {
+        return sizeof(uint64_t);
+    } else if (name.compare("serialization_size") == 0) {
         return sizeof(uint64_t);
     } else if (name.compare("serialization_state") == 0) {
         return sizeof(char);
@@ -477,6 +481,8 @@ std::string ueb::BmiUEB::GetVarUnits(std::string name) {
 
 int ueb::BmiUEB::GetVarNbytes(std::string name) {
     if (name.compare("serialization_create") == 0) {
+        return sizeof(uint64_t);
+    } else if (name.compare("serialization_size") == 0) {
         return sizeof(uint64_t);
     } else if (name.compare("serialization_state") == 0) {
         return this->m_serialized_length;
@@ -650,8 +656,7 @@ void ueb::BmiUEB::GetValue(std::string name, void* dest) {
 
 void* ueb::BmiUEB::GetValuePtr(std::string name) {
     // special cases for serialization
-    if (name.compare("serialization_create") == 0) {
-        this->new_serialized();
+    if (name.compare("serialization_size") == 0) {
         return (void*)&this->m_serialized_length;
     } else if (name.compare("serialization_state") == 0) {
         return (void*)this->m_serialized.data();
@@ -781,9 +786,8 @@ void ueb::BmiUEB::SetValue(std::string name, void* src) {
         this->clear_serialized();
         return;
     } else if (name.compare("serialization_create") == 0) {
-        auto msg = "Cannot set value with \"serialization_create\".";
-        // Logger::Log(LogLevel::WARNING, msg);
-        throw std::invalid_argument(msg);
+        this->new_serialized();
+        return;
     }
     void* dest = NULL;
 
