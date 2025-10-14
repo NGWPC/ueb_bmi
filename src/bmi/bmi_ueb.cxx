@@ -1787,6 +1787,14 @@ void ueb::BmiUEB::outputPointFiles() {
                 std::cerr << "output point " << uebCellY << ", " << uebCellX << std::endl;
 #endif // ifdef DEBUG_UEB
                 FILE* pointoutFile = fopen((const char*)pOut[ipout].outfName, "w");
+                fprintf( pointoutFile, "%s",
+                    "#Year(1) Month(2) Day(3) Hour(4) atff(5) HRI(6) Eacl(7) Ema(8) cosZen(9) Ta(10) "    
+                    "P(11) V(12) RH(13) Qsiob(14) Qlif(15) Qnetob(16) Us(17) Ws(18) Snowwalb(19) Pr(20) "    
+                    "Ps(21) Alb(22) QHs(23) QEs(24) Es(25) SWIT(26) QMs(27) Q(28) FM(29) Tave(30) "    
+                    "TSURFs(31) cump(32) cumes(33) cumMr(34) Qnet(35) smelt(36) erfDepth(37) totalRefDepth(38) cf(39) Taufb(40) "    
+                    "Taufd(41) Qsib(42) Qsid(43) Taub(44) Taud(45) Qsns(46) Qsnc(47) Qlns(48) Qlnc(49) Vz(50) "    
+                    "Rkinsc(51) Rkinc(52) Inmax(53) intc(54) ieff(55) Ur(56) Wc(57) Tc(58) Tac(59) QHc(60) "    
+                    "QEc(61) Ec(62) Qpc(63) Qmc(64) Mc(65) FMc(66) SWIGM(67) SWISM(68) SWIR(69) errMB(70)" );
                 for (int istep = 0; istep < numTimeStep; istep++) {
                     fprintf(
                         pointoutFile,
