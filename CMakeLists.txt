@@ -5,6 +5,8 @@ project (bmi-ueb-cxx CXX)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+option(UEB_SUPRESS_OUTPUTS "Build where UEB BMI's Finalize() will not create outputs" OFF)
+
 # -----------------------------------------------------------------------------
 # Find the Boost library and configure usage
 set(Boost_USE_STATIC_LIBS OFF)
