@@ -359,6 +359,8 @@ std::string ueb::BmiUEB::GetVarType(std::string name) {
         return "char";
     } else if (name.compare("serialization_free") == 0) {
         return "int";
+    } else if (name.compare("reset_time") == 0) {
+        return "double";
     }
 
     auto it_site = std::find(
@@ -419,6 +421,8 @@ int ueb::BmiUEB::GetVarItemsize(std::string name) {
         return sizeof(char);
     } else if (name.compare("serialization_free") == 0) {
         return sizeof(int);
+    } else if (name.compare("reset_time") == 0) {
+        return sizeof(double);
     }
 
     auto it_site = std::find(
@@ -500,6 +504,8 @@ int ueb::BmiUEB::GetVarNbytes(std::string name) {
         return this->m_serialized_length;
     } else if (name.compare("serialization_free") == 0) {
         return sizeof(int);
+    } else if (name.compare("reset_time") == 0) {
+        return sizeof(double);
     }
 
     int itemsize;
@@ -796,6 +802,9 @@ void ueb::BmiUEB::SetValue(std::string name, void* src) {
         return;
     } else if (name.compare("serialization_create") == 0) {
         this->new_serialized();
+        return;
+    } else if (name.compare("reset_time") == 0) {
+        this->reset_time();
         return;
     }
     void* dest = NULL;
@@ -1847,6 +1856,12 @@ double ueb::BmiUEB::getUEBEndTime() {
 
 int ueb::BmiUEB::get_istep() {
     return std::round(this->GetCurrentTime() / this->GetTimeStep());
+}
+
+void ueb::BmiUEB::reset_time() {
+    // set curernt time to what was specified in the config
+    _currentModelDateTime = this->getUEBStartTime();
+    // indexing into values seems to derive from _currentModelDateTime, so this should be the only thing that needs to be reset
 }
 
 template<class Archive>

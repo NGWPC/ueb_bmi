@@ -239,6 +239,8 @@ class BmiUEB : public bmi::Bmi {
     std::array<float, NSITEVARS> getSiteState(int const& cell);
 
     int get_istep();
+
+    void reset_time();
 };
 
 }; // namespace ueb
