@@ -106,7 +106,12 @@ void ueb::BmiUEB::Initialize(std::string config_file) {
 
             _outvarArray[cell].resize(numOut);
             for (auto& v : _outvarArray[cell]) {
+                #ifdef UEB_SUPRESS_OUTPUTS
+                // only need one space when not recording all results
+                v.resize(1);
+                #else
                 v.resize(numTotalTs);
+                #endif
             }
         }
     }
@@ -137,9 +142,14 @@ void ueb::BmiUEB::Update() {
 
     float Inpt[niv];
 
-    int istep = std::round(
-        (_currentModelDateTime - this->getUEBStartTime()) * 24 * 3600 / this->GetTimeStep()
-    );
+    int istep = this->get_istep();
+#ifdef UEB_SUPRESS_OUTPUTS
+    // when supressing outputs, outputs will be updated in plcae in the 1 sized output arrays
+    int ostep = 0;
+#else
+    // otherwise, outputs will go into the same index as the inputs step
+    int ostep = istep;
+#endif
 
     auto tsvarArray  = _forcings.getTsvarArray();
     auto forcingtype = _forcings.getStrinpforcArray();
@@ -249,7 +259,7 @@ void ueb::BmiUEB::Update() {
             ); // array of 53 elements, output
             this->updatOutVars(
                 cell, // input
-                istep, // input
+                ostep, // input
                 Year, // input
                 Month, // input
                 Day, // input
@@ -266,7 +276,7 @@ void ueb::BmiUEB::Update() {
         {
             errMB = 0.0;
             for (int i = 0; i < 53; i++) OutArr[i] = 0.0;
-            for (int i = 0; i < 70; i++) _outvarArray[cell][i][istep] = 0.0;
+            for (int i = 0; i < 70; i++) _outvarArray[cell][i][ostep] = 0.0;
         }
     }
 
@@ -277,7 +287,7 @@ void ueb::BmiUEB::Update() {
 void ueb::BmiUEB::UpdateUntil(double t) // t unit is in seconds since the start time
 {
     // convert days to seconds
-    double time = (_currentModelDateTime - this->getUEBStartTime()) * 24 * 3600;
+    double time = this->GetCurrentTime();
 
     double dt = this->GetTimeStep();
 
@@ -297,6 +307,7 @@ void ueb::BmiUEB::UpdateUntil(double t) // t unit is in seconds since the start 
 }
 
 void ueb::BmiUEB::Finalize() {
+#ifndef UEB_SUPRESS_OUTPUTS
     //
     // Point outputs
     //
@@ -309,6 +320,7 @@ void ueb::BmiUEB::Finalize() {
     // NetCDF outputs
     //
     this->outputNcFiles();
+#endif
 
     // clean serialization
     this->clear_serialized();
@@ -699,11 +711,7 @@ void* ueb::BmiUEB::GetValuePtr(std::string name) {
         int i = std::distance(ueb::ForcingVariables::forcing_var_names.begin(), it_forc);
         // SCTV and SVTV inputs
         if (strinpArray[i].infType == 0 || strinpArray[i].infType == 1) {
-            int istep = std::round(
-                            (_currentModelDateTime - this->getUEBStartTime()) * 24 * 3600 /
-                            this->GetTimeStep()
-                        ) -
-                        1;
+            int istep = this->get_istep() - 1;
 
             // Only set the value for the first cell
             // NGen wouldn't pass gradded values, only one value at a time
@@ -744,15 +752,16 @@ void* ueb::BmiUEB::GetValuePtr(std::string name) {
     );
     if (it_out != ueb::OutControl::output_var_names.end()) {
         int i = std::distance(ueb::OutControl::output_var_names.begin(), it_out);
-        int istep =
-            std::round(
-                (_currentModelDateTime - this->getUEBStartTime()) * 24 * 3600 / this->GetTimeStep()
-            ) -
-            1;
+#ifdef UEB_SUPRESS_OUTPUTS
+        // value will always be the first when not recording previous results
+        int ostep = 0;
+#else
+        int ostep = this->get_istep() - 1;
+#endif
         // need to check for gridded model
         // this only return the first grid cell's value
         // How about other grid cells?
-        return (void*)&_outvarArray[0][i][istep];
+        return (void*)&_outvarArray[0][i][ostep];
     }
     return (void*)NULL;
 }
@@ -913,7 +922,7 @@ double ueb::BmiUEB::GetEndTime() {
 
 double ueb::BmiUEB::GetCurrentTime() {
 
-    return (_currentModelDateTime - this->getUEBStartTime()) * 24 * 3600;
+    return (_currentModelDateTime - this->getUEBStartTime()) * (24 * 3600);
     // convert days to seconds;
 }
 
@@ -1834,6 +1843,10 @@ double ueb::BmiUEB::getUEBEndTime() {
     double dHour      = _confile.getModelEndHour();
     double EJD        = julian(ModelEndDate[0], ModelEndDate[1], ModelEndDate[2], dHour);
     return EJD;
+}
+
+int ueb::BmiUEB::get_istep() {
+    return std::round(this->GetCurrentTime() / this->GetTimeStep());
 }
 
 template<class Archive>

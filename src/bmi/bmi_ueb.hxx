@@ -237,6 +237,8 @@ class BmiUEB : public bmi::Bmi {
     std::array<float, nsv> getSitevForCell(int const& cell);
 
     std::array<float, NSITEVARS> getSiteState(int const& cell);
+
+    int get_istep();
 };
 
 }; // namespace ueb
