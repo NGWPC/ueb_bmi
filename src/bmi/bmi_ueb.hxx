@@ -223,7 +223,7 @@ class BmiUEB : public bmi::Bmi {
         float const* OutArr
     ); // array of 53 elements,  input
        //
-#ifndef UEB_SUPRESS_OUTPUTS
+#ifndef UEB_SUPPRESS_OUTPUTS
     void outputAggregratedFiles();
     void outputNcFiles();
     void outputPointFiles();

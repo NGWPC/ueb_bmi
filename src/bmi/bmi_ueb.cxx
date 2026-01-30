@@ -106,7 +106,7 @@ void ueb::BmiUEB::Initialize(std::string config_file) {
 
             _outvarArray[cell].resize(numOut);
             for (auto& v : _outvarArray[cell]) {
-                #ifdef UEB_SUPRESS_OUTPUTS
+                #ifdef UEB_SUPPRESS_OUTPUTS
                 // only need one space when not recording all results
                 v.resize(1);
                 #else
@@ -143,8 +143,8 @@ void ueb::BmiUEB::Update() {
     float Inpt[niv];
 
     int istep = this->get_istep();
-#ifdef UEB_SUPRESS_OUTPUTS
-    // when supressing outputs, outputs will be updated in plcae in the 1 sized output arrays
+#ifdef UEB_SUPPRESS_OUTPUTS
+    // when suppressing outputs, outputs will be updated in plcae in the 1 sized output arrays
     int ostep = 0;
 #else
     // otherwise, outputs will go into the same index as the inputs step
@@ -307,7 +307,7 @@ void ueb::BmiUEB::UpdateUntil(double t) // t unit is in seconds since the start 
 }
 
 void ueb::BmiUEB::Finalize() {
-#ifndef UEB_SUPRESS_OUTPUTS
+#ifndef UEB_SUPPRESS_OUTPUTS
     //
     // Point outputs
     //
@@ -758,7 +758,7 @@ void* ueb::BmiUEB::GetValuePtr(std::string name) {
     );
     if (it_out != ueb::OutControl::output_var_names.end()) {
         int i = std::distance(ueb::OutControl::output_var_names.begin(), it_out);
-#ifdef UEB_SUPRESS_OUTPUTS
+#ifdef UEB_SUPPRESS_OUTPUTS
         // value will always be the first when not recording previous results
         int ostep = 0;
 #else
@@ -1535,7 +1535,7 @@ void ueb::BmiUEB::updatOutVars(
     }
 }
 
-#ifndef UEB_SUPRESS_OUTPUTS
+#ifndef UEB_SUPPRESS_OUTPUTS
 void ueb::BmiUEB::outputAggregratedFiles() {
     auto activeCells = _ws.getActiveCells(_sitevars.getSiteVars().data());
 
@@ -1831,7 +1831,7 @@ void ueb::BmiUEB::outputPointFiles() {
         }
     }
 }
-#endif // not UEB_SUPRESS_OUTPUTS
+#endif // not UEB_SUPPRESS_OUTPUTS
 
 //
 // Get the UEB start time, this is different form the GetStartTime API.

@@ -5,7 +5,7 @@ project (bmi-ueb-cxx CXX)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-option(UEB_SUPRESS_OUTPUTS "Build where UEB BMI's Finalize() will not create outputs" OFF)
+option(UEB_SUPPRESS_OUTPUTS "Build where UEB BMI's Finalize() will not create outputs" OFF)
 
 # -----------------------------------------------------------------------------
 # Find the Boost library and configure usage
@@ -36,9 +36,9 @@ else()
 
 endif()
 
-if(UEB_SUPRESS_OUTPUTS)
+if(UEB_SUPPRESS_OUTPUTS)
     message("-- UEB compiled to not create its own outputs")
-    add_compile_definitions(UEB_SUPRESS_OUTPUTS)
+    add_compile_definitions(UEB_SUPPRESS_OUTPUTS)
 endif()
 
 link_libraries(Boost::serialization)
