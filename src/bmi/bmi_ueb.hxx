@@ -223,9 +223,11 @@ class BmiUEB : public bmi::Bmi {
         float const* OutArr
     ); // array of 53 elements,  input
        //
+#ifndef UEB_SUPRESS_OUTPUTS
     void outputAggregratedFiles();
     void outputNcFiles();
     void outputPointFiles();
+#endif
     //
     // Get the UEB start time, this is different form the GetStartTime API.
     // The NextGen frameword require the GetStartTime returns 0.

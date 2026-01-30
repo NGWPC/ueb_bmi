@@ -1535,6 +1535,7 @@ void ueb::BmiUEB::updatOutVars(
     }
 }
 
+#ifndef UEB_SUPRESS_OUTPUTS
 void ueb::BmiUEB::outputAggregratedFiles() {
     auto activeCells = _ws.getActiveCells(_sitevars.getSiteVars().data());
 
@@ -1830,6 +1831,7 @@ void ueb::BmiUEB::outputPointFiles() {
         }
     }
 }
+#endif // not UEB_SUPRESS_OUTPUTS
 
 //
 // Get the UEB start time, this is different form the GetStartTime API.

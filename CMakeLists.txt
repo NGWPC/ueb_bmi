@@ -36,6 +36,11 @@ else()
 
 endif()
 
+if(UEB_SUPRESS_OUTPUTS)
+    message("-- UEB compiled to not create its own outputs")
+    add_compile_definitions(UEB_SUPRESS_OUTPUTS)
+endif()
+
 link_libraries(Boost::serialization)
 
 add_subdirectory (src)
