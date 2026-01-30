@@ -238,8 +238,13 @@ class BmiUEB : public bmi::Bmi {
 
     std::array<float, NSITEVARS> getSiteState(int const& cell);
 
+    // Calculate the index of where loaded data should come from and where results should be saved to based on the current time of the model.
     int get_istep();
 
+    /**
+     * Set all time properties back to the original time after Initialize has been called.
+     * This is primarily used for resetting valid indexes after loading a hot start state.
+     */
     void reset_time();
 };
 
