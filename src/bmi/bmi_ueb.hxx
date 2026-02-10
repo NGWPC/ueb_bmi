@@ -129,7 +129,7 @@ class BmiUEB : public bmi::Bmi {
     void serialize(Archive& ar, const unsigned int version);
     vecbuf<char> m_serialized;
     uint64_t m_serialized_length; // needs stable location for GetValuePtr
-    void load_serialized(const char* data);
+    void load_serialized(char* data);
     void clear_serialized();
     void new_serialized();
 

@@ -1887,8 +1887,12 @@ void ueb::BmiUEB::serialize(Archive& ar, const unsigned int version) {
     ar & this->_cumEg;
 }
 
-void ueb::BmiUEB::load_serialized(const char* data) {
-    std::stringstream stream(data);
+void ueb::BmiUEB::load_serialized(char* data) {
+    // get size from header of data
+    uint64_t size;
+    memcpy(&size, data, sizeof(uint64_t));
+    // create stream from data after the header
+    membuf stream(data + sizeof(uint64_t), size);
     boost::archive::binary_iarchive archive(stream);
     try {
         archive >> (*this);
@@ -1906,11 +1910,15 @@ void ueb::BmiUEB::clear_serialized() {
 }
 
 void ueb::BmiUEB::new_serialized() {
-    this->m_serialized.clear();
+    // resize with room for a size of data header
+    this->m_serialized.resize(sizeof(uint64_t));
     boost::archive::binary_oarchive archive(this->m_serialized);
     try {
         archive << (*this);
         this->m_serialized_length = this->m_serialized.size();
+        // copy size of serialized data into the header
+        uint64_t serialized_size = this->m_serialized_length - sizeof(uint64_t);
+        memcpy(this->m_serialized.data(), &serialized_size, sizeof(uint64_t));
     } catch (const std::exception &e) {
         // Logger::Log(LogLevel::SEVERE, "Serializing UEB encountered an error: %s", e.what());
         this->m_serialized_length = 0;
