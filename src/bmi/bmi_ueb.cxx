@@ -13,6 +13,14 @@
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/vector.hpp>
 
+namespace {
+    const auto SERIALIZATION_CREATE = "serialization_create";
+    const auto SERIALIZATION_SIZE = "serialization_size";
+    const auto SERIALIZATION_STATE = "serialization_state";
+    const auto SERIALIZATION_FREE = "serialization_free";
+    const auto RESET_TIME = "reset_time";
+}
+
 std::stringstream bmi_ueb_ss("");
 
 void ueb::BmiUEB::Initialize(std::string config_file) {
@@ -351,15 +359,15 @@ int ueb::BmiUEB::GetVarGrid(std::string name) {
 }
 
 std::string ueb::BmiUEB::GetVarType(std::string name) {
-    if (name.compare("serialization_create") == 0) {
+    if (name.compare(SERIALIZATION_CREATE) == 0) {
         return "uint64_t";
-    } else if (name.compare("serialization_size") == 0) {
+    } else if (name.compare(SERIALIZATION_SIZE) == 0) {
         return "uint64_t";
-    } else if (name.compare("serialization_state") == 0) {
+    } else if (name.compare(SERIALIZATION_STATE) == 0) {
         return "char";
-    } else if (name.compare("serialization_free") == 0) {
+    } else if (name.compare(SERIALIZATION_FREE) == 0) {
         return "int";
-    } else if (name.compare("reset_time") == 0) {
+    } else if (name.compare(RESET_TIME) == 0) {
         return "double";
     }
 
@@ -413,15 +421,15 @@ std::string ueb::BmiUEB::GetVarType(std::string name) {
 }
 
 int ueb::BmiUEB::GetVarItemsize(std::string name) {
-    if (name.compare("serialization_create") == 0) {
+    if (name.compare(SERIALIZATION_CREATE) == 0) {
         return sizeof(uint64_t);
-    } else if (name.compare("serialization_size") == 0) {
+    } else if (name.compare(SERIALIZATION_SIZE) == 0) {
         return sizeof(uint64_t);
-    } else if (name.compare("serialization_state") == 0) {
+    } else if (name.compare(SERIALIZATION_STATE) == 0) {
         return sizeof(char);
-    } else if (name.compare("serialization_free") == 0) {
+    } else if (name.compare(SERIALIZATION_FREE) == 0) {
         return sizeof(int);
-    } else if (name.compare("reset_time") == 0) {
+    } else if (name.compare(RESET_TIME) == 0) {
         return sizeof(double);
     }
 
@@ -496,15 +504,15 @@ std::string ueb::BmiUEB::GetVarUnits(std::string name) {
 }
 
 int ueb::BmiUEB::GetVarNbytes(std::string name) {
-    if (name.compare("serialization_create") == 0) {
+    if (name.compare(SERIALIZATION_CREATE) == 0) {
         return sizeof(uint64_t);
-    } else if (name.compare("serialization_size") == 0) {
+    } else if (name.compare(SERIALIZATION_SIZE) == 0) {
         return sizeof(uint64_t);
-    } else if (name.compare("serialization_state") == 0) {
+    } else if (name.compare(SERIALIZATION_STATE) == 0) {
         return this->m_serialized_length;
-    } else if (name.compare("serialization_free") == 0) {
+    } else if (name.compare(SERIALIZATION_FREE) == 0) {
         return sizeof(int);
-    } else if (name.compare("reset_time") == 0) {
+    } else if (name.compare(RESET_TIME) == 0) {
         return sizeof(double);
     }
 
@@ -664,7 +672,7 @@ void ueb::BmiUEB::GetValue(std::string name, void* dest) {
 
     src = this->GetValuePtr(name);
 
-    if (name.compare("serialiation_state") == 0) {
+    if (name.compare(SERIALIZATION_STATE) == 0) {
         std::memcpy(dest, src, this->m_serialized_length);
     } else {
         nbytes = this->GetVarNbytes(name);
@@ -674,9 +682,9 @@ void ueb::BmiUEB::GetValue(std::string name, void* dest) {
 
 void* ueb::BmiUEB::GetValuePtr(std::string name) {
     // special cases for serialization
-    if (name.compare("serialization_size") == 0) {
+    if (name.compare(SERIALIZATION_SIZE) == 0) {
         return (void*)&this->m_serialized_length;
-    } else if (name.compare("serialization_state") == 0) {
+    } else if (name.compare(SERIALIZATION_STATE) == 0) {
         return (void*)this->m_serialized.data();
     }
 
@@ -794,16 +802,16 @@ void ueb::BmiUEB::GetValueAtIndices(std::string name, void* dest, int* inds, int
 
 void ueb::BmiUEB::SetValue(std::string name, void* src) {
     // special cases for serialized state
-    if (name.compare("serialization_state") == 0) {
+    if (name.compare(SERIALIZATION_STATE) == 0) {
         this->load_serialized((char*)src);
         return;
-    } else if (name.compare("serialization_free") == 0) {
+    } else if (name.compare(SERIALIZATION_FREE) == 0) {
         this->clear_serialized();
         return;
-    } else if (name.compare("serialization_create") == 0) {
+    } else if (name.compare(SERIALIZATION_CREATE) == 0) {
         this->new_serialized();
         return;
-    } else if (name.compare("reset_time") == 0) {
+    } else if (name.compare(RESET_TIME) == 0) {
         this->reset_time();
         return;
     }
