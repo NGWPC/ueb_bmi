@@ -13,6 +13,14 @@
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/vector.hpp>
 
+namespace {
+    const auto SERIALIZATION_CREATE = "serialization_create";
+    const auto SERIALIZATION_SIZE = "serialization_size";
+    const auto SERIALIZATION_STATE = "serialization_state";
+    const auto SERIALIZATION_FREE = "serialization_free";
+    const auto RESET_TIME = "reset_time";
+}
+
 std::stringstream bmi_ueb_ss("");
 
 void ueb::BmiUEB::Initialize(std::string config_file) {
@@ -106,7 +114,12 @@ void ueb::BmiUEB::Initialize(std::string config_file) {
 
             _outvarArray[cell].resize(numOut);
             for (auto& v : _outvarArray[cell]) {
+                #ifdef UEB_SUPPRESS_OUTPUTS
+                // only need one space when not recording all results
+                v.resize(1);
+                #else
                 v.resize(numTotalTs);
+                #endif
             }
         }
     }
@@ -137,9 +150,14 @@ void ueb::BmiUEB::Update() {
 
     float Inpt[niv];
 
-    int istep = std::round(
-        (_currentModelDateTime - this->getUEBStartTime()) * 24 * 3600 / this->GetTimeStep()
-    );
+    int istep = this->get_istep();
+#ifdef UEB_SUPPRESS_OUTPUTS
+    // when suppressing outputs, outputs will be updated in plcae in the 1 sized output arrays
+    int ostep = 0;
+#else
+    // otherwise, outputs will go into the same index as the inputs step
+    int ostep = istep;
+#endif
 
     auto tsvarArray  = _forcings.getTsvarArray();
     auto forcingtype = _forcings.getStrinpforcArray();
@@ -249,7 +267,7 @@ void ueb::BmiUEB::Update() {
             ); // array of 53 elements, output
             this->updatOutVars(
                 cell, // input
-                istep, // input
+                ostep, // input
                 Year, // input
                 Month, // input
                 Day, // input
@@ -266,7 +284,7 @@ void ueb::BmiUEB::Update() {
         {
             errMB = 0.0;
             for (int i = 0; i < 53; i++) OutArr[i] = 0.0;
-            for (int i = 0; i < 70; i++) _outvarArray[cell][i][istep] = 0.0;
+            for (int i = 0; i < 70; i++) _outvarArray[cell][i][ostep] = 0.0;
         }
     }
 
@@ -277,7 +295,7 @@ void ueb::BmiUEB::Update() {
 void ueb::BmiUEB::UpdateUntil(double t) // t unit is in seconds since the start time
 {
     // convert days to seconds
-    double time = (_currentModelDateTime - this->getUEBStartTime()) * 24 * 3600;
+    double time = this->GetCurrentTime();
 
     double dt = this->GetTimeStep();
 
@@ -297,6 +315,7 @@ void ueb::BmiUEB::UpdateUntil(double t) // t unit is in seconds since the start 
 }
 
 void ueb::BmiUEB::Finalize() {
+#ifndef UEB_SUPPRESS_OUTPUTS
     //
     // Point outputs
     //
@@ -309,6 +328,7 @@ void ueb::BmiUEB::Finalize() {
     // NetCDF outputs
     //
     this->outputNcFiles();
+#endif
 
     // clean serialization
     this->clear_serialized();
@@ -339,14 +359,16 @@ int ueb::BmiUEB::GetVarGrid(std::string name) {
 }
 
 std::string ueb::BmiUEB::GetVarType(std::string name) {
-    if (name.compare("serialization_create") == 0) {
+    if (name.compare(SERIALIZATION_CREATE) == 0) {
         return "uint64_t";
-    } else if (name.compare("serialization_size") == 0) {
+    } else if (name.compare(SERIALIZATION_SIZE) == 0) {
         return "uint64_t";
-    } else if (name.compare("serialization_state") == 0) {
+    } else if (name.compare(SERIALIZATION_STATE) == 0) {
         return "char";
-    } else if (name.compare("serialization_free") == 0) {
+    } else if (name.compare(SERIALIZATION_FREE) == 0) {
         return "int";
+    } else if (name.compare(RESET_TIME) == 0) {
+        return "double";
     }
 
     auto it_site = std::find(
@@ -399,14 +421,16 @@ std::string ueb::BmiUEB::GetVarType(std::string name) {
 }
 
 int ueb::BmiUEB::GetVarItemsize(std::string name) {
-    if (name.compare("serialization_create") == 0) {
+    if (name.compare(SERIALIZATION_CREATE) == 0) {
         return sizeof(uint64_t);
-    } else if (name.compare("serialization_size") == 0) {
+    } else if (name.compare(SERIALIZATION_SIZE) == 0) {
         return sizeof(uint64_t);
-    } else if (name.compare("serialization_state") == 0) {
+    } else if (name.compare(SERIALIZATION_STATE) == 0) {
         return sizeof(char);
-    } else if (name.compare("serialization_free") == 0) {
+    } else if (name.compare(SERIALIZATION_FREE) == 0) {
         return sizeof(int);
+    } else if (name.compare(RESET_TIME) == 0) {
+        return sizeof(double);
     }
 
     auto it_site = std::find(
@@ -480,14 +504,16 @@ std::string ueb::BmiUEB::GetVarUnits(std::string name) {
 }
 
 int ueb::BmiUEB::GetVarNbytes(std::string name) {
-    if (name.compare("serialization_create") == 0) {
+    if (name.compare(SERIALIZATION_CREATE) == 0) {
         return sizeof(uint64_t);
-    } else if (name.compare("serialization_size") == 0) {
+    } else if (name.compare(SERIALIZATION_SIZE) == 0) {
         return sizeof(uint64_t);
-    } else if (name.compare("serialization_state") == 0) {
+    } else if (name.compare(SERIALIZATION_STATE) == 0) {
         return this->m_serialized_length;
-    } else if (name.compare("serialization_free") == 0) {
+    } else if (name.compare(SERIALIZATION_FREE) == 0) {
         return sizeof(int);
+    } else if (name.compare(RESET_TIME) == 0) {
+        return sizeof(double);
     }
 
     int itemsize;
@@ -646,7 +672,7 @@ void ueb::BmiUEB::GetValue(std::string name, void* dest) {
 
     src = this->GetValuePtr(name);
 
-    if (name.compare("serialiation_state") == 0) {
+    if (name.compare(SERIALIZATION_STATE) == 0) {
         std::memcpy(dest, src, this->m_serialized_length);
     } else {
         nbytes = this->GetVarNbytes(name);
@@ -656,9 +682,9 @@ void ueb::BmiUEB::GetValue(std::string name, void* dest) {
 
 void* ueb::BmiUEB::GetValuePtr(std::string name) {
     // special cases for serialization
-    if (name.compare("serialization_size") == 0) {
+    if (name.compare(SERIALIZATION_SIZE) == 0) {
         return (void*)&this->m_serialized_length;
-    } else if (name.compare("serialization_state") == 0) {
+    } else if (name.compare(SERIALIZATION_STATE) == 0) {
         return (void*)this->m_serialized.data();
     }
 
@@ -699,11 +725,7 @@ void* ueb::BmiUEB::GetValuePtr(std::string name) {
         int i = std::distance(ueb::ForcingVariables::forcing_var_names.begin(), it_forc);
         // SCTV and SVTV inputs
         if (strinpArray[i].infType == 0 || strinpArray[i].infType == 1) {
-            int istep = std::round(
-                            (_currentModelDateTime - this->getUEBStartTime()) * 24 * 3600 /
-                            this->GetTimeStep()
-                        ) -
-                        1;
+            int istep = this->get_istep() - 1;
 
             // Only set the value for the first cell
             // NGen wouldn't pass gradded values, only one value at a time
@@ -744,15 +766,16 @@ void* ueb::BmiUEB::GetValuePtr(std::string name) {
     );
     if (it_out != ueb::OutControl::output_var_names.end()) {
         int i = std::distance(ueb::OutControl::output_var_names.begin(), it_out);
-        int istep =
-            std::round(
-                (_currentModelDateTime - this->getUEBStartTime()) * 24 * 3600 / this->GetTimeStep()
-            ) -
-            1;
+#ifdef UEB_SUPPRESS_OUTPUTS
+        // value will always be the first when not recording previous results
+        int ostep = 0;
+#else
+        int ostep = this->get_istep() - 1;
+#endif
         // need to check for gridded model
         // this only return the first grid cell's value
         // How about other grid cells?
-        return (void*)&_outvarArray[0][i][istep];
+        return (void*)&_outvarArray[0][i][ostep];
     }
     return (void*)NULL;
 }
@@ -779,14 +802,17 @@ void ueb::BmiUEB::GetValueAtIndices(std::string name, void* dest, int* inds, int
 
 void ueb::BmiUEB::SetValue(std::string name, void* src) {
     // special cases for serialized state
-    if (name.compare("serialization_state") == 0) {
+    if (name.compare(SERIALIZATION_STATE) == 0) {
         this->load_serialized((char*)src);
         return;
-    } else if (name.compare("serialization_free") == 0) {
+    } else if (name.compare(SERIALIZATION_FREE) == 0) {
         this->clear_serialized();
         return;
-    } else if (name.compare("serialization_create") == 0) {
+    } else if (name.compare(SERIALIZATION_CREATE) == 0) {
         this->new_serialized();
+        return;
+    } else if (name.compare(RESET_TIME) == 0) {
+        this->reset_time();
         return;
     }
     void* dest = NULL;
@@ -913,7 +939,7 @@ double ueb::BmiUEB::GetEndTime() {
 
 double ueb::BmiUEB::GetCurrentTime() {
 
-    return (_currentModelDateTime - this->getUEBStartTime()) * 24 * 3600;
+    return (_currentModelDateTime - this->getUEBStartTime()) * (24 * 3600);
     // convert days to seconds;
 }
 
@@ -1517,6 +1543,7 @@ void ueb::BmiUEB::updatOutVars(
     }
 }
 
+#ifndef UEB_SUPPRESS_OUTPUTS
 void ueb::BmiUEB::outputAggregratedFiles() {
     auto activeCells = _ws.getActiveCells(_sitevars.getSiteVars().data());
 
@@ -1812,6 +1839,7 @@ void ueb::BmiUEB::outputPointFiles() {
         }
     }
 }
+#endif // not UEB_SUPPRESS_OUTPUTS
 
 //
 // Get the UEB start time, this is different form the GetStartTime API.
@@ -1836,6 +1864,16 @@ double ueb::BmiUEB::getUEBEndTime() {
     return EJD;
 }
 
+int ueb::BmiUEB::get_istep() {
+    return std::round(this->GetCurrentTime() / this->GetTimeStep());
+}
+
+void ueb::BmiUEB::reset_time() {
+    // set curernt time to what was specified in the config
+    _currentModelDateTime = this->getUEBStartTime();
+    // indexing into values seems to derive from _currentModelDateTime, so this should be the only thing that needs to be reset
+}
+
 template<class Archive>
 void ueb::BmiUEB::serialize(Archive& ar, const unsigned int version) {
     ar & this->_currentModelDateTime;
@@ -1857,8 +1895,12 @@ void ueb::BmiUEB::serialize(Archive& ar, const unsigned int version) {
     ar & this->_cumEg;
 }
 
-void ueb::BmiUEB::load_serialized(const char* data) {
-    std::stringstream stream(data);
+void ueb::BmiUEB::load_serialized(char* data) {
+    // get size from header of data
+    uint64_t size;
+    memcpy(&size, data, sizeof(uint64_t));
+    // create stream from data after the header
+    membuf stream(data + sizeof(uint64_t), size);
     boost::archive::binary_iarchive archive(stream);
     try {
         archive >> (*this);
@@ -1876,11 +1918,15 @@ void ueb::BmiUEB::clear_serialized() {
 }
 
 void ueb::BmiUEB::new_serialized() {
-    this->m_serialized.clear();
+    // resize with room for a size of data header
+    this->m_serialized.resize(sizeof(uint64_t));
     boost::archive::binary_oarchive archive(this->m_serialized);
     try {
         archive << (*this);
         this->m_serialized_length = this->m_serialized.size();
+        // copy size of serialized data into the header
+        uint64_t serialized_size = this->m_serialized_length - sizeof(uint64_t);
+        memcpy(this->m_serialized.data(), &serialized_size, sizeof(uint64_t));
     } catch (const std::exception &e) {
         // Logger::Log(LogLevel::SEVERE, "Serializing UEB encountered an error: %s", e.what());
         this->m_serialized_length = 0;
