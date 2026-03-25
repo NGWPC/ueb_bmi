@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "Logger.hpp"
 #include "bmi_ueb.hxx"
 #include <bmi.hxx>
 
@@ -24,6 +25,15 @@ namespace {
 std::stringstream bmi_ueb_ss("");
 
 void ueb::BmiUEB::Initialize(std::string config_file) {
+
+    // Initialize the Error, Warning and Trapping System
+    #ifdef EWTS_HAVE_NGEN_BRIDGE    
+        EwtsInit(EWTS_ID_UEB, true);
+    #else
+        EwtsInit(EWTS_ID_UEB, false);
+    #endif
+    LOG(LogLevel::INFO, "Initializing UEB");
+
     if (config_file.compare("") != 0) {
         _confile = ControlFile(config_file);
         _ws      = Watershed(
@@ -1905,7 +1915,7 @@ void ueb::BmiUEB::load_serialized(char* data) {
     try {
         archive >> (*this);
     } catch (const std::exception &e) {
-        // Logger::Log(LogLevel::SEVERE, "Deserializing UEB encountered an error: %s", e.what());
+        // LOG(LogLevel::SEVERE, "Deserializing UEB encountered an error: %s", e.what());
         throw;
     }
     this->clear_serialized();
@@ -1928,7 +1938,7 @@ void ueb::BmiUEB::new_serialized() {
         uint64_t serialized_size = this->m_serialized_length - sizeof(uint64_t);
         memcpy(this->m_serialized.data(), &serialized_size, sizeof(uint64_t));
     } catch (const std::exception &e) {
-        // Logger::Log(LogLevel::SEVERE, "Serializing UEB encountered an error: %s", e.what());
+        // LOG(LogLevel::SEVERE, "Serializing UEB encountered an error: %s", e.what());
         this->m_serialized_length = 0;
         throw;
     }
