@@ -6,6 +6,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <cmath>
 
 ueb::ControlFile::ControlFile()
     : _outtStride(1)
@@ -28,10 +29,11 @@ ueb::ControlFile::~ControlFile() {
 }
 
 void ueb::ControlFile::loadControlFile(std::string const& contrl_file) {
+    _conFilename = contrl_file;
     std::stringstream std_ss("");
 
     std_ss << "Control File is " << contrl_file << std::endl;
-    LOG(std_ss.str(), LogLevel::INFO);
+    LOG(LogLevel::INFO, std_ss.str());
     std_ss.str("");
     char headerLine[256];
     char paramFile1[256], sitevarFile1[256], inputconFile1[256], outputconFile1[256],
@@ -228,6 +230,24 @@ void ueb::ControlFile::setModelDt(double const& t) {
 
 double ueb::ControlFile::getModelUTCOffset() {
     return _ModelUTCOffset;
+}
+
+void ueb::ControlFile::overrideModelTiming(
+    const std::array<int, 3>& start_date,
+    double start_hour,
+    const std::array<int, 3>& end_date,
+    double end_hour,
+    double dt_hours
+) {
+    if (dt_hours <= 0.0) {
+        throw std::invalid_argument("UEB ControlFile overrideModelTiming received non-positive dt_hours");
+    }
+
+    _ModelStartDate = start_date;
+    _ModelStartHour = start_hour;
+    _ModelEndDate   = end_date;
+    _ModelEndHour   = end_hour;
+    _ModelDt        = dt_hours;
 }
 
 void ueb::ControlFile::setModelUTCOffset(double const& offset) {

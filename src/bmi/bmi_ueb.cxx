@@ -36,6 +36,25 @@ void ueb::BmiUEB::Initialize(std::string config_file) {
 
     if (config_file.compare("") != 0) {
         _confile = ControlFile(config_file);
+
+        {
+            std::stringstream ts_ss;
+            const auto start_date = _confile.getModelStartDate();
+            const auto end_date   = _confile.getModelEndDate();
+
+            ts_ss << "UEB effective control timing after Initialize load:" << std::endl;
+            ts_ss << "  control file: " << _confile.getControlFile() << std::endl;
+            ts_ss << "  start: "
+                  << start_date[0] << "-" << start_date[1] << "-" << start_date[2]
+                  << " " << _confile.getModelStartHour() << std::endl;
+            ts_ss << "  end:   "
+                  << end_date[0] << "-" << end_date[1] << "-" << end_date[2]
+                  << " " << _confile.getModelEndHour() << std::endl;
+            ts_ss << "  dt_hours: " << _confile.getModelDt() << std::endl;
+            ts_ss << "  total_timesteps: " << _confile.getModelTotalTimeSteps() << std::endl;
+            LOG(ts_ss.str(), LogLevel::INFO);
+        }
+
         _ws      = Watershed(
             _confile.getWatershedFile(),
             _confile.getWsvarName(),
