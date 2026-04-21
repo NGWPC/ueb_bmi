@@ -20,6 +20,9 @@ namespace {
     const auto SERIALIZATION_STATE = "serialization_state";
     const auto SERIALIZATION_FREE = "serialization_free";
     const auto RESET_TIME = "reset_time";
+    const auto NGEN_REALIZATION_START_TIME = "ngen_realization_start_time";
+    const auto NGEN_REALIZATION_END_TIME = "ngen_realization_end_time";
+    const auto NGEN_REALIZATION_DT = "ngen_realization_dt";
 }
 
 std::stringstream bmi_ueb_ss("");
@@ -36,6 +39,29 @@ void ueb::BmiUEB::Initialize(std::string config_file) {
 
     if (config_file.compare("") != 0) {
         _confile = ControlFile(config_file);
+
+        {
+            std::stringstream ts_ss;
+            const auto start_date = _confile.getModelStartDate();
+            const auto end_date   = _confile.getModelEndDate();
+
+            ts_ss << "UEB effective control timing after Initialize load:" << std::endl;
+            ts_ss << "  control file: " << _confile.getControlFile() << std::endl;
+            ts_ss << "  start: "
+                  << start_date[0] << "-" << start_date[1] << "-" << start_date[2]
+                  << " " << _confile.getModelStartHour() << std::endl;
+            ts_ss << "  end:   "
+                  << end_date[0] << "-" << end_date[1] << "-" << end_date[2]
+                  << " " << _confile.getModelEndHour() << std::endl;
+            ts_ss << "  dt_hours: " << _confile.getModelDt() << std::endl;
+            ts_ss << "  total_timesteps: " << _confile.getModelTotalTimeSteps() << std::endl;
+            LOG(ts_ss.str(), LogLevel::INFO);
+        }
+
+        if (_ngen_realization_start_time > 0.0 && _ngen_realization_end_time > 0.0 && _ngen_realization_dt > 0.0) {
+            apply_ngen_realization_time();
+        }
+
         _ws      = Watershed(
             _confile.getWatershedFile(),
             _confile.getWsvarName(),
@@ -46,7 +72,6 @@ void ueb::BmiUEB::Initialize(std::string config_file) {
         _sitevars = SiteVariables(_confile.getSitevarFile());
         _forcings = ForcingVariables(
             _confile.getInputconFile(),
-            //_forcings = new ForcingVariables( _confile.getInputconFile(),
             _ws.getActiveCells(_sitevars.getSiteVars().data()),
             _confile.getWsycorName(),
             _confile.getWsxcorName()
@@ -77,55 +102,31 @@ void ueb::BmiUEB::Initialize(std::string config_file) {
         _taveprevday.resize(numOfActiveCells);
 
         float Us, Ws, Wc, Apr, cg, rhog, de, tave, WGT;
-        // WGT=WATER EQUIVALENT GLACIER THICKNESS
 
         auto Param = _parms.getParams();
 
         _outvarArray.resize(numOfActiveCells);
 
-        for (int cell = 0; cell < numOfActiveCells; ++cell) {
-            auto sitev     = this->getSitevForCell(cell);
-            auto SiteState = this->getSiteState(cell);
-            float ts_last  = SiteState[30];
+        for (int cell = 0; cell < numOfActiveCells; cell++) {
+            auto sitev = getSitevForCell(cell);
 
-            _Ws1[cell] = _statev[cell][1];
-            _Wc1[cell] = _statev[cell][3];
+            _tsprevday[cell].resize(nstepinaDay, 0.f);
+            _taveprevday[cell].resize(nstepinaDay, 0.f);
 
-            if (sitev[9] == 0 || sitev[9] == 3)
-                WGT = 0.0;
-            else
-                WGT = 1.0;
+            Us   = _statev[cell][0];
+            Ws   = _statev[cell][1];
+            Wc   = _statev[cell][3];
+            Apr  = sitev[1];
+            cg   = Param[3];
+            rhog = Param[7];
+            de   = Param[10];
 
-            if (sitev[9] != 3) //  Only do this work for non accumulation cells where model is run
-            {
-                _tsprevday[cell].resize(nstepinaDay, -9999.f);
-                _taveprevday[cell].resize(nstepinaDay, -9999.f);
-
-                // Take surface temperature as 0 where it is unknown the previous time step
-                // This is for first day of the model to get the force restore going
-                // #$#$#$#$#_is this all the time steps or the last time?
-                if (ts_last <= -9999)
-                    _tsprevday[cell][nstepinaDay - 1] = 0;
-                else
-                    _tsprevday[cell][nstepinaDay - 1] = ts_last;
-
-                // compute Ave.Temp for previous day
-                Us   = _statev[cell][0]; // Ub in UEB
-                Ws   = _statev[cell][1]; // W in UEB
-                Wc   = _statev[cell][3]; // Canopy SWE
-                Apr  = sitev[1]; // Atm. Pressure  [PR in UEB]
-                cg   = Param[3]; // Ground heat capacity [nominally 2.09 KJ/kg/C]
-                rhog = Param[7]; // Soil Density [nominally 1700 kg/m^3]
-                de   = Param[10]; // Thermally active depth of soil (0.1 m)
-
-                tave = TAVG(Us, Ws + WGT, Rho_w, C_s, T_0, rhog, de, cg, H_f);
-                _taveprevday[cell][nstepinaDay - 1] = tave;
-            }
+            tave = TAVG(Us, Ws + WGT, Rho_w, C_s, T_0, rhog, de, cg, H_f);
+            _taveprevday[cell][nstepinaDay - 1] = tave;
 
             _outvarArray[cell].resize(numOut);
             for (auto& v : _outvarArray[cell]) {
                 #ifdef UEB_SUPPRESS_OUTPUTS
-                // only need one space when not recording all results
                 v.resize(1);
                 #else
                 v.resize(numTotalTs);
@@ -347,6 +348,10 @@ void ueb::BmiUEB::Finalize() {
 int ueb::BmiUEB::GetVarGrid(std::string name) {
     int lastgrid                              = 0;
     std::array<sitevar, NSITEVARS> strsvArray = _sitevars.getSiteVars();
+
+    if (name == NGEN_REALIZATION_START_TIME || name == NGEN_REALIZATION_END_TIME || name == NGEN_REALIZATION_DT) {
+        return 0;
+    }
     for (int i = 0; i < ueb::SiteVariables::nsitevars; ++i) {
         if (strsvArray[i].svType == 1) {
             if (name.compare(strsvArray[i].svName) == 0) {
@@ -369,7 +374,10 @@ int ueb::BmiUEB::GetVarGrid(std::string name) {
 }
 
 std::string ueb::BmiUEB::GetVarType(std::string name) {
-    if (name.compare(SERIALIZATION_CREATE) == 0) {
+    if (name == NGEN_REALIZATION_START_TIME || name == NGEN_REALIZATION_END_TIME || name == NGEN_REALIZATION_DT) {
+	return "double";
+    }
+    else if (name.compare(SERIALIZATION_CREATE) == 0) {
         return "uint64_t";
     } else if (name.compare(SERIALIZATION_SIZE) == 0) {
         return "uint64_t";
@@ -431,7 +439,10 @@ std::string ueb::BmiUEB::GetVarType(std::string name) {
 }
 
 int ueb::BmiUEB::GetVarItemsize(std::string name) {
-    if (name.compare(SERIALIZATION_CREATE) == 0) {
+    if (name == NGEN_REALIZATION_START_TIME || name == NGEN_REALIZATION_END_TIME || name == NGEN_REALIZATION_DT) {
+        return sizeof(double);
+    }
+    else if (name.compare(SERIALIZATION_CREATE) == 0) {
         return sizeof(uint64_t);
     } else if (name.compare(SERIALIZATION_SIZE) == 0) {
         return sizeof(uint64_t);
@@ -494,6 +505,9 @@ int ueb::BmiUEB::GetVarItemsize(std::string name) {
 
 std::string ueb::BmiUEB::GetVarUnits(std::string name) {
     auto it_site = ueb::SiteVariables::site_var_units.find(name);
+    if (name == NGEN_REALIZATION_START_TIME || name == NGEN_REALIZATION_END_TIME || name == NGEN_REALIZATION_DT) {
+        return "s";
+    }
     if (it_site != ueb::SiteVariables::site_var_units.end()) {
         return it_site->second;
     }
@@ -514,7 +528,9 @@ std::string ueb::BmiUEB::GetVarUnits(std::string name) {
 }
 
 int ueb::BmiUEB::GetVarNbytes(std::string name) {
-    if (name.compare(SERIALIZATION_CREATE) == 0) {
+    if (name == NGEN_REALIZATION_START_TIME || name == NGEN_REALIZATION_END_TIME || name == NGEN_REALIZATION_DT) {
+        return sizeof(double);
+    } else if (name.compare(SERIALIZATION_CREATE) == 0) {
         return sizeof(uint64_t);
     } else if (name.compare(SERIALIZATION_SIZE) == 0) {
         return sizeof(uint64_t);
@@ -812,6 +828,35 @@ void ueb::BmiUEB::GetValueAtIndices(std::string name, void* dest, int* inds, int
 
 void ueb::BmiUEB::SetValue(std::string name, void* src) {
     // special cases for serialized state
+    
+    if (name == NGEN_REALIZATION_START_TIME) {
+        _ngen_realization_start_time = *static_cast<double*>(src);
+        if (_ngen_realization_start_time > 0.0 &&
+            _ngen_realization_end_time > 0.0 &&
+            _ngen_realization_dt > 0.0) {
+            apply_ngen_realization_time();
+        }
+        return;
+    }
+    if (name == NGEN_REALIZATION_END_TIME) {
+        _ngen_realization_end_time = *static_cast<double*>(src);
+        if (_ngen_realization_start_time > 0.0 &&
+            _ngen_realization_end_time > 0.0 &&
+            _ngen_realization_dt > 0.0) {
+            apply_ngen_realization_time();
+        }
+        return;
+    }
+    if (name == NGEN_REALIZATION_DT) {
+        _ngen_realization_dt = *static_cast<double*>(src);
+        if (_ngen_realization_start_time > 0.0 &&
+            _ngen_realization_end_time > 0.0 &&
+            _ngen_realization_dt > 0.0) {
+            apply_ngen_realization_time();
+        }
+        return;
+    }
+
     if (name.compare(SERIALIZATION_STATE) == 0) {
         this->load_serialized((char*)src);
         return;
@@ -825,6 +870,7 @@ void ueb::BmiUEB::SetValue(std::string name, void* src) {
         this->reset_time();
         return;
     }
+
     void* dest = NULL;
 
     dest = this->GetValuePtr(name);
@@ -1882,6 +1928,50 @@ void ueb::BmiUEB::reset_time() {
     // set curernt time to what was specified in the config
     _currentModelDateTime = this->getUEBStartTime();
     // indexing into values seems to derive from _currentModelDateTime, so this should be the only thing that needs to be reset
+}
+
+void ueb::BmiUEB::apply_ngen_realization_time()
+{
+    if (_ngen_realization_start_time <= 0.0 ||
+        _ngen_realization_end_time <= 0.0 ||
+        _ngen_realization_dt <= 0.0) {
+        return;
+    }
+
+    // Convert UNIX -> UTC struct tm
+    time_t start_t = static_cast<time_t>(_ngen_realization_start_time);
+    time_t end_t   = static_cast<time_t>(_ngen_realization_end_time);
+
+    struct tm start_tm_val = *gmtime(&start_t);
+    struct tm end_tm_val   = *gmtime(&end_t);
+
+    int startYear  = start_tm_val.tm_year + 1900;
+    int startMonth = start_tm_val.tm_mon + 1;
+    int startDay   = start_tm_val.tm_mday;
+    int startHour  = start_tm_val.tm_hour;
+
+    int endYear  = end_tm_val.tm_year + 1900;
+    int endMonth = end_tm_val.tm_mon + 1;
+    int endDay   = end_tm_val.tm_mday;
+    int endHour  = end_tm_val.tm_hour;
+
+    double dt_hours = _ngen_realization_dt / 3600.0;
+
+    _confile.overrideModelTiming(
+        startYear, startMonth, startDay, startHour,
+        endYear,   endMonth,   endDay,   endHour,
+        dt_hours
+    );
+
+    _currentModelDateTime = this->getUEBStartTime();
+
+    std::stringstream ss;
+    ss << "UEB realization time applied:" << std::endl;
+    ss << "  startdate=" << startYear << "-" << startMonth << "-" << startDay << " " << startHour << std::endl;
+    ss << "  enddate=" << endYear << "-" << endMonth << "-" << endDay << " " << endHour << std::endl;
+    ss << "  dt_hours=" << dt_hours << std::endl;
+    ss << "  total_timesteps=" << _confile.getModelTotalTimeSteps() << std::endl;
+    LOG(ss.str(), LogLevel::INFO);
 }
 
 template<class Archive>

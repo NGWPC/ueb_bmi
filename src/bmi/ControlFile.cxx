@@ -310,6 +310,24 @@ int ueb::ControlFile::getStepsInADay() const {
     return nstepinaDay;
 }
 
+void ueb::ControlFile::overrideModelTiming(
+    int startYear, int startMonth, int startDay, int startHour,
+    int endYear, int endMonth, int endDay, int endHour,
+    double dt_hours
+) {
+    if (dt_hours <= 0.0) {
+        throw std::invalid_argument("UEB ControlFile overrideModelTiming received non-positive dt_hours");
+    }
+
+    _ModelStartDate = {startYear, startMonth, startDay};
+    _ModelStartHour = startHour;
+
+    _ModelEndDate = {endYear, endMonth, endDay};
+    _ModelEndHour = endHour;
+
+    _ModelDt = dt_hours;
+}
+
 std::ostream& operator<<(std::ostream& os, ueb::ControlFile f) { // operator<<
     os << "Control file: " << f._conFilename << std::endl;
     os << "Parameter file: " << f._paramFilename << std::endl;

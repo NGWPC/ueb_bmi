@@ -108,6 +108,13 @@ class BmiUEB : public bmi::Bmi {
     OutControl _outcontrol;
 
     double _currentModelDateTime; // this is Julian date in days
+    double realization_start_time = -1;
+    double realization_end_time   = -1;
+    double realization_dt         = -1;
+    bool realization_time_set     = false;
+    double _ngen_realization_start_time = -1.0;
+    double _ngen_realization_end_time   = -1.0;
+    double _ngen_realization_dt         = -1.0;
 
     std::vector<std::array<float, nxv>> _statev;
 
@@ -134,6 +141,8 @@ class BmiUEB : public bmi::Bmi {
     void new_serialized();
 
     void setStatev();
+
+    void apply_ngen_realization_time();
 
     void prepareInputForPoint(
         double const& UTCHour, // input
