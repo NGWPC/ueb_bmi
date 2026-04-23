@@ -98,6 +98,23 @@ void ueb::BmiUEB::Initialize(std::string config_file) {
         int numTotalTs  = _confile.getModelTotalTimeSteps();
         int nstepinaDay = _confile.getStepsInADay();
 
+        if (numTotalTs <= 0) {
+            throw std::runtime_error("UEB Initialize: numTotalTs <= 0 before vector allocation");
+        }
+        if (nstepinaDay <= 0) {
+            throw std::runtime_error("UEB Initialize: nstepinaDay <= 0 before vector allocation");
+        }
+
+        {
+            std::stringstream ss_info;
+            ss_info << "UEB allocation sizes:" << std::endl;
+            ss_info << "  numActiveCells=" << numOfActiveCells << std::endl;
+            ss_info << "  numTotalTs=" << numTotalTs << std::endl;
+            ss_info << "  nstepinaDay=" << nstepinaDay << std::endl;
+            ss_info << "  numOut=" << numOut << std::endl;
+            LOG(ss_info.str(), LogLevel::INFO);
+        }
+
         _tsprevday.resize(numOfActiveCells);
         _taveprevday.resize(numOfActiveCells);
 
@@ -831,29 +848,17 @@ void ueb::BmiUEB::SetValue(std::string name, void* src) {
     
     if (name == NGEN_REALIZATION_START_TIME) {
         _ngen_realization_start_time = *static_cast<double*>(src);
-        if (_ngen_realization_start_time > 0.0 &&
-            _ngen_realization_end_time > 0.0 &&
-            _ngen_realization_dt > 0.0) {
-            apply_ngen_realization_time();
-        }
+        apply_ngen_realization_time();
         return;
     }
     if (name == NGEN_REALIZATION_END_TIME) {
         _ngen_realization_end_time = *static_cast<double*>(src);
-        if (_ngen_realization_start_time > 0.0 &&
-            _ngen_realization_end_time > 0.0 &&
-            _ngen_realization_dt > 0.0) {
-            apply_ngen_realization_time();
-        }
+        apply_ngen_realization_time();
         return;
     }
     if (name == NGEN_REALIZATION_DT) {
         _ngen_realization_dt = *static_cast<double*>(src);
-        if (_ngen_realization_start_time > 0.0 &&
-            _ngen_realization_end_time > 0.0 &&
-            _ngen_realization_dt > 0.0) {
-            apply_ngen_realization_time();
-        }
+        apply_ngen_realization_time();
         return;
     }
 
@@ -1932,28 +1937,36 @@ void ueb::BmiUEB::reset_time() {
 
 void ueb::BmiUEB::apply_ngen_realization_time()
 {
+    if (this->realization_time_applied) {
+        return;
+    }
+
     if (_ngen_realization_start_time <= 0.0 ||
         _ngen_realization_end_time <= 0.0 ||
         _ngen_realization_dt <= 0.0) {
         return;
     }
 
-    // Convert UNIX -> UTC struct tm
+    this->realization_time_applied = true;
+
     time_t start_t = static_cast<time_t>(_ngen_realization_start_time);
     time_t end_t   = static_cast<time_t>(_ngen_realization_end_time);
 
-    struct tm start_tm_val = *gmtime(&start_t);
-    struct tm end_tm_val   = *gmtime(&end_t);
+    struct tm start_tm_struct;
+    struct tm end_tm_struct;
 
-    int startYear  = start_tm_val.tm_year + 1900;
-    int startMonth = start_tm_val.tm_mon + 1;
-    int startDay   = start_tm_val.tm_mday;
-    int startHour  = start_tm_val.tm_hour;
+    gmtime_r(&start_t, &start_tm_struct);
+    gmtime_r(&end_t, &end_tm_struct);
 
-    int endYear  = end_tm_val.tm_year + 1900;
-    int endMonth = end_tm_val.tm_mon + 1;
-    int endDay   = end_tm_val.tm_mday;
-    int endHour  = end_tm_val.tm_hour;
+    int startYear  = start_tm_struct.tm_year + 1900;
+    int startMonth = start_tm_struct.tm_mon + 1;
+    int startDay   = start_tm_struct.tm_mday;
+    int startHour  = start_tm_struct.tm_hour;
+
+    int endYear  = end_tm_struct.tm_year + 1900;
+    int endMonth = end_tm_struct.tm_mon + 1;
+    int endDay   = end_tm_struct.tm_mday;
+    int endHour  = end_tm_struct.tm_hour;
 
     double dt_hours = _ngen_realization_dt / 3600.0;
 
@@ -1963,15 +1976,19 @@ void ueb::BmiUEB::apply_ngen_realization_time()
         dt_hours
     );
 
-    _currentModelDateTime = this->getUEBStartTime();
+    // resync internal model time
+    this->reset_time();
 
-    std::stringstream ss;
-    ss << "UEB realization time applied:" << std::endl;
-    ss << "  startdate=" << startYear << "-" << startMonth << "-" << startDay << " " << startHour << std::endl;
-    ss << "  enddate=" << endYear << "-" << endMonth << "-" << endDay << " " << endHour << std::endl;
-    ss << "  dt_hours=" << dt_hours << std::endl;
-    ss << "  total_timesteps=" << _confile.getModelTotalTimeSteps() << std::endl;
-    LOG(ss.str(), LogLevel::INFO);
+    {
+        std::stringstream ss;
+        ss << "UEB realization time applied:" << std::endl;
+        ss << "  startdate=" << startYear << "-" << startMonth << "-" << startDay << " " << startHour << std::endl;
+        ss << "  enddate=" << endYear << "-" << endMonth << "-" << endDay << " " << endHour << std::endl;
+        ss << "  dt_hours=" << dt_hours << std::endl;
+        ss << "  total_timesteps=" << _confile.getModelTotalTimeSteps() << std::endl;
+        ss << "  steps_in_day=" << _confile.getStepsInADay() << std::endl;
+        LOG(ss.str(), LogLevel::INFO);
+    }
 }
 
 template<class Archive>

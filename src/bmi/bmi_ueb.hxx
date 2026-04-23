@@ -116,6 +116,8 @@ class BmiUEB : public bmi::Bmi {
     double _ngen_realization_end_time   = -1.0;
     double _ngen_realization_dt         = -1.0;
 
+    bool realization_time_applied = false;
+
     std::vector<std::array<float, nxv>> _statev;
 
     std::vector<float> _Ws1;
