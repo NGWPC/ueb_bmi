@@ -770,23 +770,39 @@ void* ueb::BmiUEB::GetValuePtr(std::string name) {
     }
 
     auto it_out = std::find(
-        ueb::OutControl::output_var_names.begin(),
-        ueb::OutControl::output_var_names.end(),
-        name
+      ueb::OutControl::output_var_names.begin(),
+      ueb::OutControl::output_var_names.end(),
+      name
     );
+
     if (it_out != ueb::OutControl::output_var_names.end()) {
-        int i = std::distance(ueb::OutControl::output_var_names.begin(), it_out);
-#ifdef UEB_SUPPRESS_OUTPUTS
-        // value will always be the first when not recording previous results
-        int ostep = 0;
-#else
-        int ostep = this->get_istep() - 1;
-#endif
-        // need to check for gridded model
-        // this only return the first grid cell's value
-        // How about other grid cells?
-        return (void*)&_outvarArray[0][i][ostep];
+      int i = std::distance(ueb::OutControl::output_var_names.begin(), it_out);
+
+  #ifdef UEB_SUPPRESS_OUTPUTS
+      // value will always be the first when not recording previous results
+      int ostep = 0;
+  #else
+      int ostep = this->get_istep() - 1;
+  #endif
+
+      // BMI-facing conversion only:
+      // UEB internal SWE is m; NWM SNEQV expects kg m-2.
+      if (name.compare("SWE") == 0) {
+        _swe_kg_m2 = _outvarArray[0][i][ostep] * 1000.0f;
+        return (void*)&_swe_kg_m2;
+      }
+
+      // UEB internal SWIT is m/hr; NWM ACSNOW expects timestep depth in mm.
+      if (name.compare("SWIT") == 0) {
+        _swit_mm = _outvarArray[0][i][ostep] *
+                   (float)(this->GetTimeStep() / 3600.0) *
+                   1000.0f;
+        return (void*)&_swit_mm;
+      }
+
+      return (void*)&_outvarArray[0][i][ostep];
     }
+    
     return (void*)NULL;
 }
 

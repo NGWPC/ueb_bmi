@@ -408,7 +408,7 @@ const std::map<std::string, std::string> ueb::OutControl::output_var_units{
                       //	 thermally active soil per unit of horizontal area
                       //	 defined with respect to solid (ice) phase snow at
                       //	 0 C..	kJ/m2
-    {"SWE",           "m"          }, //  SWE	SWE	Surface snow water equivalent
+    {"SWE",           "kg m-2"          }, //  SWE	SWE	Surface snow water equivalent
                   // State variable that gives the Snow Water Equivalent (SWE)
                   // of snow on the surface.  It can be considered as the depth
                   // of water that would theoretically result if the whole snow
@@ -440,7 +440,7 @@ const std::map<std::string, std::string> ueb::OutControl::output_var_units{
                             //(wind and turbulence).	kJ/m2/hr
     {"Es",            "m"          }, //  E	E	Surface sublimation	Amount of water removed
                  // from the snow surface by sublimation	m
-    {"SWIT",          "m hr-1"     }, //  SWIT 	SWIT 	Total outflow 	Total outflow from the
+    {"SWIT",          "mm"     }, //  SWIT 	SWIT 	Total outflow 	Total outflow from the
                         // base of the snowpack (and glacier). This includes rainfall,
                         // melt from seasonal snow and melt from glaciated surface.
                         // m/hr
