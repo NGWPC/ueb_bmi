@@ -441,9 +441,9 @@ const std::map<std::string, std::string> ueb::OutControl::output_var_units{
                             // transferred from the snow surface to the atmosphere by
                             // water vapor carried in air movement
                             //(wind and turbulence).	kJ/m2/hr
-    {"Es",            "mm"          }, //  E	E	Surface sublimation	Amount of water removed
+    {"Es",            "m"          }, //  E	E	Surface sublimation	Amount of water removed
                  // from the snow surface by sublimation	m
-    {"SWIT",          "mm hr-1"    }, //  SWIT 	SWIT 	Total outflow 	Total outflow from the
+    {"SWIT",          "m hr-1"    }, //  SWIT 	SWIT 	Total outflow 	Total outflow from the
                         // base of the snowpack (and glacier). This includes rainfall,
                         // melt from seasonal snow and melt from glaciated surface.
                         // m/hr

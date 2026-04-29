@@ -771,7 +771,7 @@ void* ueb::BmiUEB::GetValuePtr(std::string name) {
 
     auto it_out = std::find(
         ueb::OutControl::output_var_names.begin(),
-	     ueb::OutControl::output_var_names.end(),
+	    ueb::OutControl::output_var_names.end(),
         name
     );
 
