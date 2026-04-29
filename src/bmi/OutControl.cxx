@@ -301,6 +301,7 @@ const std::array<std::string, NOUTPUTS> ueb::OutControl::output_var_names{
     "Qnet",
     "Us",
     "SWE",
+    "SWE_kg_m2",
     "tausn",
     "Pr",
     "Ps",
@@ -309,6 +310,7 @@ const std::array<std::string, NOUTPUTS> ueb::OutControl::output_var_names{
     "QEs",
     "Es",
     "SWIT",
+    "SWIT_mm",
     "QMs",
     "Q",
     "FM",
@@ -408,7 +410,7 @@ const std::map<std::string, std::string> ueb::OutControl::output_var_units{
                       //	 thermally active soil per unit of horizontal area
                       //	 defined with respect to solid (ice) phase snow at
                       //	 0 C..	kJ/m2
-    {"SWE",           "kg m-2"          }, //  SWE	SWE	Surface snow water equivalent
+    {"SWE",           "m"          }, //  SWE	SWE	Surface snow water equivalent
                   // State variable that gives the Snow Water Equivalent (SWE)
                   // of snow on the surface.  It can be considered as the depth
                   // of water that would theoretically result if the whole snow
@@ -416,6 +418,7 @@ const std::map<std::string, std::string> ueb::OutControl::output_var_units{
                   // and ablation on top of a substrate layer which may be
                   // ground or glacier.  In the case that the substrate is
                   // glacier this does not track the quantity of glacier ice. m
+    {"SWE_kg_m2",     "kg m-2"     },
     {"tausn",         "1"          }, //  tausn	tausn	Dimensionless snow surface age
                     // Dimensionless age of the snow surface state variable to
                     // account for aging of the snow surface dependent on snow
@@ -440,10 +443,11 @@ const std::map<std::string, std::string> ueb::OutControl::output_var_units{
                             //(wind and turbulence).	kJ/m2/hr
     {"Es",            "m"          }, //  E	E	Surface sublimation	Amount of water removed
                  // from the snow surface by sublimation	m
-    {"SWIT",          "mm"     }, //  SWIT 	SWIT 	Total outflow 	Total outflow from the
+    {"SWIT",          "mm hr-1"    }, //  SWIT 	SWIT 	Total outflow 	Total outflow from the
                         // base of the snowpack (and glacier). This includes rainfall,
                         // melt from seasonal snow and melt from glaciated surface.
                         // m/hr
+    {"SWIT_mm",       "mm"         },
     {"QMs",           "kJ m-2 hr-1"}, //  Qm	Qm	Outflow energy flux
                             // Energy removed from the snowpack by total outflow
                             // kJ/m2/hr
