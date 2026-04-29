@@ -770,13 +770,13 @@ void* ueb::BmiUEB::GetValuePtr(std::string name) {
     }
 
     auto it_out = std::find(
-     ueb::OutControl::output_var_names.begin(),
-     ueb::OutControl::output_var_names.end(),
-     name
+       ueb::OutControl::output_var_names.begin(),
+       ueb::OutControl::output_var_names.end(),
+       name
     );
 
     if (it_out != ueb::OutControl::output_var_names.end()) {
-     int i = std::distance(ueb::OutControl::output_var_names.begin(), it_out);
+       int i = std::distance(ueb::OutControl::output_var_names.begin(), it_out);
 
  #ifdef UEB_SUPPRESS_OUTPUTS
       // value will always be the first when not recording previous results
