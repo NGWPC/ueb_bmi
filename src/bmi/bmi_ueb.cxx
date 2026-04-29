@@ -770,20 +770,20 @@ void* ueb::BmiUEB::GetValuePtr(std::string name) {
     }
 
     auto it_out = std::find(
-       ueb::OutControl::output_var_names.begin(),
-       ueb::OutControl::output_var_names.end(),
-       name
+        ueb::OutControl::output_var_names.begin(),
+	ueb::OutControl::output_var_names.end(),
+        name
     );
 
     if (it_out != ueb::OutControl::output_var_names.end()) {
-       int i = std::distance(ueb::OutControl::output_var_names.begin(), it_out);
+        int i = std::distance(ueb::OutControl::output_var_names.begin(), it_out);
 
- #ifdef UEB_SUPPRESS_OUTPUTS
+  #ifdef UEB_SUPPRESS_OUTPUTS
       // value will always be the first when not recording previous results
       int ostep = 0;
- #else
+  #else
       int ostep = this->get_istep() - 1;
- #endif
+  #endif
 
       // BMI-facing conversion only:
       // UEB internal SWE is m; NWM SNEQV expects kg m-2.
