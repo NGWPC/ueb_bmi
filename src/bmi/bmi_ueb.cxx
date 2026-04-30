@@ -58,10 +58,6 @@ void ueb::BmiUEB::Initialize(std::string config_file) {
             LOG(ts_ss.str(), LogLevel::INFO);
         }
 
-        if (_ngen_realization_start_time > 0.0 && _ngen_realization_end_time > 0.0 && _ngen_realization_dt > 0.0) {
-            apply_ngen_realization_time();
-        }
-
         _ws      = Watershed(
             _confile.getWatershedFile(),
             _confile.getWsvarName(),
@@ -98,11 +94,10 @@ void ueb::BmiUEB::Initialize(std::string config_file) {
         int numTotalTs  = _confile.getModelTotalTimeSteps();
         int nstepinaDay = _confile.getStepsInADay();
 
-        if (numTotalTs <= 0) {
-            throw std::runtime_error("UEB Initialize: numTotalTs <= 0 before vector allocation");
-        }
-        if (nstepinaDay <= 0) {
-            throw std::runtime_error("UEB Initialize: nstepinaDay <= 0 before vector allocation");
+        if (numTotalTs <= 0 || nstepinaDay <= 0) {
+            LOG("UEB Initialize: static config timing is incomplete; using temporary allocation until ngen realization time is supplied through BMI.", LogLevel::INFO);
+            numTotalTs = 1;
+            nstepinaDay = 1;
         }
 
         {
@@ -1976,8 +1971,54 @@ void ueb::BmiUEB::apply_ngen_realization_time()
         dt_hours
     );
 
-    // resync internal model time
     this->reset_time();
+
+    int numTotalTs  = _confile.getModelTotalTimeSteps();
+    int nstepinaDay = _confile.getStepsInADay();
+
+    if (numTotalTs <= 0) {
+        throw std::runtime_error("UEB realization time produced numTotalTs <= 0");
+    }
+    if (nstepinaDay <= 0) {
+        throw std::runtime_error("UEB realization time produced nstepinaDay <= 0");
+    }
+
+    auto numOfActiveCells = _ws.getActiveCells(_sitevars.getSiteVars().data()).size();
+
+    _tsprevday.resize(numOfActiveCells);
+    _taveprevday.resize(numOfActiveCells);
+    _outvarArray.resize(numOfActiveCells);
+
+    float Us, Ws, Wc, Apr, cg, rhog, de, tave, WGT;
+
+    auto Param = _parms.getParams();
+
+    for (int cell = 0; cell < numOfActiveCells; cell++) {
+        auto sitev = getSitevForCell(cell);
+
+        _tsprevday[cell].resize(nstepinaDay, 0.f);
+        _taveprevday[cell].resize(nstepinaDay, 0.f);
+
+        Us   = _statev[cell][0];
+        Ws   = _statev[cell][1];
+        Wc   = _statev[cell][3];
+        Apr  = sitev[1];
+        cg   = Param[3];
+        rhog = Param[7];
+        de   = Param[10];
+
+        tave = TAVG(Us, Ws + WGT, Rho_w, C_s, T_0, rhog, de, cg, H_f);
+        _taveprevday[cell][nstepinaDay - 1] = tave;
+
+        _outvarArray[cell].resize(numOut);
+        for (auto& v : _outvarArray[cell]) {
+            #ifdef UEB_SUPPRESS_OUTPUTS
+            v.resize(1);
+            #else
+            v.resize(numTotalTs);
+            #endif
+        }
+    }
 
     {
         std::stringstream ss;
@@ -1985,8 +2026,8 @@ void ueb::BmiUEB::apply_ngen_realization_time()
         ss << "  startdate=" << startYear << "-" << startMonth << "-" << startDay << " " << startHour << std::endl;
         ss << "  enddate=" << endYear << "-" << endMonth << "-" << endDay << " " << endHour << std::endl;
         ss << "  dt_hours=" << dt_hours << std::endl;
-        ss << "  total_timesteps=" << _confile.getModelTotalTimeSteps() << std::endl;
-        ss << "  steps_in_day=" << _confile.getStepsInADay() << std::endl;
+        ss << "  total_timesteps=" << numTotalTs << std::endl;
+        ss << "  steps_in_day=" << nstepinaDay << std::endl;
         LOG(ss.str(), LogLevel::INFO);
     }
 }
