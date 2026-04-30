@@ -301,7 +301,6 @@ const std::array<std::string, NOUTPUTS> ueb::OutControl::output_var_names{
     "Qnet",
     "Us",
     "SWE",
-    "SWE_kg_m2",
     "tausn",
     "Pr",
     "Ps",
@@ -310,7 +309,6 @@ const std::array<std::string, NOUTPUTS> ueb::OutControl::output_var_names{
     "QEs",
     "Es",
     "SWIT",
-    "SWIT_mm",
     "QMs",
     "Q",
     "FM",
@@ -354,7 +352,9 @@ const std::array<std::string, NOUTPUTS> ueb::OutControl::output_var_names{
     "SWIGM",
     "SWISM",
     "SWIR",
-    "errMB"
+    "errMB",
+    "SWE_kg_m2",
+    "SWIT_mm"
 };
 
 const std::map<std::string, std::string> ueb::OutControl::output_var_units{
@@ -418,7 +418,6 @@ const std::map<std::string, std::string> ueb::OutControl::output_var_units{
                   // and ablation on top of a substrate layer which may be
                   // ground or glacier.  In the case that the substrate is
                   // glacier this does not track the quantity of glacier ice. m
-    {"SWE_kg_m2",     "kg m-2"     },
     {"tausn",         "1"          }, //  tausn	tausn	Dimensionless snow surface age
                     // Dimensionless age of the snow surface state variable to
                     // account for aging of the snow surface dependent on snow
@@ -447,7 +446,6 @@ const std::map<std::string, std::string> ueb::OutControl::output_var_units{
                         // base of the snowpack (and glacier). This includes rainfall,
                         // melt from seasonal snow and melt from glaciated surface.
                         // m/hr
-    {"SWIT_mm",       "mm"         },
     {"QMs",           "kJ m-2 hr-1"}, //  Qm	Qm	Outflow energy flux
                             // Energy removed from the snowpack by total outflow
                             // kJ/m2/hr
@@ -643,6 +641,9 @@ const std::map<std::string, std::string> ueb::OutControl::output_var_units{
                     // in the computation.  It is included as a check on the
                     // functioning of the model and if significantly different from
                     // 0 is indicative of a problem.	m
+    {"SWE_kg_m2",     "kg m-2"     },
+    {"SWIT_mm",       "mm"         },
+
 };
 
 std::ostream& operator<<(std::ostream& os, ueb::OutControl const& p) { // operator<<
