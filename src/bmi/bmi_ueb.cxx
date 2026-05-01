@@ -387,7 +387,7 @@ int ueb::BmiUEB::GetVarGrid(std::string name) {
 
 std::string ueb::BmiUEB::GetVarType(std::string name) {
     if (name == NGEN_REALIZATION_START_TIME || name == NGEN_REALIZATION_END_TIME || name == NGEN_REALIZATION_DT) {
-	return "double";
+        return "double";
     }
     else if (name.compare(SERIALIZATION_CREATE) == 0) {
         return "uint64_t";
@@ -400,7 +400,6 @@ std::string ueb::BmiUEB::GetVarType(std::string name) {
     } else if (name.compare(RESET_TIME) == 0) {
         return "double";
     }
-
     auto it_site = std::find(
         ueb::SiteVariables::site_var_names.begin(),
         ueb::SiteVariables::site_var_names.end(),
@@ -451,10 +450,13 @@ std::string ueb::BmiUEB::GetVarType(std::string name) {
 }
 
 int ueb::BmiUEB::GetVarItemsize(std::string name) {
-    if (name == NGEN_REALIZATION_START_TIME || name == NGEN_REALIZATION_END_TIME || name == NGEN_REALIZATION_DT) {
+    if (name.compare(NGEN_REALIZATION_START_TIME) == 0 ||
+        name.compare(NGEN_REALIZATION_END_TIME) == 0 ||
+        name.compare(NGEN_REALIZATION_DT) == 0) {
         return sizeof(double);
     }
-    else if (name.compare(SERIALIZATION_CREATE) == 0) {
+
+    if (name.compare(SERIALIZATION_CREATE) == 0) {
         return sizeof(uint64_t);
     } else if (name.compare(SERIALIZATION_SIZE) == 0) {
         return sizeof(uint64_t);
@@ -517,9 +519,12 @@ int ueb::BmiUEB::GetVarItemsize(std::string name) {
 
 std::string ueb::BmiUEB::GetVarUnits(std::string name) {
     auto it_site = ueb::SiteVariables::site_var_units.find(name);
-    if (name == NGEN_REALIZATION_START_TIME || name == NGEN_REALIZATION_END_TIME || name == NGEN_REALIZATION_DT) {
+    if (name.compare(NGEN_REALIZATION_START_TIME) == 0 ||
+        name.compare(NGEN_REALIZATION_END_TIME) == 0 ||
+        name.compare(NGEN_REALIZATION_DT) == 0) {
         return "s";
     }
+
     if (it_site != ueb::SiteVariables::site_var_units.end()) {
         return it_site->second;
     }
@@ -540,7 +545,9 @@ std::string ueb::BmiUEB::GetVarUnits(std::string name) {
 }
 
 int ueb::BmiUEB::GetVarNbytes(std::string name) {
-    if (name == NGEN_REALIZATION_START_TIME || name == NGEN_REALIZATION_END_TIME || name == NGEN_REALIZATION_DT) {
+    if (name.compare(NGEN_REALIZATION_START_TIME) == 0 ||
+        name.compare(NGEN_REALIZATION_END_TIME) == 0 ||
+        name.compare(NGEN_REALIZATION_DT) == 0) {
         return sizeof(double);
     } else if (name.compare(SERIALIZATION_CREATE) == 0) {
         return sizeof(uint64_t);
@@ -840,18 +847,16 @@ void ueb::BmiUEB::GetValueAtIndices(std::string name, void* dest, int* inds, int
 
 void ueb::BmiUEB::SetValue(std::string name, void* src) {
     // special cases for serialized state
-    
-    if (name == NGEN_REALIZATION_START_TIME) {
+
+    if (name.compare(NGEN_REALIZATION_START_TIME) == 0) {
         _ngen_realization_start_time = *static_cast<double*>(src);
         apply_ngen_realization_time();
         return;
-    }
-    if (name == NGEN_REALIZATION_END_TIME) {
+    } else if (name.compare(NGEN_REALIZATION_END_TIME) == 0) {
         _ngen_realization_end_time = *static_cast<double*>(src);
         apply_ngen_realization_time();
         return;
-    }
-    if (name == NGEN_REALIZATION_DT) {
+    } else if (name.compare(NGEN_REALIZATION_DT) == 0) {
         _ngen_realization_dt = *static_cast<double*>(src);
         apply_ngen_realization_time();
         return;
@@ -911,7 +916,7 @@ int ueb::BmiUEB::GetInputItemCount() {
     //  return Parameters::npar +
     //	  NSITEVARS +
     //          NFORCS;
-    return 8;
+    return 11;
 }
 
 int ueb::BmiUEB::GetOutputItemCount() {
@@ -935,6 +940,10 @@ std::vector<std::string> ueb::BmiUEB::GetInputVarNames() {
     names.push_back("qair");
     names.push_back("uebv2d");
     names.push_back("uebu2d");
+
+    names.push_back(NGEN_REALIZATION_START_TIME);
+    names.push_back(NGEN_REALIZATION_END_TIME);
+    names.push_back(NGEN_REALIZATION_DT);
 
     // ngen check all input variables to see if there is
     // a provider. So here we can't list all input variables.
@@ -1994,21 +2003,38 @@ void ueb::BmiUEB::apply_ngen_realization_time()
     auto Param = _parms.getParams();
 
     for (int cell = 0; cell < numOfActiveCells; cell++) {
-        auto sitev = getSitevForCell(cell);
+        auto sitev     = this->getSitevForCell(cell);
+        auto SiteState = this->getSiteState(cell);
+        float ts_last  = SiteState[30];
 
-        _tsprevday[cell].resize(nstepinaDay, 0.f);
-        _taveprevday[cell].resize(nstepinaDay, 0.f);
+        _Ws1[cell] = _statev[cell][1];
+        _Wc1[cell] = _statev[cell][3];
 
-        Us   = _statev[cell][0];
-        Ws   = _statev[cell][1];
-        Wc   = _statev[cell][3];
-        Apr  = sitev[1];
-        cg   = Param[3];
-        rhog = Param[7];
-        de   = Param[10];
+        if (sitev[9] == 0 || sitev[9] == 3)
+            WGT = 0.0;
+        else
+            WGT = 1.0;
 
-        tave = TAVG(Us, Ws + WGT, Rho_w, C_s, T_0, rhog, de, cg, H_f);
-        _taveprevday[cell][nstepinaDay - 1] = tave;
+        if (sitev[9] != 3) {
+            _tsprevday[cell].resize(nstepinaDay, -9999.f);
+            _taveprevday[cell].resize(nstepinaDay, -9999.f);
+
+            if (ts_last <= -9999)
+                _tsprevday[cell][nstepinaDay - 1] = 0;
+            else
+                _tsprevday[cell][nstepinaDay - 1] = ts_last;
+
+            Us   = _statev[cell][0];
+            Ws   = _statev[cell][1];
+            Wc   = _statev[cell][3];
+            Apr  = sitev[1];
+            cg   = Param[3];
+            rhog = Param[7];
+            de   = Param[10];
+
+            tave = TAVG(Us, Ws + WGT, Rho_w, C_s, T_0, rhog, de, cg, H_f);
+            _taveprevday[cell][nstepinaDay - 1] = tave;
+        }
 
         _outvarArray[cell].resize(numOut);
         for (auto& v : _outvarArray[cell]) {
