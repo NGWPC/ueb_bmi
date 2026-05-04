@@ -797,6 +797,19 @@ void* ueb::BmiUEB::GetValuePtr(std::string name) {
             }
 
             int swe_i = std::distance(ueb::OutControl::output_var_names.begin(), swe_it);
+
+            /* UEB native SWE is water-equivalent depth in meters.
+             * NWM SNEQV expects mass per unit area in kg m-2.
+             *
+             * Conversion:
+             *   SWE_kg_m2 = SWE_m * rho_water
+             *             = SWE_m * 1000 kg m-3
+             *
+             * This is equivalent to the common shortcut that 1 mm water
+             * depth equals 1 kg m-2, but here the source value is meters,
+             * so the multiplier is 1000.
+             */
+            	    
             _swe_kg_m2 = _outvarArray[0][swe_i][ostep] * 1000.0f;
             return (void*)&_swe_kg_m2;
         }
