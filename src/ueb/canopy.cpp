@@ -619,16 +619,27 @@ void TURBFLUX(
 
             // ###### 9.21.13 to avoid div by 0 when Rkina + 1*Rkinl + 1*Rkinc evaluate to zero 0.01
             // added TBC_9.21.13
-            if (radFracdenom == 0) {
+	    if (radFracdenom == 0) {
+                static int warned = 0;
+
                 radFracdenom += 0.01;
-                canopy_ss << "Warning! a zero denominator! the sum of turbulent conductances Rkina "
-                             "+ 1*Rkinl + 1*Rkinc evaluates to zero"
-                          << endl;
-                canopy_ss << "added 0.01 to avoid numerical error; Need checking results" << endl;
-                LOG(canopy_ss.str(), LogLevel::SEVERE);
-                canopy_ss.str("");
-                // getchar();
+
+                if (warned == 0) {
+                    canopy_ss << "Warning! a zero denominator! the sum of turbulent conductances Rkina "
+                                 "+ 1*Rkinl + 1*Rkinc evaluates to zero"
+                              << endl;
+                    canopy_ss << "added 0.01 to avoid numerical error; Need checking results" << endl;
+                    LOG(canopy_ss.str(), LogLevel::SEVERE);
+                    canopy_ss.str("");
+                    warned = 1;
+                }
+                else if (warned == 1) {
+                    LOG(LogLevel::SEVERE,
+                        "Warning! zero turbulent-conductance denominator occurred again; further warnings suppressed");
+                    warned = 2;
+                }
             }
+	    
             Tac = (Tc * Rkinl + Tss * Rkinc + Ta * Rkina) /
                   radFracdenom; //(1*Rkina + 1*Rkinl + 1*Rkinc);
             Eac = (Esc * Rkinl + Ess * Rkinc + Ea * Rkina) /
