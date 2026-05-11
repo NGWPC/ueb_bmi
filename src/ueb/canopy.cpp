@@ -649,11 +649,22 @@ void TURBFLUX(
             // ###### 9.22.13 observed Tac values close to -273 which may lead to Tack = 0
             // TBC_9.22.13
             if (Tack == 0) {
+                static int warned = 0;
+
                 Tack += 1.0;
-                canopy_ss << "Error! Surface temp in function Turbflux() Tack = 0" << endl;
-                canopy_ss << "added 1 to avoid numerical error; Need checking results" << endl;
-                LOG(canopy_ss.str(), LogLevel::WARNING);
-                canopy_ss.str("");
+
+                if (warned == 0) {
+                    canopy_ss << "Error! Surface temp in function Turbflux() Tack = 0" << endl;
+                    canopy_ss << "added 1 to avoid numerical error; Need checking results" << endl;
+                    LOG(canopy_ss.str(), LogLevel::WARNING);
+                    canopy_ss.str("");
+                    warned = 1;
+                }
+                else if (warned == 1) {
+                    LOG(LogLevel::WARNING,
+                        "Surface temp in function Turbflux() Tack = 0 occurred again; further warnings suppressed");
+                    warned = 2;
+                }
                 // getchar();
             }
 
