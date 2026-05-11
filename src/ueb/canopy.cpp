@@ -654,7 +654,7 @@ void TURBFLUX(
                 Tack += 1.0;
 
                 if (warned == 0) {
-                    canopy_ss << "Error! Surface temp in function Turbflux() Tack = 0" << endl;
+                    canopy_ss << "Surface temp in function Turbflux() Tack = 0" << endl;
                     canopy_ss << "added 1 to avoid numerical error; Need checking results" << endl;
                     LOG(canopy_ss.str(), LogLevel::WARNING);
                     canopy_ss.str("");
