@@ -28,9 +28,9 @@ void ueb::BmiUEB::Initialize(std::string config_file) {
 
     // Initialize the Error, Warning and Trapping System
     #ifdef EWTS_HAVE_NGEN_BRIDGE    
-        EwtsInit(EWTS_ID_UEB, true);
+        EwtsInit(UEB_MODULE_ID, true);
     #else
-        EwtsInit(EWTS_ID_UEB, false);
+        EwtsInit(UEB_MODULE_ID, false);
     #endif
     LOG(LogLevel::INFO, "Initializing UEB");
 
