@@ -28,6 +28,8 @@ ueb::ControlFile::~ControlFile() {
 }
 
 void ueb::ControlFile::loadControlFile(std::string const& contrl_file) {
+    _conFilename = contrl_file;
+
     std::stringstream std_ss("");
 
     std_ss << "Control File is " << contrl_file << std::endl;
@@ -311,8 +313,8 @@ int ueb::ControlFile::getStepsInADay() const {
 }
 
 void ueb::ControlFile::overrideModelTiming(
-    int startYear, int startMonth, int startDay, int startHour,
-    int endYear, int endMonth, int endDay, int endHour,
+    int startYear, int startMonth, int startDay, double startHour,
+    int endYear, int endMonth, int endDay, double endHour,
     double dt_hours
 ) {
     if (dt_hours <= 0.0) {

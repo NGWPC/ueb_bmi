@@ -106,8 +106,8 @@ class ControlFile {
 
     int getStepsInADay() const;
 
-    void overrideModelTiming(int startYear, int startMonth, int startDay, int startHour,
-                             int endYear, int endMonth, int endDay, int endHour,
+    void overrideModelTiming(int startYear, int startMonth, int startDay, double startHour,
+                             int endYear, int endMonth, int endDay, double endHour,
                              double dt_hours);
     friend std::ostream& ::operator<<(std::ostream& os, ControlFile f);
 };

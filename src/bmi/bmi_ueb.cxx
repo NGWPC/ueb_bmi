@@ -133,6 +133,11 @@ void ueb::BmiUEB::Initialize(std::string config_file) {
             rhog = Param[7];
             de   = Param[10];
 
+            if (sitev[9] == 0 || sitev[9] == 3)
+                WGT = 0.0f;
+            else
+                WGT = 1.0f;
+
             tave = TAVG(Us, Ws + WGT, Rho_w, C_s, T_0, rhog, de, cg, H_f);
             _taveprevday[cell][nstepinaDay - 1] = tave;
 
@@ -731,6 +736,14 @@ void* ueb::BmiUEB::GetValuePtr(std::string name) {
         return (void*)&this->m_serialized_length;
     } else if (name.compare(SERIALIZATION_STATE) == 0) {
         return (void*)this->m_serialized.data();
+    }
+
+    if (name.compare(NGEN_REALIZATION_START_TIME) == 0) {
+        return (void*)&this->_ngen_realization_start_time;
+    } else if (name.compare(NGEN_REALIZATION_END_TIME) == 0) {
+        return (void*)&this->_ngen_realization_end_time;
+    } else if (name.compare(NGEN_REALIZATION_DT) == 0) {
+        return (void*)&this->_ngen_realization_dt;
     }
 
     auto it_par = std::find(
@@ -2001,8 +2014,6 @@ void ueb::BmiUEB::apply_ngen_realization_time()
         return;
     }
 
-    this->realization_time_applied = true;
-
     time_t start_t = static_cast<time_t>(_ngen_realization_start_time);
     time_t end_t   = static_cast<time_t>(_ngen_realization_end_time);
 
@@ -2015,12 +2026,16 @@ void ueb::BmiUEB::apply_ngen_realization_time()
     int startYear  = start_tm_struct.tm_year + 1900;
     int startMonth = start_tm_struct.tm_mon + 1;
     int startDay   = start_tm_struct.tm_mday;
-    int startHour  = start_tm_struct.tm_hour;
+    double startHour = start_tm_struct.tm_hour +
+                       start_tm_struct.tm_min / 60.0 +
+                       start_tm_struct.tm_sec / 3600.0;
 
     int endYear  = end_tm_struct.tm_year + 1900;
     int endMonth = end_tm_struct.tm_mon + 1;
     int endDay   = end_tm_struct.tm_mday;
-    int endHour  = end_tm_struct.tm_hour;
+    double endHour = end_tm_struct.tm_hour +
+                     end_tm_struct.tm_min / 60.0 +
+                     end_tm_struct.tm_sec / 3600.0;
 
     double dt_hours = _ngen_realization_dt / 3600.0;
 
@@ -2061,13 +2076,13 @@ void ueb::BmiUEB::apply_ngen_realization_time()
         _Wc1[cell] = _statev[cell][3];
 
         if (sitev[9] == 0 || sitev[9] == 3)
-            WGT = 0.0;
+            WGT = 0.0f;
         else
-            WGT = 1.0;
+            WGT = 1.0f;
 
         if (sitev[9] != 3) {
-            _tsprevday[cell].resize(nstepinaDay, -9999.f);
-            _taveprevday[cell].resize(nstepinaDay, -9999.f);
+            _tsprevday[cell].assign(nstepinaDay, -9999.f);
+            _taveprevday[cell].assign(nstepinaDay, -9999.f);
 
             if (ts_last <= -9999)
                 _tsprevday[cell][nstepinaDay - 1] = 0;
@@ -2089,12 +2104,14 @@ void ueb::BmiUEB::apply_ngen_realization_time()
         _outvarArray[cell].resize(numOut);
         for (auto& v : _outvarArray[cell]) {
             #ifdef UEB_SUPPRESS_OUTPUTS
-            v.resize(1);
+            v.assign(1, 0.0f);
             #else
-            v.resize(numTotalTs);
+            v.assign(numTotalTs, 0.0f);
             #endif
         }
     }
+
+    this->realization_time_applied = true;
 
     {
         std::stringstream ss;
