@@ -3096,7 +3096,7 @@ labl11:
                         warned = 1;
                     }
                     else if (warned == 1) {
-                        LOG("Bisection canopy temperature solution failed again; Future warnings will be suppressed",
+                        LOG("Bisection canopy temperature solution failed again; subsequent occurrences of this message will be suppressed.",
                             LogLevel::WARNING);
                         warned = 2;
                     }
