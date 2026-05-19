@@ -27,11 +27,9 @@ std::stringstream bmi_ueb_ss("");
 void ueb::BmiUEB::Initialize(std::string config_file) {
 
     // Initialize the Error, Warning and Trapping System
-    #ifdef EWTS_HAVE_NGEN_BRIDGE    
+#ifdef USE_EWTS    
         EwtsInit(UEB_MODULE_ID, true);
-    #else
-        EwtsInit(UEB_MODULE_ID, false);
-    #endif
+#endif
     LOG(LogLevel::INFO, "Initializing UEB");
 
     if (config_file.compare("") != 0) {

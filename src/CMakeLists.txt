@@ -73,13 +73,13 @@ target_link_libraries(bmiuebcxx
     ewts::ewts_cpp
     "-Wl,--no-as-needed" ewts::ewts_ngen_bridge "-Wl,--as-needed"
 )
-target_compile_definitions(bmiuebcxx PRIVATE EWTS_HAVE_NGEN_BRIDGE)
+target_compile_definitions(bmiuebcxx PRIVATE USE_EWTS)
 
 target_link_libraries(run_bmiuebcxx
     ewts::ewts_cpp
     "-Wl,--no-as-needed" ewts::ewts_ngen_bridge "-Wl,--as-needed"
 )
-target_compile_definitions(run_bmiuebcxx PRIVATE EWTS_HAVE_NGEN_BRIDGE)
+target_compile_definitions(run_bmiuebcxx PRIVATE USE_EWTS)
 
 include(GNUInstallDirs)
 
