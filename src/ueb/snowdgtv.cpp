@@ -3081,7 +3081,6 @@ labl11:
             if (Flb * Fub > 0) // these are of the same sign so no bisection solution
             {
                 // if(snowdgtvariteflag == 1)
-                // if(snowdgtvariteflag == 1)
                 {
                     static int warned = 0;
 
