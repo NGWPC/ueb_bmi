@@ -1,7 +1,7 @@
 #ifndef UEB_LOGGER_HPP
 #define UEB_LOGGER_HPP
 
-#ifdef USE_EWTS
+#ifdef UEB_USE_EWTS
 #include "ewts/module_constants.hpp"
 #include "ewts/logger.hpp"
 #include "ewts/log_levels.hpp"
@@ -17,9 +17,13 @@ inline constexpr const char* UEB_MODULE_ID = ewts::modules::EWTS_ID_UEB;
 
 #else
 // Log all messages to stdout
+#include <chrono>
 #include <cstdarg>
 #include <cstddef>
 #include <cstdio>
+#include <cstdlib>
+#include <ctime>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -37,12 +41,31 @@ enum class LogLevel {
     FATAL = 50
 };
 
-inline bool IsLoggingEnabled() {
-    return true;  // always enabled in fallback
+
+inline std::string utc_timestamp() {
+    using clock = std::chrono::system_clock;
+    auto now = clock::now();
+    auto tt = clock::to_time_t(now);
+
+    std::tm tm{};
+    gmtime_r(&tt, &tm);
+
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+        now.time_since_epoch()) % 1000;
+
+    std::ostringstream oss;
+    oss << std::put_time(&tm, "%Y-%m-%dT%H:%M:%S")
+        << '.' << std::setw(3) << std::setfill('0') << ms.count()
+        << 'Z';
+
+    return oss.str();
 }
 
-inline LogLevel GetLogLevel() {
-    return LogLevel::INFO;  // simple default
+inline std::string_view rstrip_newline(std::string_view s) {
+    while (!s.empty() && (s.back() == '\n' || s.back() == '\r')) {
+        s.remove_suffix(1);
+    }
+    return s;
 }
 
 inline const char* level_to_string(LogLevel level) {
@@ -58,12 +81,25 @@ inline const char* level_to_string(LogLevel level) {
 
 inline void Log(LogLevel level, std::string_view message) {
     std::ostringstream oss;
-    oss << UEB_MODULE_ID << " "
+
+    message = rstrip_newline(message);
+
+    oss << utc_timestamp() << " "
+        << UEB_MODULE_ID << " "
         << level_to_string(level) << " "
         << message << '\n';
 
     std::cout << oss.str() << std::flush;   
 }
+
+inline bool IsLoggingEnabled() {
+    return true;  // always enabled in fallback
+}
+
+inline LogLevel GetLogLevel() {
+    return LogLevel::INFO;  // simple default
+}
+
 
 inline void Log(std::string_view message, LogLevel level) {
     Log(level, message);

@@ -13,11 +13,6 @@ option(UEB_SUPPRESS_OUTPUTS "Build where UEB BMI's Finalize() will not create ou
 
 option(USE_EWTS "Build UEB BMI with EWTS logging" OFF)
 
-if(USE_EWTS)
-    message("-- UEB compiled with EWTS logging")
-    add_compile_definitions(USE_EWTS)
-endif()
-
 # -----------------------------------------------------------------------------
 # Find the Boost library and configure usage
 set(Boost_USE_STATIC_LIBS OFF)
@@ -50,6 +45,12 @@ endif()
 if(UEB_SUPPRESS_OUTPUTS)
     message("-- UEB compiled to not create its own outputs")
     add_compile_definitions(UEB_SUPPRESS_OUTPUTS)
+endif()
+
+message("-- ueb-bmi CMakeLists USE_EWTS = ${USE_EWTS}")
+if(USE_EWTS)
+    message("-- UEB compiled with EWTS logging")
+    add_compile_definitions(UEB_USE_EWTS)
 endif()
 
 link_libraries(Boost::serialization)

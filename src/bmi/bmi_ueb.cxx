@@ -27,9 +27,13 @@ std::stringstream bmi_ueb_ss("");
 void ueb::BmiUEB::Initialize(std::string config_file) {
 
     // Initialize the Error, Warning and Trapping System
-#ifdef USE_EWTS    
-        EwtsInit(UEB_MODULE_ID, true);
+#ifdef UEB_USE_EWTS    
+    #pragma message("ueb-bmi.bmi_ueb.Initialize: UEB_USE_EWTS ON")
+    EwtsInit(UEB_MODULE_ID, true);
+#else
+    #pragma message("ueb-bmi.bmi_ueb.Initialize: UEB_USE_EWTS OFF")
 #endif
+
     LOG(LogLevel::INFO, "Initializing UEB");
 
     if (config_file.compare("") != 0) {
