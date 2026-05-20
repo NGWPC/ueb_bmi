@@ -41,8 +41,10 @@ enum class LogLevel {
     FATAL = 50
 };
 
+#define UEB_FALLBACK_LOGGING_ENABLED   1
+#define UEB_FALLBACK_LOG_LEVEL         LogLevel::INFO
 
-inline std::string utc_timestamp() {
+inline std::string ueb_utc_timestamp() {
     using clock = std::chrono::system_clock;
     auto now = clock::now();
     auto tt = clock::to_time_t(now);
@@ -61,14 +63,14 @@ inline std::string utc_timestamp() {
     return oss.str();
 }
 
-inline std::string_view rstrip_newline(std::string_view s) {
+inline std::string_view ueb_rstrip_newline(std::string_view s) {
     while (!s.empty() && (s.back() == '\n' || s.back() == '\r')) {
         s.remove_suffix(1);
     }
     return s;
 }
 
-inline const char* level_to_string(LogLevel level) {
+inline const char* ueb_level_to_string(LogLevel level) {
     switch (level) {
         case LogLevel::DEBUG:   return "DEBUG";
         case LogLevel::INFO:    return "INFO";
@@ -79,27 +81,31 @@ inline const char* level_to_string(LogLevel level) {
     }
 }
 
+inline bool IsLoggingEnabled() {
+    return UEB_FALLBACK_LOGGING_ENABLED;
+}
+
+inline LogLevel GetLogLevel() {
+    return UEB_FALLBACK_LOG_LEVEL;  // simple default
+}
+
 inline void Log(LogLevel level, std::string_view message) {
+
+    if (message.empty()) return;
+    if (!IsLoggingEnabled()) return;
+    if (level < GetLogLevel()) return;
+
     std::ostringstream oss;
 
-    message = rstrip_newline(message);
+    message = ueb_rstrip_newline(message);
 
-    oss << utc_timestamp() << " "
+    oss << ueb_utc_timestamp() << " "
         << UEB_MODULE_ID << " "
-        << level_to_string(level) << " "
+        << ueb_level_to_string(level) << " "
         << message << '\n';
 
     std::cout << oss.str() << std::flush;   
 }
-
-inline bool IsLoggingEnabled() {
-    return true;  // always enabled in fallback
-}
-
-inline LogLevel GetLogLevel() {
-    return LogLevel::INFO;  // simple default
-}
-
 
 inline void Log(std::string_view message, LogLevel level) {
     Log(level, message);
@@ -107,6 +113,8 @@ inline void Log(std::string_view message, LogLevel level) {
 
 inline void Log(LogLevel level, const char* fmt, ...) {
     if (!fmt) return;
+    if (!IsLoggingEnabled()) return;
+    if (level < GetLogLevel()) return;
 
     va_list args;
     va_start(args, fmt);
