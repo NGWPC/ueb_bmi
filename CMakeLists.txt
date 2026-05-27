@@ -1,5 +1,5 @@
 #
-# ueb-bmi CMakeLists.txt
+# ngen/extern/ueb-bmi CMakeLists.txt
 #
 
 cmake_minimum_required(VERSION 3.0)
@@ -45,12 +45,6 @@ endif()
 if(UEB_SUPPRESS_OUTPUTS)
     message("-- UEB compiled to not create its own outputs")
     add_compile_definitions(UEB_SUPPRESS_OUTPUTS)
-endif()
-
-message("-- ueb-bmi CMakeLists USE_EWTS = ${USE_EWTS}")
-if(USE_EWTS)
-    message("-- UEB compiled with EWTS logging")
-    add_compile_definitions(UEB_USE_EWTS)
 endif()
 
 link_libraries(Boost::serialization)

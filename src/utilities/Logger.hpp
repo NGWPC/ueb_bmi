@@ -2,6 +2,10 @@
 #define UEB_LOGGER_HPP
 
 #ifdef UEB_USE_EWTS
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+// Using EWTS
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
 #include "ewts/module_constants.hpp"
 #include "ewts/logger.hpp"
 #include "ewts/log_levels.hpp"
@@ -16,7 +20,10 @@ using ewts::LogLevel;
 inline constexpr const char* UEB_MODULE_ID = ewts::modules::EWTS_ID_UEB;
 
 #else
-// Log all messages to stdout
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+// Log messages written to STDOUT
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
 #include <chrono>
 #include <cstdarg>
 #include <cstddef>

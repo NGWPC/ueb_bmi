@@ -66,20 +66,28 @@ set_target_properties(bmiuebcxx PROPERTIES
        PUBLIC_HEADER utilities/Logger.hpp
 )
 
-# --- EWTS (installed from nwm-ewts) ---
-find_package(ewts CONFIG REQUIRED)
+option(USE_EWTS "Build UEB with EWTS logging" ON)
+message("-- UEB CMakeLists USE_EWTS = ${USE_EWTS}")
+if(USE_EWTS)
+    message("-- UEB compiled with EWTS logging")
 
-target_link_libraries(bmiuebcxx
-    ewts::ewts_cpp
-    "-Wl,--no-as-needed" ewts::ewts_ngen_bridge "-Wl,--as-needed"
-)
-target_compile_definitions(bmiuebcxx PRIVATE USE_EWTS)
+    # --- EWTS (installed from nwm-ewts) ---
+    find_package(ewts CONFIG REQUIRED)
 
-target_link_libraries(run_bmiuebcxx
-    ewts::ewts_cpp
-    "-Wl,--no-as-needed" ewts::ewts_ngen_bridge "-Wl,--as-needed"
-)
-target_compile_definitions(run_bmiuebcxx PRIVATE USE_EWTS)
+    target_link_libraries(bmiuebcxx
+        ewts::ewts_cpp
+        "-Wl,--no-as-needed" ewts::ewts_ngen_bridge "-Wl,--as-needed"
+    )
+    target_compile_definitions(bmiuebcxx PRIVATE UEB_USE_EWTS)
+
+    target_link_libraries(run_bmiuebcxx
+        ewts::ewts_cpp
+        "-Wl,--no-as-needed" ewts::ewts_ngen_bridge "-Wl,--as-needed"
+    )
+    target_compile_definitions(run_bmiuebcxx PRIVATE UEB_USE_EWTS)
+else()
+    message("-- UEB compiled with stdout fallback logging")
+endif()
 
 include(GNUInstallDirs)
 
