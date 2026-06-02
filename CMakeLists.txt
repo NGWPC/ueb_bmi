@@ -11,7 +11,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 option(UEB_SUPPRESS_OUTPUTS "Build where UEB BMI's Finalize() will not create outputs" OFF)
 
-option(USE_EWTS "Build UEB BMI with EWTS logging" OFF)
+option(USE_EWTS "Build UEB BMI with EWTS logging" ON)
 
 # -----------------------------------------------------------------------------
 # Find the Boost library and configure usage
