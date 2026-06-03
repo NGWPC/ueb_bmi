@@ -1,5 +1,5 @@
 #
-# ueb-bmi CMakeLists.txt
+# ngen/extern/ueb-bmi CMakeLists.txt
 #
 
 cmake_minimum_required(VERSION 3.0)
@@ -10,6 +10,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fPIC")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 option(UEB_SUPPRESS_OUTPUTS "Build where UEB BMI's Finalize() will not create outputs" OFF)
+
+option(USE_EWTS "Build UEB BMI with EWTS logging" ON)
 
 # -----------------------------------------------------------------------------
 # Find the Boost library and configure usage
